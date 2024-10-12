@@ -1,0 +1,3 @@
+/home/philc/sdr_project/build/CMakeFiles/qs1r_server.dir
+/home/philc/sdr_project/build/CMakeFiles/edit_cache.dir
+/home/philc/sdr_project/build/CMakeFiles/rebuild_cache.dir
