@@ -1,0 +1,20 @@
+# Ignore build directory
+build/
+
+# Ignore all object files
+*.o
+
+# Ignore compiled binary files
+*.exe
+*.out
+
+# Ignore config.h (if generated)
+headers/config.h
+
+# Ignore temporary files created by editors
+*~
+.DS_Store
+/build
+*.o
+*.exe
+*.out
