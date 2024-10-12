@@ -1,1 +1,0 @@
-/usr/bin/c++ CMakeFiles/qs1r_server.dir/src/debug.cpp.o CMakeFiles/qs1r_server.dir/src/main.cpp.o CMakeFiles/qs1r_server.dir/src/qs1r_server.cpp.o CMakeFiles/qs1r_server.dir/src/qs_globals.cpp.o CMakeFiles/qs1r_server.dir/src/qs_io_libusb.cpp.o -o qs1r_server  -lusb-1.0 
