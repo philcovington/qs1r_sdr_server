@@ -33,11 +33,16 @@ int main() {
 
     std::cout << "setPgaMode result: " << result << std::endl;
 
+    result = qs1r.setRandMode( true );
+
+    std::cout << "setRandMode result: " << result << std::endl;
+
 	result = qs1r.setDitherMode( true );
 
 	std::cout << "setDitherMode result: " << result << std::endl;
 
     std::cout << "PGA MODE NOW IS: " << qs1r.pgaMode( ) << std::endl;
+    std::cout << "RAND MODE NOW IS: " << qs1r.randMode( ) << std::endl;
 	std::cout << "DITHER MODE NOW IS: " << qs1r.ditherMode( ) << std::endl;
 
     std::cout << "QS1R server shutting down..." << std::endl;
