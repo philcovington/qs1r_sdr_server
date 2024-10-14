@@ -1,26 +1,16 @@
-#ifndef QS_SLEEP_H
-#define QS_SLEEP_H
+#pragma once
 
-#include <thread>
 #include <chrono>
+#include <thread>
 
-class QsSleep
-{
-public:
+class QsSleep {
+  public:
     // Sleep for seconds
-    void sleep(unsigned long sec) {
-        std::this_thread::sleep_for(std::chrono::seconds(sec));
-    }
+    void sleep(unsigned long sec) { std::this_thread::sleep_for(std::chrono::seconds(sec)); }
 
     // Sleep for milliseconds
-    void msleep(unsigned long msec) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(msec));
-    }
+    void msleep(unsigned long msec) { std::this_thread::sleep_for(std::chrono::milliseconds(msec)); }
 
     // Sleep for microseconds
-    void usleep(unsigned long usec) {
-        std::this_thread::sleep_for(std::chrono::microseconds(usec));
-    }
+    void usleep(unsigned long usec) { std::this_thread::sleep_for(std::chrono::microseconds(usec)); }
 };
-
-#endif // QS_SLEEP_H

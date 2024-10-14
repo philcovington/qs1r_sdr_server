@@ -1,47 +1,47 @@
-#include <vector>
-#include <string>
+#pragma once
 
-#include "../headers/qs_sleep.h"
+#include <string>
+#include <vector>
+
 #include "../headers/qs_io_libusb.h"
+#include "../headers/qs_sleep.h"
 
 #ifndef QS1RSERVER_H
 #define QS1RSERVER_H
 
 class QS1R_server {
+  public:
+    QsIOLib_LibUSB usb;
 
-public:
-	QsIOLib_LibUSB usb;
+    QS1R_server();
+    ~QS1R_server();
 
-	QS1R_server( );
-	~QS1R_server( );
-	
-	int setPgaMode( bool on );
-	int setRandMode( bool on );
-	int setDitherMode( bool on);
-	
-	bool pgaMode( );
-	bool randMode( );
-	bool ditherMode( );
+    int setPgaMode(bool on);
+    int setRandMode(bool on);
+    int setDitherMode(bool on);
 
-	bool isHardwareInit( );
+    bool pgaMode();
+    bool randMode();
+    bool ditherMode();
 
-	void showStartupMsg( );
+    bool isHardwareInit();
 
-	void initSupportedSampleRatesList( );
-	std::vector<std::string> getSupportedSampleRates( );
+    void showStartupMsg();
 
-	int initQS1RHardware( unsigned int index );	
+    void initSupportedSampleRatesList();
+    std::vector<std::string> getSupportedSampleRates();
 
-	void exit( );
+    int initQS1RHardware(unsigned int index);
 
-private:
-	std::vector<std::string> m_supported_samplerates;
+    void exit();
 
-	QsSleep sleep;
-	bool m_hardware_is_init = false;
+  private:
+    std::vector<std::string> m_supported_samplerates;
 
-	libusb_device * findQS1RDevice( QsIOLib_LibUSB *usb, u_int16_t vid, uint16_t pid, unsigned int index);
+    QsSleep sleep;
+    bool m_hardware_is_init = false;
 
+    libusb_device *findQS1RDevice(QsIOLib_LibUSB *usb, u_int16_t vid, uint16_t pid, unsigned int index);
 };
 
 #endif
