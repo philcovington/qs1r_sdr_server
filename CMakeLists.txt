@@ -26,6 +26,8 @@ add_executable(qs1r_server ${SOURCES})
 # Specify the build output directory
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/build)
 
+set(CMAKE_BUILD_TYPE Debug)
+
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(LIBUSB REQUIRED libusb-1.0)
 
