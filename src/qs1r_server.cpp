@@ -149,16 +149,46 @@ int QS1R_server :: setPgaMode( bool on ) {
         result &= ~PGA;
     }
 
-    // return usb.writeMultibusInt( MB_CONTRL1, (u_int)result );
-	return usb.writeMultibusInt( MB_CONTRL1, 1 );
+    return usb.writeMultibusInt( MB_CONTRL1, (u_int)result );
 }
 
 int QS1R_server :: setRandMode( bool on ) {
-	return 0;
+	if ( !m_hardware_is_init )
+    {
+        std::cerr << "Error: Please initialize QS1R Hardware first!" << std::endl;        
+        return -1;
+    }
+    int result = usb.readMultibusInt( MB_CONTRL1 );
+    if ( on )
+    {
+        result |= RANDOM;
+    }
+    else
+    {
+        result &= ~RANDOM;
+    }
+
+    return usb.writeMultibusInt( MB_CONTRL1, (u_int)result );
+	
 }
 
 int QS1R_server :: setDitherMode( bool on) {
-	return 0;
+	if ( !m_hardware_is_init )
+    {
+        std::cerr << "Error: Please initialize QS1R Hardware first!" << std::endl;        
+        return -1;
+    }
+    int result = usb.readMultibusInt( MB_CONTRL1 );
+    if ( on )
+    {
+        result |= DITHER;
+    }
+    else
+    {
+        result &= ~DITHER;
+    }
+
+    return usb.writeMultibusInt( MB_CONTRL1, (u_int)result );
 }
 
 bool QS1R_server :: pgaMode( ) {
