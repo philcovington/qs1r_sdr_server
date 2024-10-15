@@ -76,6 +76,7 @@
 		"xstring": "cpp",
 		"xtr1common": "cpp",
 		"condition_variable": "cpp",
-		"mutex": "cpp"
+		"mutex": "cpp",
+		"arch.h": "c"
 	}
 }

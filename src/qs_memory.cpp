@@ -195,7 +195,7 @@ unsigned int QsMemory::getTxFilterHi() { return m_tx_filter_high; }
 //***************************************************//
 
 void QsMemory::setTxPdacLevel(unsigned int value) {
-    m_tx_pdac_level = qBound(static_cast<unsigned int>(0), value, static_cast<unsigned int>(100));
+    m_tx_pdac_level = QsDataProc::qBound(static_cast<unsigned int>(0), value, static_cast<unsigned int>(100));
 }
 
 unsigned int QsMemory::getTxPdacLevel() { return m_tx_pdac_level; }
@@ -498,38 +498,6 @@ bool QsMemory::getAdcDitherOn() { return m_adc_dith_on; }
 void QsMemory::setRtAudioFrames(int value) { m_rt_audio_frames = value; }
 
 int QsMemory::getRtAudioFrames() { return m_rt_audio_frames; }
-
-//***************************************************//
-//--------------------WAV FILES----------------------//
-//***************************************************//
-
-void QsMemory::setWavRecContinuous(bool value) { m_wav_rec_continuous = value; }
-
-bool QsMemory::getWavRecContinuous() { return m_wav_rec_continuous; }
-
-void QsMemory::setWavRecordPrebufferOn(bool value) { m_wav_rec_prebuffer = value; }
-
-bool QsMemory::getWavRecordPrebufferOn() { return m_wav_rec_prebuffer; }
-
-void QsMemory::setWavRecordPrebufferTime(double value) { m_wav_rec_prebuffer_time = value; }
-
-double QsMemory::getWavRecordPrebufferTime() { return m_wav_rec_prebuffer_time; }
-
-void QsMemory::setWavRecordPath(QString value) { m_wav_rec_path = value; }
-
-QString QsMemory::getWavRecordPath() { return m_wav_rec_path; }
-
-void QsMemory::setWavPlaybackStartTime(time_t value) { m_wav_play_starttime = value; }
-
-time_t QsMemory::getWavPlaybackStartTime() { return m_wav_play_starttime; }
-
-void QsMemory::setWavInFileName(std::string value) { m_wav_in_filename = value; }
-
-std::string QsMemory::getWavInFileName() { return m_wav_in_filename; }
-
-void QsMemory::setWavInLooping(bool value) { m_wav_in_loop = value; }
-
-bool QsMemory::getWavInLooping() { return m_wav_in_loop; }
 
 //***************************************************//
 //------------------BLOCK SIZES----------------------//

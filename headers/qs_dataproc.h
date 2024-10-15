@@ -446,7 +446,7 @@ class QsDataProc {
         double max = 0.0;
         double val = 0.0;
         for (uint32_t i = 0; i < length; i++) {
-            val = QsSpl::Abs(src[i]);
+            val = QsDataProc::Abs(src[i]);
             if (val > max)
                 max = val;
         }

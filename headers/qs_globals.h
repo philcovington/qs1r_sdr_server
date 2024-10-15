@@ -1,16 +1,14 @@
 // qs_globals.h
 #pragma once
 
-#include <../headers/qs1rserver.h>
-#include <../headers/qs_io_libusb.h>
-
-#include <condition_variable>
-#include <mutex>
-
+#include "../headers/qs1rserver.h"
+#include "../headers/qs_io_libusb.h"
+#include "../headers/qs_wait_condition.h"
 #include "../headers/qs_cpx_vector_circularbuffer.h"
 #include "../headers/qs_float_vector_circularbuffer.h"
 
-QWaitCondition WC_FILE_FIFO_WRITE;
+WaitCondition WC_NEED_MORE_DATA;
+WaitCondition WC_FILE_FIFO_WRITE;
 
 namespace QsGlobal {
 extern QS1RServer *g_server;

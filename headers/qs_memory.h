@@ -191,28 +191,7 @@ class QsMemory {
 
     void setRtAudioFrames(int value);
     int getRtAudioFrames();
-
-    void setWavRecContinuous(bool value);
-    bool getWavRecContinuous();
-
-    void setWavRecordPrebufferOn(bool value);
-    bool getWavRecordPrebufferOn();
-
-    void setWavRecordPrebufferTime(double value);
-    double getWavRecordPrebufferTime();
-
-    void setWavRecordPath(std::string value);
-    std::string getWavRecordPath();
-
-    void setWavPlaybackStartTime(time_t value);
-    time_t getWavPlaybackStartTime();
-
-    void setWavInFileName(std::string value);
-    std::string getWavInFileName();
-
-    void setWavInLooping(bool value);
-    bool getWavInLooping();
-
+    
     void setReadBlockSize(int value);
     int getReadBlockSize();
 
