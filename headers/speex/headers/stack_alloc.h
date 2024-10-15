@@ -1,103 +1,86 @@
 #pragma once
 
-#if defined(_WIN32) 
+#ifndef STACK_ALLOC_H
+#define STACK_ALLOC_H
 
-#  if defined(__CYGWIN__)
-#    include <_G_config.h>
-     typedef _G_int32_t spx_int32_t;
-     typedef _G_uint32_t spx_uint32_t;
-     typedef _G_int16_t spx_int16_t;
-     typedef _G_uint16_t spx_uint16_t;
-#  elif defined(__MINGW32__)
-     typedef short spx_int16_t;
-     typedef unsigned short spx_uint16_t;
-     typedef int spx_int32_t;
-     typedef unsigned int spx_uint32_t;
-#  elif defined(__MWERKS__)
-     typedef int spx_int32_t;
-     typedef unsigned int spx_uint32_t;
-     typedef short spx_int16_t;
-     typedef unsigned short spx_uint16_t;
-#  else
-     /* MSVC/Borland */
-     typedef __int32 spx_int32_t;
-     typedef unsigned __int32 spx_uint32_t;
-     typedef __int16 spx_int16_t;
-     typedef unsigned __int16 spx_uint16_t;
-#  endif
+#ifdef USE_ALLOCA
+#ifdef WIN32
+#include <malloc.h>
+#else
+#ifdef HAVE_ALLOCA_H
+#include <alloca.h>
+#else
+#include <stdlib.h>
+#endif
+#endif
+#endif
 
-#elif defined(__MACOS__)
+/**
+ * @def ALIGN(stack, size)
+ *
+ * Aligns the stack to a 'size' boundary
+ *
+ * @param stack Stack
+ * @param size  New size boundary
+ */
 
-#  include <sys/types.h>
-   typedef SInt16 spx_int16_t;
-   typedef UInt16 spx_uint16_t;
-   typedef SInt32 spx_int32_t;
-   typedef UInt32 spx_uint32_t;
+/**
+ * @def PUSH(stack, size, type)
+ *
+ * Allocates 'size' elements of type 'type' on the stack
+ *
+ * @param stack Stack
+ * @param size  Number of elements
+ * @param type  Type of element
+ */
 
-#elif (defined(__APPLE__) && defined(__MACH__)) /* MacOS X Framework build */
+/**
+ * @def VARDECL(var)
+ *
+ * Declare variable on stack
+ *
+ * @param var Variable to declare
+ */
 
-#  include <sys/types.h>
-   typedef int16_t spx_int16_t;
-   typedef u_int16_t spx_uint16_t;
-   typedef int32_t spx_int32_t;
-   typedef u_int32_t spx_uint32_t;
+/**
+ * @def ALLOC(var, size, type)
+ *
+ * Allocate 'size' elements of 'type' on stack
+ *
+ * @param var  Name of variable to allocate
+ * @param size Number of elements
+ * @param type Type of element
+ */
 
-#elif defined(__BEOS__)
+#ifdef ENABLE_VALGRIND
 
-   /* Be */
-#  include <inttypes.h>
-   typedef int16_t spx_int16_t;
-   typedef u_int16_t spx_uint16_t;
-   typedef int32_t spx_int32_t;
-   typedef u_int32_t spx_uint32_t;
+#include <valgrind/memcheck.h>
 
-#elif defined (__EMX__)
+#define ALIGN(stack, size) ((stack) += ((size) - (long)(stack)) & ((size) - 1))
 
-   /* OS/2 GCC */
-   typedef short spx_int16_t;
-   typedef unsigned short spx_uint16_t;
-   typedef int spx_int32_t;
-   typedef unsigned int spx_uint32_t;
-
-#elif defined (DJGPP)
-
-   /* DJGPP */
-   typedef short spx_int16_t;
-   typedef int spx_int32_t;
-   typedef unsigned int spx_uint32_t;
-
-#elif defined(R5900)
-
-   /* PS2 EE */
-   typedef int spx_int32_t;
-   typedef unsigned spx_uint32_t;
-   typedef short spx_int16_t;
-
-#elif defined(__SYMBIAN32__)
-
-   /* Symbian GCC */
-   typedef signed short spx_int16_t;
-   typedef unsigned short spx_uint16_t;
-   typedef signed int spx_int32_t;
-   typedef unsigned int spx_uint32_t;
-
-#elif defined(CONFIG_TI_C54X) || defined (CONFIG_TI_C55X)
-
-   typedef short spx_int16_t;
-   typedef unsigned short spx_uint16_t;
-   typedef long spx_int32_t;
-   typedef unsigned long spx_uint32_t;
-
-#elif defined(CONFIG_TI_C6X)
-
-   typedef short spx_int16_t;
-   typedef unsigned short spx_uint16_t;
-   typedef int spx_int32_t;
-   typedef unsigned int spx_uint32_t;
+#define PUSH(stack, size, type)                                                                                        \
+    (VALGRIND_MAKE_NOACCESS(stack, 1000), ALIGN((stack), sizeof(type)),                                                \
+     VALGRIND_MAKE_WRITABLE(stack, ((size) * sizeof(type))), (stack) += ((size) * sizeof(type)),                       \
+     (type *)((stack) - ((size) * sizeof(type))))
 
 #else
 
-#  include <speex/speex_config_types.h>
+#define ALIGN(stack, size) ((stack) += ((size) - (long)(stack)) & ((size) - 1))
+
+#define PUSH(stack, size, type)                                                                                        \
+    (ALIGN((stack), sizeof(type)), (stack) += ((size) * sizeof(type)), (type *)((stack) - ((size) * sizeof(type))))
 
 #endif
 
+#if defined(VAR_ARRAYS)
+#define VARDECL(var)
+#define ALLOC(var, size, type) type var[size]
+#elif defined(USE_ALLOCA)
+#define VARDECL(var) var
+#define ALLOC(var, size, type) var = alloca(sizeof(type) * (size))
+#else
+#define VARDECL(var) var
+#define ALLOC(var, size, type) var = PUSH(stack, size, type)
+#endif
+
+#endif
