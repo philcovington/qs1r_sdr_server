@@ -18,3 +18,7 @@ headers/config.h
 *.o
 *.exe
 *.out
+
+CMakeCache.txt
+CMakeFiles/
+

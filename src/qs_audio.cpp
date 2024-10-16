@@ -2,6 +2,7 @@
 #include "../headers/qs1rserver.h"
 #include "../headers/qs_globals.h"
 #include "../headers/qs_dataproc.h"
+#include "../headers/debugloggerclass.h"
 
 QsAudio ::QsAudio() : p_rta(new RtAudio()), stop_stream_request(0) {}
 
@@ -16,8 +17,7 @@ bool QsAudio ::initAudio(int frames, double sample_rate, int in_dev_id, int out_
     unsigned int devcount = p_rta->getDeviceCount();
 
     if (devcount < 1) {
-        qDebug() << "Info: No sound devices found!";
-        QsGlobal::g_server->setStatusText("Info: No sound devices found!");
+        _debug << "Info: No sound devices found!";        
         return ok;
     }
 
@@ -25,16 +25,16 @@ bool QsAudio ::initAudio(int frames, double sample_rate, int in_dev_id, int out_
     rtaInputDeviceMap.clear();
 
     RtAudio::DeviceInfo info;
-    QList<unsigned int> rates;
+    List<unsigned int> rates;
 
     for (unsigned int i = 0; i < devcount; i++) {
         info = p_rta->getDeviceInfo(i);
         if (info.outputChannels > 0) {
-            rtaOutputDeviceMap[i] = QString::fromStdString(info.name);
-            rates = QList<unsigned int>::fromVector(QVector<unsigned int>::fromStdVector(info.sampleRates));
+            rtaOutputDeviceMap[i] = String::fromStdString(info.name);
+            rates = List<unsigned int>::fromVector(QVector<unsigned int>::fromStdVector(info.sampleRates));
         } else if (info.inputChannels > 0) {
-            rtaInputDeviceMap[i] = QString::fromStdString(info.name);
-            rates = QList<unsigned int>::fromVector(QVector<unsigned int>::fromStdVector(info.sampleRates));
+            rtaInputDeviceMap[i] = String::fromStdString(info.name);
+            rates = List<unsigned int>::fromVector(QVector<unsigned int>::fromStdVector(info.sampleRates));
         }
     }
 
@@ -77,23 +77,21 @@ bool QsAudio ::initAudio(int frames, double sample_rate, int in_dev_id, int out_
                               &rta_options);
         }
         m_sample_rate = rate;
-        // qDebug() << "frames: " << frames_;
+        // _debug()() << "frames: " << frames_;
     } catch (RtError &e) {
-        if (QString(e.what()).contains("does not support input")) {
+        if (String(e.what()).contains("does not support input")) {
             try {
                 QsTx::g_qs1e_present = false;
                 p_rta->openStream(&out_rta_parameters, NULL, RTAUDIO_FLOAT32, rate, &frames_, sta_rt_callback, this,
                                   &rta_options);
                 m_sample_rate = rate;
-                QsGlobal::g_server->setStatusText("Audio Error: No valid audio input device. QS1E bypassed.");
+                _debug() << ("Audio Error: No valid audio input device. QS1E bypassed.");
             } catch (RtError &e) {
-                qDebug() << "Audio Error: " + QString(e.what());
-                QsGlobal::g_server->setStatusText("Audio Error: " + QString(e.what()));
+                _debug() << "Audio Error: " + String(e.what());                
                 return ok;
             }
         } else {
-            qDebug() << "Audio Error: " + QString(e.what());
-            QsGlobal::g_server->setStatusText("Audio Error: " + QString(e.what()));
+            _debug() << "Audio Error: " + String(e.what());            
             return ok;
         }
     }
@@ -112,7 +110,7 @@ int QsAudio ::RtCallback(void *outputBuffer, void *inputBuffer, unsigned int nBu
     if (QsGlobal::g_float_rt_ring->readAvail() >= size) {
         QsGlobal::g_float_rt_ring->read((float *)outputBuffer, size);
     } else {
-        QsSpl::Zero((float *)outputBuffer, size);
+        QsDataProc::Zero((float *)outputBuffer, size);
     }
 
     if (QsTx::g_qs1e_present == true) {
@@ -124,10 +122,10 @@ int QsAudio ::RtCallback(void *outputBuffer, void *inputBuffer, unsigned int nBu
     return stop_stream_request;
 }
 
-QStringList QsAudio ::getOutputDevices() {
+StringList QsAudio ::getOutputDevices() {
     unsigned int devcount = p_rta->getDeviceCount();
     RtAudio::DeviceInfo info;
-    QStringList list;
+    StringList list;
 
     list.clear();
 
@@ -138,18 +136,18 @@ QStringList QsAudio ::getOutputDevices() {
         for (unsigned int i = 0; i < devcount; i++) {
             info = p_rta->getDeviceInfo(i);
             if (info.outputChannels > 1) {
-                rtaOutputDeviceMap[i] = QString::fromStdString(info.name);
-                list.append("id: " + QString::number(i) + " -> " + QString::fromStdString(info.name));
+                rtaOutputDeviceMap[i] = String::fromStdString(info.name);
+                list.append("id: " + String::number(i) + " -> " + String::fromStdString(info.name));
             }
         }
     }
     return list;
 }
 
-QStringList QsAudio ::getInputDevices() {
+StringList QsAudio ::getInputDevices() {
     unsigned int devcount = p_rta->getDeviceCount();
     RtAudio::DeviceInfo info;
-    QStringList list;
+    StringList list;
 
     list.clear();
 
@@ -160,30 +158,30 @@ QStringList QsAudio ::getInputDevices() {
         for (unsigned int i = 0; i < devcount; i++) {
             info = p_rta->getDeviceInfo(i);
             if (info.inputChannels > 1) {
-                rtaInputDeviceMap[i] = QString::fromStdString(info.name);
-                list.append("id: " + QString::number(i) + " -> " + QString::fromStdString(info.name));
+                rtaInputDeviceMap[i] = String::fromStdString(info.name);
+                list.append("id: " + String::number(i) + " -> " + String::fromStdString(info.name));
             }
         }
     }
     return list;
 }
 
-bool QsAudio ::isOutputDeviceValid(int id, QString &descr) {
+bool QsAudio ::isOutputDeviceValid(int id, String &descr) {
     bool result = false;
     descr.clear();
     if (rtaOutputDeviceMap.contains(id)) {
         result = true;
-        descr.append(QString(rtaOutputDeviceMap[id]));
+        descr.append(String(rtaOutputDeviceMap[id]));
     }
     return result;
 }
 
-bool QsAudio ::isInputDeviceValid(int id, QString &descr) {
+bool QsAudio ::isInputDeviceValid(int id, String &descr) {
     bool result = false;
     descr.clear();
     if (rtaInputDeviceMap.contains(id)) {
         result = true;
-        descr.append(QString(rtaInputDeviceMap[id]));
+        descr.append(String(rtaInputDeviceMap[id]));
     }
     return result;
 }

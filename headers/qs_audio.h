@@ -2,6 +2,10 @@
 
 #include "../headers/qs_globals.h"
 #include "../headers/qs_rt_audio.h"
+#include "../headers/stringclass.h"
+#include "../headers/stringlistclass.h"
+#include "../headers/mapclass.h"
+#include "../headers/listclass.h"
 
 class QsAudio {
 
@@ -16,8 +20,8 @@ class QsAudio {
         return ((QsAudio *)userData)->RtCallback(outputBuffer, inputBuffer, nBufferFrames, streamTime, status);
     }
 
-    QMap<int, QString> rtaInputDeviceMap;
-    QMap<int, QString> rtaOutputDeviceMap;
+    Map<int, String> rtaInputDeviceMap;
+    Map<int, String> rtaOutputDeviceMap;
     double m_sample_rate;
     int stop_stream_request;
 
@@ -37,12 +41,12 @@ class QsAudio {
             p_rta->stopStream();
     }
 
-    QStringList getOutputDevices();
-    QStringList getInputDevices();
+    StringList getOutputDevices();
+    StringList getInputDevices();
 
     int getDefaultOutputDevice();
     int getDefaultInputDevice();
 
-    bool isOutputDeviceValid(int id, QString &descr);
-    bool isInputDeviceValid(int id, QString &descr);
+    bool isOutputDeviceValid(int id, String &descr);
+    bool isInputDeviceValid(int id, String &descr);
 };
