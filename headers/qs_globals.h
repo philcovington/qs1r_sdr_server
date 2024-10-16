@@ -37,6 +37,9 @@
 
 #include <memory>
 
+const double ONE_PI = 3.1415926535897932384626433832795;
+const double TWO_PI = 6.283185307179586476925286766559;
+
 extern WaitCondition WC_NEED_MORE_DATA;
 extern WaitCondition WC_FILE_FIFO_WRITE;
 
