@@ -1,3 +1,38 @@
+/**
+ * @file QsIOLib_LibUSB.h
+ * @brief A class for interfacing with USB devices using the LibUSB library.
+ *
+ * The QsIOLib_LibUSB class provides an interface for communicating with USB devices,
+ * particularly those adhering to the QS1R specifications. It encapsulates the LibUSB
+ * functionalities required for device enumeration, data transfer, and firmware management.
+ *
+ * Features:
+ * - Support for USB device discovery and communication.
+ * - Functions to read from and write to various endpoints of the USB device.
+ * - Capabilities for loading firmware and FPGA bitstreams into the device.
+ * - Methods for I2C and EEPROM communication.
+ * - Control over device resets and other control messages.
+ * - Utilities for obtaining device class and subclass strings, facilitating better
+ *   understanding of device capabilities.
+ *
+ * Usage:
+ * To utilize the QsIOLib_LibUSB class, instantiate the class and call its methods
+ * to interact with USB devices. For example:
+ *
+ *   QsIOLib_LibUSB usbInterface;
+ *   usbInterface.findDevices(); // Find and enumerate devices
+ *
+ *   unsigned char buffer[64];
+ *   usbInterface.readEP1(buffer, sizeof(buffer)); // Read data from endpoint 1
+ *
+ * The class is designed for flexibility and ease of use in applications that require
+ * communication with USB devices, such as DSP systems, data acquisition systems, and
+ * custom hardware interfacing.
+ *
+ * Author: [Philip A Covington]
+ * Date: [2024-10-16]
+ */
+
 #pragma once
 
 #ifndef QSIO_H

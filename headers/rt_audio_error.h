@@ -1,3 +1,32 @@
+/*
+ * File: RtError.h
+ * Brief: Custom exception class for handling RtAudio-related errors.
+ * 
+ * This header defines the `RtError` class, a custom exception used to handle 
+ * various error types within the RtAudio library. The class extends `std::exception` 
+ * and provides additional functionality for categorizing and retrieving error 
+ * messages.
+ *
+ * Features:
+ * - Supports multiple error types, including device, memory, system, and thread errors.
+ * - Provides a method to print error messages to `stderr`.
+ * - Includes functions to retrieve error type, error message string, and a C-style 
+ *   error message (`what()`).
+ *
+ * Usage:
+ * Throw an `RtError` object with a specific error message and type when an audio 
+ * operation fails. The error can be caught and handled, and the message can be printed 
+ * or logged using `printMessage()`. Use `getType()` and `getMessage()` to examine 
+ * the error details programmatically.
+ *
+ * Notes:
+ * - The error type defaults to `UNSPECIFIED` if not provided.
+ * - The `what()` method provides compatibility with standard exception handling.
+ * 
+ * Author: Philip A Covington
+ * Date: 2024-10-16
+ */
+
 #pragma once
 
 #include <exception>

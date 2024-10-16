@@ -4,7 +4,8 @@
 #define VERSION "20241016"
 
 // Define this to enable debug messages
-#define DEBUG_MODE 1 // Set to 1 to enable, 0 to disable
+#define DEBUG_MODE 1  // Set to 1 to enable, 0 to disable
 
 // If multiple QS1Rs, which index?
 #define QS1R_IDX 0
+

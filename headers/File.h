@@ -1,3 +1,44 @@
+/**
+ * @file File.h
+ * @brief A simple file handling utility for binary file operations.
+ *
+ * The File class provides a convenient interface for reading binary files
+ * in C++. It manages file streams using an ifstream object and offers methods
+ * to open files, check their validity, read data into a buffer, and close
+ * the file when finished.
+ *
+ * Features:
+ * - Constructor to initialize the file with a specified filename.
+ * - Method to open a file with a specified mode (defaulting to binary read).
+ * - Validity check to ensure the file is successfully opened.
+ * - Method to read a specified number of bytes into a vector, returning the
+ *   actual bytes read.
+ * - Method to check if the end of the file has been reached.
+ * - Destructor that ensures the file is closed properly when the object is 
+ *   destroyed.
+ *
+ * Usage:
+ * To use this class, create an instance of File with the desired filename.
+ * You can then call the methods to perform file operations:
+ *
+ *   File myFile("example.bin");
+ *   if (myFile.isValid()) {
+ *       std::vector<char> data = myFile.read(100);
+ *       // Process data...
+ *   }
+ *
+ * The class automatically manages the file's lifecycle, closing the file 
+ * stream if it is still open upon destruction.
+ *
+ * @note This class is intended for basic file handling and may need to be
+ * extended for more complex file operations or error handling.
+ * 
+ * I tried to provide the same functionalty as Qt's QFile class.
+ *
+ * Author: [Philip A Covington]
+ * Date: [2024-10-16]
+ */
+
 #pragma once
 
 #include <fstream>

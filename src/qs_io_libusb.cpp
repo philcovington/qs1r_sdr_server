@@ -6,13 +6,9 @@
 #include "../headers/ByteArray.h"
 #include "../headers/File.h"
 #include "../headers/TextStream.h"
-#include "../headers/debug.h"
+#include "../headers/debugloggerclass.h"
 #include "../headers/qs_io_libusb.h"
 #include <libusb-1.0/libusb.h>
-
-#define LOG(msg)                                                                                                       \
-    std::cerr << msg;                                                                                                  \
-    logger.end();
 
 std::string QsIOLib_LibUSB ::printVectorInHex(const std::vector<uint8_t> &ba) {
     std::stringstream ss;
@@ -56,7 +52,7 @@ QsIOLib_LibUSB ::QsIOLib_LibUSB() {
     int result = libusb_init(&context);
 
     if (result != LIBUSB_SUCCESS) {
-        std::cerr << "Libusb init failed!" << std::endl;
+        _debug() << "Libusb init failed!";
     }
 }
 
@@ -72,7 +68,7 @@ int QsIOLib_LibUSB ::open(libusb_device *dev) {
     close();
 
     if (!dev) {
-        std::cerr << "Libusb Device is nullptr! " << std::endl;
+        _debug() << "Libusb Device is nullptr! ";
         return -1;
     }
 
@@ -83,44 +79,44 @@ int QsIOLib_LibUSB ::open(libusb_device *dev) {
     if (hdev) {
         if (result = libusb_set_configuration(hdev, 1);
             result != LIBUSB_SUCCESS && result != LIBUSB_TRANSFER_COMPLETED) {
-            std::cerr << "Could not set configuration 1: " << libusb_error_name(result) << std::endl;
+            _debug() << "Could not set configuration 1: " << libusb_error_name(result);
             return -1;
         }
         if (result = libusb_claim_interface(hdev, 0); result != LIBUSB_SUCCESS && result != LIBUSB_TRANSFER_COMPLETED) {
-            std::cerr << "Could not claim interface 0: " << libusb_error_name(result) << std::endl;
+            _debug() << "Could not claim interface 0: " << libusb_error_name(result);
             return -1;
         }
         if (result = libusb_set_interface_alt_setting(hdev, 0, 0);
             result != LIBUSB_SUCCESS && result != LIBUSB_TRANSFER_COMPLETED) {
-            std::cerr << "Could not set alt interface 0: " << libusb_error_name(result) << std::endl;
+            _debug() << "Could not set alt interface 0: " << libusb_error_name(result);
             return -1;
         }
         if (result = libusb_clear_halt(hdev, FX2_EP1_IN);
             result != LIBUSB_SUCCESS && result != LIBUSB_TRANSFER_COMPLETED) {
-            std::cerr << "Could not clear halt on EP1_IN: " << libusb_error_name(result) << std::endl;
+            _debug() << "Could not clear halt on EP1_IN: " << libusb_error_name(result);
         }
         if (result = libusb_clear_halt(hdev, FX2_EP1_OUT);
             result != LIBUSB_SUCCESS && result != LIBUSB_TRANSFER_COMPLETED) {
-            std::cerr << "Could not clear halt on EP1_OUT: " << libusb_error_name(result) << std::endl;
+            _debug() << "Could not clear halt on EP1_OUT: " << libusb_error_name(result);
         }
         if (result = libusb_clear_halt(hdev, FX2_EP2);
             result != LIBUSB_SUCCESS && result != LIBUSB_TRANSFER_COMPLETED) {
-            std::cerr << "Could not clear halt on EP2: " << libusb_error_name(result) << std::endl;
+            _debug() << "Could not clear halt on EP2: " << libusb_error_name(result);
         }
         if (result = libusb_clear_halt(hdev, FX2_EP4);
             result != LIBUSB_SUCCESS && result != LIBUSB_TRANSFER_COMPLETED) {
-            std::cerr << "Could not clear halt on EP4: " << libusb_error_name(result) << std::endl;
+            _debug() << "Could not clear halt on EP4: " << libusb_error_name(result);
         }
         if (result = libusb_clear_halt(hdev, FX2_EP6);
             result != LIBUSB_SUCCESS && result != LIBUSB_TRANSFER_COMPLETED) {
-            std::cerr << "Could not clear halt on EP6: " << libusb_error_name(result) << std::endl;
+            _debug() << "Could not clear halt on EP6: " << libusb_error_name(result);
         }
         if (result = libusb_clear_halt(hdev, FX2_EP8);
             result != LIBUSB_SUCCESS && result != LIBUSB_TRANSFER_COMPLETED) {
-            std::cerr << "Could not clear halt on EP8: " << libusb_error_name(result) << std::endl;
+            _debug() << "Could not clear halt on EP8: " << libusb_error_name(result);
         }
     } else {
-        std::cerr << "Libusb device handle is nullptr! " << libusb_error_name(result) << std::endl;
+        _debug() << "Libusb device handle is nullptr! " << libusb_error_name(result);
         return -1;
     }
     return 0;
@@ -147,7 +143,7 @@ std::string QsIOLib_LibUSB ::get_string_descriptor(libusb_device_handle *device_
     int result = libusb_get_string_descriptor_ascii(device_handle, index, buffer, sizeof(buffer));
 
     if (result < 0) {
-        std::cerr << "Error getting string descriptor: " << libusb_error_name(result) << std::endl;
+        _debug() << "Error getting string descriptor: " << libusb_error_name(result);
         return "";
     }
     return std::string(reinterpret_cast<char *>(buffer), result);
@@ -161,7 +157,7 @@ int QsIOLib_LibUSB ::findDevices(bool detailed) {
     ssize_t cnt = libusb_get_device_list(context, &list);
 
     if (cnt < 0) {
-        std::cerr << "Error finding usb devices!" << std::endl;
+        _debug() << "Error finding usb devices!";
         return -1;
     }
 
@@ -182,8 +178,8 @@ int QsIOLib_LibUSB ::findDevices(bool detailed) {
                 if (desc.iManufacturer > 0) {
                     int ret = libusb_get_string_descriptor_ascii(handle, desc.iManufacturer, buffer, sizeof(buffer));
                     if (ret < 0) {
-                        std::cerr << "    Unable to retrieve manufacturer string: " << ret << libusb_error_name(ret)
-                                  << std::endl;
+                        _debug() << "    Unable to retrieve manufacturer string: " << ret << libusb_error_name(ret)
+                                 ;
                     }
                 } else {
                     const char *unknown = "No manufacturer data...";
@@ -196,8 +192,8 @@ int QsIOLib_LibUSB ::findDevices(bool detailed) {
                 if (desc.iProduct > 0) {
                     int ret = libusb_get_string_descriptor_ascii(handle, desc.iProduct, buffer, sizeof(buffer));
                     if (ret < 0) {
-                        std::cerr << "    Unable to retrieve product string: " << ret << libusb_error_name(ret)
-                                  << std::endl;
+                        _debug() << "    Unable to retrieve product string: " << ret << libusb_error_name(ret)
+                                 ;
                     }
                 } else {
                     const char *unknown = "No product string...";
@@ -210,8 +206,8 @@ int QsIOLib_LibUSB ::findDevices(bool detailed) {
                 if (desc.iSerialNumber > 0) {
                     int ret = libusb_get_string_descriptor_ascii(handle, desc.iSerialNumber, buffer, sizeof(buffer));
                     if (ret < 0) {
-                        std::cerr << "    Unable to retrieve serial string: " << ret << libusb_error_name(ret)
-                                  << std::endl;
+                        _debug() << "    Unable to retrieve serial string: " << ret << libusb_error_name(ret)
+                                 ;
                     }
                 } else {
                     const char *unknown = "No serial string...";
@@ -221,12 +217,12 @@ int QsIOLib_LibUSB ::findDevices(bool detailed) {
                 serial_str = (reinterpret_cast<char *>(buffer));
                 libusb_close(handle);
             } else {
-                std::cerr << "Unable to open device: " << libusb_error_name(result) << std::endl;
+                _debug() << "Unable to open device: " << libusb_error_name(result);
                 continue;
             }
 
             if (detailed) {
-                std::cout << "Device " << i + 1 << ": "
+                _debug() << "Device " << i + 1 << ": "
                           << "Vendor ID: " << std::hex << desc.idVendor << ", Product ID: " << desc.idProduct
                           << ", Class: " << getDeviceClassString(desc.bDeviceClass)
                           << ", Subclass: " << getDeviceSubClassString(desc.bDeviceClass, desc.bDeviceSubClass)
@@ -237,15 +233,15 @@ int QsIOLib_LibUSB ::findDevices(bool detailed) {
                           << ", USB Ver: " << static_cast<int>(desc.bcdUSB)
                           << ", Release Number: " << static_cast<int>(desc.bcdDevice)
                           << ", Manufacturer: " << manufacturer_str << ", Product: " << product_str
-                          << ", Serial: " << serial_str << std::dec << std::endl;
+                          << ", Serial: " << serial_str << std::dec;
             } else {
-                std::cout << "Device " << i + 1 << ": "
+                _debug() << "Device " << i + 1 << ": "
                           << "Vendor ID: " << std::hex << desc.idVendor << ", Product ID: " << desc.idProduct
-                          << ", Class: " << getDeviceClassString(desc.bDeviceClass) << std::dec << std::endl;
+                          << ", Class: " << getDeviceClassString(desc.bDeviceClass) << std::dec;
             }
 
         } else {
-            std::cerr << "Error: " << libusb_error_name(result) << std::endl;
+            _debug() << "Error: " << libusb_error_name(result);
             return -1;
         }
     }
@@ -261,7 +257,7 @@ libusb_device *QsIOLib_LibUSB ::findQsDevice(uint16_t idVendor, uint16_t idProdu
     ssize_t cnt = libusb_get_device_list(context, &list);
 
     if (cnt < 0) {
-        std::cerr << "Error finding usb devices!" << std::endl;
+        _debug() << "Error finding usb devices!";
         return NULL;
     }
 
@@ -273,8 +269,8 @@ libusb_device *QsIOLib_LibUSB ::findQsDevice(uint16_t idVendor, uint16_t idProdu
         if (libusb_get_device_descriptor(device, &desc) == 0) {
             if ((desc.idVendor == QS1R_VID && desc.idProduct == QS1R_PID) ||
                 (desc.idVendor == QS1R_MISSING_EEPROM_VID && desc.idProduct == QS1R_MISSING_EEPROM_PID)) {
-                debugMessage << "Found VID: " << std::hex << desc.idVendor << ", PID: " << std::hex << desc.idProduct
-                             << std::dec << std::endl;
+                _debug() << "Found VID: " << std::hex << desc.idVendor << ", PID: " << std::hex << desc.idProduct
+                             << std::dec;
                 device_list_qs1r.push_back(device);
             }
         }
@@ -302,7 +298,7 @@ int QsIOLib_LibUSB ::qs1rDeviceCount() { return QsIOLib_LibUSB ::qs1r_device_cou
 
 int QsIOLib_LibUSB ::loadFirmware(std::string filename) {
     if (!dev_was_found) {
-        std::cerr << "Need to call findDevice first." << std::endl;
+        _debug() << "Need to call findDevice first.";
         return -1;
     }
 
@@ -310,14 +306,14 @@ int QsIOLib_LibUSB ::loadFirmware(std::string filename) {
 
     u_char value = 1;
     if (!write_cpu_ram(FX2_RAM_RESET, &value, 1)) {
-        std::cerr << "Could not put CPU in reset." << std::endl;
+        _debug() << "Could not put CPU in reset.";
         return -1;
     }
 
     File file(filename);
 
     if (!file.isValid()) {
-        std::cerr << "loadFirmware: filename does not exist." << std::endl;
+        _debug() << "loadFirmware: filename does not exist.";
         return -1;
     }
 
@@ -330,7 +326,7 @@ int QsIOLib_LibUSB ::loadFirmware(std::string filename) {
 
         if (str.substr(0, 1) != ":") {
             file.close();
-            std::cerr << "loadFirmware: error, firmware file appears to be corrupted" << std::endl;
+            _debug() << "loadFirmware: error, firmware file appears to be corrupted";
             return -1;
         }
 
@@ -351,22 +347,22 @@ int QsIOLib_LibUSB ::loadFirmware(std::string filename) {
                 }
 
                 if (!write_cpu_ram(faddr, reinterpret_cast<u_char *>(ba.data()), flength)) {
-                    std::cerr << "loadFirmware: write failed." << std::endl;
+                    _debug() << "loadFirmware: write failed.";
                     file.close();
                     return -1;
                 }
             } else if (type == 0x01) {
                 break;
             } else if (type == 0x02) {
-                std::cerr << "loadFirmware: extended address not supported." << std::endl;
+                _debug() << "loadFirmware: extended address not supported.";
                 file.close();
                 return -1;
             }
         } catch (const std::invalid_argument &e) {
-            std::cerr << "loadFirmware: error in string conversion." << std::endl;
+            _debug() << "loadFirmware: error in string conversion.";
             return -1;
         } catch (const std::out_of_range &e) {
-            std::cerr << "loadFirmware: value out of range." << std::endl;
+            _debug() << "loadFirmware: value out of range.";
             return -1;
         }
         return 0;
@@ -377,15 +373,15 @@ int QsIOLib_LibUSB ::loadFirmware(std::string filename) {
 
 int QsIOLib_LibUSB ::loadFirmware(const char *firmware) {
     if (!dev_was_found) {
-        std::cerr << "Need to call findDevice first." << std::endl;
+        _debug() << "Need to call findDevice first.";
         return -1;
     }
 
     // PUT CPU IN RESET
     if (cpuResetControl(true) == 0) {
-        std::cout << "CPU reset command was sucessful!" << std::endl;
+        _debug() << "CPU reset command was sucessful!";
     } else {
-        std::cout << "CPU reset command failed!" << std::endl;
+        _debug() << "CPU reset command failed!";
         return -1;
     }
 
@@ -393,16 +389,16 @@ int QsIOLib_LibUSB ::loadFirmware(const char *firmware) {
     std::istringstream in(firmware);
 
     if (!in.good()) {
-        std::cerr << "Input stream initialization failed." << std::endl;
+        _debug() << "Input stream initialization failed.";
         return -1;
     }
 
     std::string str;
 
     while (std::getline(in, str)) { // Read line by line from the stringstream
-        debugMessage << "Read line: [" << str << "]" << std::endl;
+        _debug() << "Read line: [" << str << "]";
         if (str.substr(0, 1) != ":") {
-            std::cerr << "loadFirmware: error, firmware data appears to be corrupted" << std::endl;
+            _debug() << "loadFirmware: error, firmware data appears to be corrupted";
             return -1;
         }
 
@@ -417,18 +413,18 @@ int QsIOLib_LibUSB ::loadFirmware(const char *firmware) {
 
             uint8_t checksum_calc = calculateChecksum(str);
 
-            debugMessage << "flength: 0x" << std::hex << flength << std::endl;
-            debugMessage << "faddr: 0x" << std::hex << faddr << std::endl;
-            debugMessage << "type: 0x" << std::hex << type << std::endl;
-            debugMessage << "checksum: 0x" << std::hex << checksum << std::endl;
-            debugMessage << "Calculated checksum: 0x" << std::hex << std::uppercase << static_cast<int>(checksum_calc)
-                         << std::endl;
+            _debug() << "flength: 0x" << std::hex << flength;
+            _debug() << "faddr: 0x" << std::hex << faddr;
+            _debug() << "type: 0x" << std::hex << type;
+            _debug() << "checksum: 0x" << std::hex << checksum;
+            _debug() << "Calculated checksum: 0x" << std::hex << std::uppercase << static_cast<int>(checksum_calc)
+                        ;
 
             if (checksum != checksum_calc) {
-                std::cerr << "Checksum does not match!" << std::endl;
+                _debug() << "Checksum does not match!";
                 return -1;
             } else {
-                debugMessage << "checksum ok" << std::endl;
+                _debug() << "checksum ok";
             }
 
             if (type == 0) {
@@ -439,37 +435,37 @@ int QsIOLib_LibUSB ::loadFirmware(const char *firmware) {
                     ba.push_back(static_cast<uint8_t>(std::stoi(sstr.substr(i, 2), nullptr, 16)));
                 }
 
-                debugMessage << "Data: " << printVectorInHex(ba) << std::endl;
+                _debug() << "Data: " << printVectorInHex(ba);
 
                 int result = write_cpu_ram(faddr, reinterpret_cast<u_char *>(ba.data()), flength);
 
                 if (result < 0) {
-                    std::cerr << "loadFirmware: write failed." << libusb_error_name(result) << std::endl;
+                    _debug() << "loadFirmware: write failed." << libusb_error_name(result);
                     return -1;
                 } else {
-                    debugMessage << "Write ram: " << result << std::endl;
+                    _debug() << "Write ram: " << result;
                 }
 
             } else if (type == 0x01) {
                 break; // End of firmware data
             } else if (type == 0x02) {
-                std::cerr << "loadFirmware: extended address not supported." << std::endl;
+                _debug() << "loadFirmware: extended address not supported.";
                 return -1;
             }
         } catch (const std::invalid_argument &e) {
-            std::cerr << "loadFirmware: error in string conversion." << std::endl;
+            _debug() << "loadFirmware: error in string conversion.";
             return -1;
         } catch (const std::out_of_range &e) {
-            std::cerr << "loadFirmware: value out of range." << std::endl;
+            _debug() << "loadFirmware: value out of range.";
             return -1;
         }
     }
 
     // TAKE CPU OUT OF RESET
     if (cpuResetControl(false) == 0) {
-        std::cout << "CPU run command was sucessful!" << std::endl;
+        _debug() << "CPU run command was sucessful!";
     } else {
-        std::cout << "CPU run command failed!" << std::endl;
+        _debug() << "CPU run command failed!";
         return -1;
     }
 
@@ -484,17 +480,17 @@ int QsIOLib_LibUSB ::cpuResetControl(bool reset) {
 
     if (result <= 0) {
         if (reset) {
-            std::cerr << "Reset CPU failed: " << libusb_error_name(result) << std::endl;
+            _debug() << "Reset CPU failed: " << libusb_error_name(result);
             return -1;
         } else {
-            std::cerr << "Run CPU failed: " << libusb_error_name(result) << std::endl;
+            _debug() << "Run CPU failed: " << libusb_error_name(result);
             return -1;
         }
     } else {
         if (reset) {
-            debugMessage << "CPU is in reset: " << result << std::endl;
+            _debug() << "CPU is in reset: " << result;
         } else {
-            debugMessage << "Run CPU OK: " << result << std::endl;
+            _debug() << "Run CPU OK: " << result;
         }
     }
     return 0;
@@ -502,30 +498,30 @@ int QsIOLib_LibUSB ::cpuResetControl(bool reset) {
 
 int QsIOLib_LibUSB ::loadFpga(std::string filename) {
     if (!dev_was_found) {
-        std::cerr << "Need to call findDevice first." << std::endl;
+        _debug() << "Need to call findDevice first.";
         return -1;
     }
 
     File file(filename);
 
     if (!file.isValid()) {
-        std::cerr << "loadFpga: filename does not exist." << std::endl;
+        _debug() << "loadFpga: filename does not exist.";
         return -1;
     }
 
     unsigned long count = 0;
 
-    std::cerr << "loadFPGA: Sending FL_BEGIN..." << std::endl;
+    _debug() << "loadFPGA: Sending FL_BEGIN...";
 
     count = libusb_control_transfer(hdev, VRT_VENDOR_OUT, VRQ_FPGA_LOAD, 0, FL_BEGIN, 0, 0, USB_TIMEOUT_CONTROL);
 
     if (count != 0) {
         file.close();
-        std::cerr << "loadFpga: failed in FL_BEGIN load stage" << std::endl;
+        _debug() << "loadFpga: failed in FL_BEGIN load stage";
         return -1;
     }
 
-    std::cerr << "loadFPGA: Transferring FPGA Config..." << std::endl;
+    _debug() << "loadFPGA: Transferring FPGA Config...";
 
     while (!file.atEnd()) {
         std::vector<char> ba = file.read(MAX_EP4_PACKET_SIZE);
@@ -533,18 +529,18 @@ int QsIOLib_LibUSB ::loadFpga(std::string filename) {
         int len = writeEP4((unsigned char *)ba.data(), ba.size());
         if (len != ba.size()) {
             file.close();
-            std::cerr << "loadFpga: failed in FL_XFER load stage" << std::endl;
+            _debug() << "loadFpga: failed in FL_XFER load stage";
             break;
         }
     }
 
-    std::cerr << "loadFPGA: Sending FL_END..." << std::endl;
+    _debug() << "loadFPGA: Sending FL_END...";
 
     count = libusb_control_transfer(hdev, VRT_VENDOR_OUT, VRQ_FPGA_LOAD, 0, FL_END, 0, 0, USB_TIMEOUT_CONTROL);
 
     if (count != 0) {
         file.close();
-        std::cerr << "loadFpga: failed in FL_END load stage" << std::endl;
+        _debug() << "loadFpga: failed in FL_END load stage";
         return -1;
     }
 
@@ -555,28 +551,28 @@ int QsIOLib_LibUSB ::loadFpga(std::string filename) {
 
 int QsIOLib_LibUSB ::loadFpgaFromBitstream(const unsigned char *bitstream, unsigned int bitstream_size) {
     if (!dev_was_found) {
-        std::cerr << "Need to call findDevice first." << std::endl;
+        _debug() << "Need to call findDevice first.";
         return -1;
     }
 
     if (!hdev) {
-        std::cerr << "Device handle is nullptr" << std::endl;
+        _debug() << "Device handle is nullptr";
         return -1;
     }
 
     unsigned long count = 0;
 
     // Send FL_BEGIN signal
-    std::cerr << "loadFPGA: Sending FL_BEGIN..." << std::endl;
+    _debug() << "loadFPGA: Sending FL_BEGIN...";
     count = libusb_control_transfer(hdev, VRT_VENDOR_OUT, VRQ_FPGA_LOAD, 0, FL_BEGIN, nullptr, 0, USB_TIMEOUT_CONTROL);
 
     if (count != 0) {
-        std::cerr << "loadFpga: failed in FL_BEGIN load stage" << std::endl;
+        _debug() << "loadFpga: failed in FL_BEGIN load stage";
         return -1;
     }
 
     // Send the FPGA bitstream data in chunks
-    std::cerr << "loadFPGA: Transferring FPGA Config..." << std::endl;
+    _debug() << "loadFPGA: Transferring FPGA Config...";
 
     const unsigned char *bitstream_ptr = bitstream;
     unsigned int remaining_bytes = bitstream_size;
@@ -586,7 +582,7 @@ int QsIOLib_LibUSB ::loadFpgaFromBitstream(const unsigned char *bitstream, unsig
 
         int len = writeEP4(const_cast<unsigned char *>(bitstream_ptr), chunk_size);
         if (len != chunk_size) {
-            std::cerr << "loadFpga: failed in FL_XFER load stage" << std::endl;
+            _debug() << "loadFpga: failed in FL_XFER load stage";
             return -1;
         }
 
@@ -596,11 +592,11 @@ int QsIOLib_LibUSB ::loadFpgaFromBitstream(const unsigned char *bitstream, unsig
     }
 
     // Send FL_END signal
-    std::cerr << "loadFPGA: Sending FL_END..." << std::endl;
+    _debug() << "loadFPGA: Sending FL_END...";
     count = libusb_control_transfer(hdev, VRT_VENDOR_OUT, VRQ_FPGA_LOAD, 0, FL_END, nullptr, 0, USB_TIMEOUT_CONTROL);
 
     if (count != 0) {
-        std::cerr << "loadFpga: failed in FL_END load stage" << std::endl;
+        _debug() << "loadFpga: failed in FL_END load stage";
         return -1;
     }
 
@@ -614,12 +610,12 @@ int QsIOLib_LibUSB ::sendControlMessage(uint8_t request_type, uint8_t request, u
 
 int QsIOLib_LibUSB ::readFwSn() {
     if (!dev_was_found) {
-        std::cerr << "Need to call findDevice first." << std::endl;
+        _debug() << "Need to call findDevice first.";
         return -1;
     }
 
     if (!hdev) {
-        std::cerr << "Device handle is nullptr" << std::endl;
+        _debug() << "Device handle is nullptr";
         return -1;
     }
 
@@ -631,7 +627,7 @@ int QsIOLib_LibUSB ::readFwSn() {
     count = libusb_control_transfer(hdev, VRT_VENDOR_IN, VRQ_SN_READ, 0, 0, buf, sizeof(buf), USB_TIMEOUT_CONTROL);
 
     if (count != sizeof(buf)) {
-        std::cerr << "readFwSn: control transfer failed: " << libusb_error_name(count) << std::endl;
+        _debug() << "readFwSn: control transfer failed: " << libusb_error_name(count);
         return -1;
     }
 
@@ -640,7 +636,7 @@ int QsIOLib_LibUSB ::readFwSn() {
 
 int QsIOLib_LibUSB ::read(unsigned int ep, unsigned char *buffer, unsigned int length, unsigned int timeout) {
     if (!dev_was_found) {
-        std::cerr << "Need to call findDevice first." << std::endl;
+        _debug() << "Need to call findDevice first.";
         return -1;
     }
 
@@ -651,7 +647,7 @@ int QsIOLib_LibUSB ::read(unsigned int ep, unsigned char *buffer, unsigned int l
     else if (ep == 8)
         chanreg = FX2_EP8;
     else {
-        std::cerr << "read: ep is invalid... (6/8 is valid)" << std::endl;
+        _debug() << "read: ep is invalid... (6/8 is valid)";
         return -1;
     }
 
@@ -659,7 +655,7 @@ int QsIOLib_LibUSB ::read(unsigned int ep, unsigned char *buffer, unsigned int l
     int result = libusb_bulk_transfer(hdev, chanreg, (u_char *)buffer, length, &transfered, timeout);
 
     if (result != LIBUSB_SUCCESS) {
-        std::cerr << "read: could not read pipe." << std::endl;
+        _debug() << "read: could not read pipe.";
         return -1;
     }
 
@@ -668,7 +664,7 @@ int QsIOLib_LibUSB ::read(unsigned int ep, unsigned char *buffer, unsigned int l
 
 int QsIOLib_LibUSB ::write(unsigned int ep, unsigned char *buffer, unsigned int length, unsigned int timeout) {
     if (!dev_was_found) {
-        std::cerr << "Need to call findDevice first." << std::endl;
+        _debug() << "Need to call findDevice first.";
         return -1;
     }
 
@@ -680,7 +676,7 @@ int QsIOLib_LibUSB ::write(unsigned int ep, unsigned char *buffer, unsigned int 
     else if (ep == 4)
         chanreg = FX2_EP4;
     else {
-        std::cerr << "write: ep is invalid... (2/4 is valid)" << std::endl;
+        _debug() << "write: ep is invalid... (2/4 is valid)";
         return -1;
     }
 
@@ -688,7 +684,7 @@ int QsIOLib_LibUSB ::write(unsigned int ep, unsigned char *buffer, unsigned int 
     int result = libusb_bulk_transfer(hdev, chanreg, (u_char *)buffer, length, &transfered, timeout);
 
     if (result != LIBUSB_SUCCESS) {
-        std::cerr << "write: could not write pipe" << std::endl;
+        _debug() << "write: could not write pipe";
         return -1;
     }
 
@@ -703,9 +699,9 @@ int QsIOLib_LibUSB ::readEP1(unsigned char *buffer, unsigned int length, unsigne
     int result = libusb_bulk_transfer(hdev, FX2_EP1_IN, (u_char *)buffer, length, &transfered, timeout);
 
     if (result != LIBUSB_SUCCESS) {
-        // std::cerr <<"read: could not read EP1.";
+        // _debug() <<"read: could not read EP1.";
         if (libusb_clear_halt(hdev, FX2_EP1_IN) != LIBUSB_SUCCESS) {
-            std::cerr << "Could not clear halt on EP1" << std::endl;
+            _debug() << "Could not clear halt on EP1";
         }
         return -1;
     }
@@ -720,9 +716,9 @@ int QsIOLib_LibUSB ::writeEP1(unsigned char *buffer, unsigned int length, unsign
     int result = libusb_bulk_transfer(hdev, FX2_EP1_OUT, buffer, length, &transfered, timeout);
 
     if (result != LIBUSB_SUCCESS) {
-        // std::cerr <<"write: could not write EP1";
+        // _debug() <<"write: could not write EP1";
         if (libusb_clear_halt(hdev, FX2_EP1_OUT) != LIBUSB_SUCCESS) {
-            std::cerr << "Could not clear halt on EP1" << std::endl;
+            _debug() << "Could not clear halt on EP1";
         }
         return -1;
     }
@@ -737,9 +733,9 @@ int QsIOLib_LibUSB ::writeEP2(unsigned char *buffer, unsigned int length, unsign
     int result = libusb_bulk_transfer(hdev, FX2_EP2, buffer, length, &transfered, timeout);
 
     if (result != LIBUSB_SUCCESS) {
-        std::cerr << "write: could not write EP2" << std::endl;
+        _debug() << "write: could not write EP2";
         if (libusb_clear_halt(hdev, FX2_EP2) != LIBUSB_SUCCESS) {
-            std::cerr << "Could not clear halt on EP2" << std::endl;
+            _debug() << "Could not clear halt on EP2";
         }
         return -1;
     }
@@ -754,9 +750,9 @@ int QsIOLib_LibUSB ::writeEP4(unsigned char *buffer, unsigned int length, unsign
     int result = libusb_bulk_transfer(hdev, FX2_EP4, buffer, length, &transfered, timeout);
 
     if (result != LIBUSB_SUCCESS) {
-        std::cerr << "write: could not write EP4" << std::endl;
+        _debug() << "write: could not write EP4";
         if (libusb_clear_halt(hdev, FX2_EP4) != LIBUSB_SUCCESS) {
-            std::cerr << "Could not clear halt on EP4" << std::endl;
+            _debug() << "Could not clear halt on EP4";
         }
         return -1;
     }
@@ -771,9 +767,9 @@ int QsIOLib_LibUSB ::readEP6(unsigned char *buffer, unsigned int length, unsigne
     int result = libusb_bulk_transfer(hdev, FX2_EP6, (u_char *)buffer, length, &transfered, timeout);
 
     if (result != LIBUSB_SUCCESS) {
-        std::cerr << "read: could not read EP6." << std::endl;
+        _debug() << "read: could not read EP6.";
         if (libusb_clear_halt(hdev, FX2_EP6) != 0) {
-            std::cerr << "Could not clear halt on EP6" << std::endl;
+            _debug() << "Could not clear halt on EP6";
             return -1;
         }
         return -1;
@@ -789,9 +785,9 @@ int QsIOLib_LibUSB ::readEP8(unsigned char *buffer, unsigned int length, unsigne
     int result = libusb_bulk_transfer(hdev, FX2_EP8, (u_char *)buffer, length, &transfered, timeout);
 
     if (result != LIBUSB_SUCCESS) {
-        std::cerr << "read: could not read EP8." << std::endl;
+        _debug() << "read: could not read EP8.";
         if (libusb_clear_halt(hdev, FX2_EP8) != 0) {
-            std::cerr << "Could not clear halt on EP8" << std::endl;
+            _debug() << "Could not clear halt on EP8";
             return -1;
         }
         return -1;
@@ -801,7 +797,7 @@ int QsIOLib_LibUSB ::readEP8(unsigned char *buffer, unsigned int length, unsigne
 
 int QsIOLib_LibUSB ::readEEPROM(unsigned address, unsigned offset, unsigned char *buffer, unsigned int length) {
     if (!dev_was_found) {
-        std::cerr << "Need to call findDevice first." << std::endl;
+        _debug() << "Need to call findDevice first.";
         return -1;
     }
 
@@ -817,13 +813,13 @@ int QsIOLib_LibUSB ::readEEPROM(unsigned address, unsigned offset, unsigned char
 
     // set address pointer in EEPROM
     if (writeI2C(address, cmd, 2) != 2) {
-        std::cerr << "readEEPROM: Could not set EEPROM address" << std::endl;
+        _debug() << "readEEPROM: Could not set EEPROM address";
         return -1;
     }
 
     // now read from the address
     if (readI2C(address, buffer, length) != length) {
-        std::cerr << "readEEPROM: Could not read EEPROM device" << std::endl;
+        _debug() << "readEEPROM: Could not read EEPROM device";
         return -1;
     }
 
@@ -833,7 +829,7 @@ int QsIOLib_LibUSB ::readEEPROM(unsigned address, unsigned offset, unsigned char
 int QsIOLib_LibUSB ::writeEEPROM(unsigned int address, unsigned int offset, unsigned char *buffer,
                                  unsigned int length) {
     if (!dev_was_found) {
-        std::cerr << "Need to call findDevice first." << std::endl;
+        _debug() << "Need to call findDevice first.";
         return -1;
     }
 
@@ -851,7 +847,7 @@ int QsIOLib_LibUSB ::writeEEPROM(unsigned int address, unsigned int offset, unsi
         cmd[2] = (char)buffer[i];                // value to write
         // set address pointer in EEPROM
         if (writeI2C(address, cmd, 3) != 3) {
-            std::cerr << "writeEEPROM: Could not write EEPROM" << std::endl;
+            _debug() << "writeEEPROM: Could not write EEPROM";
             return -1;
         }
         offset++;
@@ -863,7 +859,7 @@ int QsIOLib_LibUSB ::writeEEPROM(unsigned int address, unsigned int offset, unsi
 
 int QsIOLib_LibUSB ::readI2C(unsigned int address, unsigned char *buffer, unsigned int length) {
     if (!dev_was_found) {
-        std::cerr << "Need to call findDevice first." << std::endl;
+        _debug() << "Need to call findDevice first.";
         return -1;
     }
 
@@ -873,7 +869,7 @@ int QsIOLib_LibUSB ::readI2C(unsigned int address, unsigned char *buffer, unsign
                                     USB_TIMEOUT_CONTROL);
 
     if (count != (unsigned int)length) {
-        std::cerr << "readI2C: control transfer failed." << std::endl;
+        _debug() << "readI2C: control transfer failed.";
         return -1;
     }
 
@@ -882,7 +878,7 @@ int QsIOLib_LibUSB ::readI2C(unsigned int address, unsigned char *buffer, unsign
 
 int QsIOLib_LibUSB ::writeI2C(unsigned int address, unsigned char *buffer, unsigned int length) {
     if (!dev_was_found) {
-        std::cerr << "Need to call findDevice first." << std::endl;
+        _debug() << "Need to call findDevice first.";
         return -1;
     }
 
@@ -892,7 +888,7 @@ int QsIOLib_LibUSB ::writeI2C(unsigned int address, unsigned char *buffer, unsig
                                     USB_TIMEOUT_CONTROL);
 
     if (count != (unsigned int)length) {
-        std::cerr << "writeI2C: control transfer failed." << std::endl;
+        _debug() << "writeI2C: control transfer failed.";
         return -1;
     }
 
@@ -901,12 +897,12 @@ int QsIOLib_LibUSB ::writeI2C(unsigned int address, unsigned char *buffer, unsig
 
 int QsIOLib_LibUSB ::readMultibusInt(u_int16_t index) {
     if (!dev_was_found) {
-        std::cerr << "Need to call findDevice first." << std::endl;
+        _debug() << "Need to call findDevice first.";
         return -1;
     }
 
     if (!hdev) {
-        std::cerr << "Device handle is nullptr" << std::endl;
+        _debug() << "Device handle is nullptr";
         return -1;
     }
 
@@ -918,7 +914,7 @@ int QsIOLib_LibUSB ::readMultibusInt(u_int16_t index) {
                                         USB_TIMEOUT_CONTROL);
 
     if (count != sizeof(buf)) {
-        std::cerr << "readMultibus: control transfer failed." << std::endl;
+        _debug() << "readMultibus: control transfer failed.";
         return -1;
     }
 
@@ -927,12 +923,12 @@ int QsIOLib_LibUSB ::readMultibusInt(u_int16_t index) {
 
 int QsIOLib_LibUSB ::readMultibusBuf(unsigned index, unsigned char *buffer, unsigned length) {
     if (!dev_was_found) {
-        std::cerr << "Need to call findDevice first." << std::endl;
+        _debug() << "Need to call findDevice first.";
         return -1;
     }
 
     if (length != 4) {
-        std::cerr << "readMultibus: buffer must be length 4." << std::endl;
+        _debug() << "readMultibus: buffer must be length 4.";
         return -1;
     }
 
@@ -943,7 +939,7 @@ int QsIOLib_LibUSB ::readMultibusBuf(unsigned index, unsigned char *buffer, unsi
                                     USB_TIMEOUT_CONTROL);
 
     if (count != nsize) {
-        std::cerr << "readMultibus: control transfer failed." << std::endl;
+        _debug() << "readMultibus: control transfer failed.";
         return -1;
     }
 
@@ -952,7 +948,7 @@ int QsIOLib_LibUSB ::readMultibusBuf(unsigned index, unsigned char *buffer, unsi
 
 int QsIOLib_LibUSB ::writeMultibusInt(unsigned int index, unsigned int value) {
     if (!dev_was_found) {
-        std::cerr << "Need to call findDevice first." << std::endl;
+        _debug() << "Need to call findDevice first.";
         return -1;
     }
 
@@ -969,7 +965,7 @@ int QsIOLib_LibUSB ::writeMultibusInt(unsigned int index, unsigned int value) {
                                     USB_TIMEOUT_CONTROL);
 
     if (count != nsize) {
-        std::cerr << "writeMultibus: control transfer failed." << std::endl;
+        _debug() << "writeMultibus: control transfer failed.";
         return -1;
     }
 
@@ -978,12 +974,12 @@ int QsIOLib_LibUSB ::writeMultibusInt(unsigned int index, unsigned int value) {
 
 int QsIOLib_LibUSB ::writeMultibusBuf(unsigned index, unsigned char *buffer, unsigned length) {
     if (!dev_was_found) {
-        std::cerr << "Need to call findDevice first." << std::endl;
+        _debug() << "Need to call findDevice first.";
         return -1;
     }
 
     if (length != 4) {
-        std::cerr << "writeMultibus: buffer must be length 4." << std::endl;
+        _debug() << "writeMultibus: buffer must be length 4.";
         return -1;
     }
 
@@ -994,7 +990,7 @@ int QsIOLib_LibUSB ::writeMultibusBuf(unsigned index, unsigned char *buffer, uns
                                     USB_TIMEOUT_CONTROL);
 
     if (count != nsize) {
-        std::cerr << "writeMultibus: control transfer failed." << std::endl;
+        _debug() << "writeMultibus: control transfer failed.";
         return -1;
     }
 
@@ -1015,7 +1011,7 @@ int QsIOLib_LibUSB ::resetDevice() {
     int count = libusb_control_transfer(hdev, VRT_VENDOR_OUT, VRQ_EP_RESET, 0, 0, 0, 0, USB_TIMEOUT_CONTROL);
 
     if (count < 0) {
-        std::cerr << "Result of device reset was: " << libusb_error_name(count) << std::endl;
+        _debug() << "Result of device reset was: " << libusb_error_name(count);
         return -1;
     }
     return count;
@@ -1043,7 +1039,7 @@ int QsIOLib_LibUSB ::write_cpu_ram(u_int16_t startaddr, u_char *buffer, u_int16_
                                         (u_char *)(buffer + (addr - startaddr)), (u_int16_t)nsize, USB_TIMEOUT_CONTROL);
 
         if (count != nsize) {
-            std::cerr << "write_cpu_ram error!" << libusb_error_name(count) << std::endl;
+            _debug() << "write_cpu_ram error!" << libusb_error_name(count);
             return -1;
         }
     }

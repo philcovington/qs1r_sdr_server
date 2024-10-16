@@ -1,4 +1,33 @@
-// qs_types.h
+/**
+ * @file qs_types.h
+ * @brief Type definitions for signal processing vectors and complex numbers.
+ *
+ * This header file contains type definitions used throughout the application
+ * for signal processing. It includes definitions for complex numbers and 
+ * vectors of various data types, which are essential for handling signals
+ * in applications such as communication systems and digital signal processing.
+ *
+ * Features:
+ * - Definition of complex number type using float precision.
+ * - Type definitions for vectors of complex numbers, floating-point numbers,
+ *   integers, and unsigned 16-bit integers.
+ *
+ * Usage:
+ * Include this header file in any source file where signal processing or 
+ * complex number calculations are required. The defined types simplify 
+ * the use of complex arithmetic and vector manipulations.
+ *
+ * Example:
+ *   #include "qs_types.h"
+ *
+ *   qs_vect_cpx complexSignals;  // Vector of complex numbers
+ *   qs_vect_f floatData;         // Vector of floating-point numbers
+ *   qs_vect_i intData;           // Vector of integers
+ *
+ * Author: [Philip A Covington]
+ * Date: [2024-10-16]
+ */
+
 #pragma once
 
 #include <complex>

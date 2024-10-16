@@ -1,5 +1,25 @@
-#ifndef QSFIRMWARE
-#define QSFIRMWARE
+/*!
+ * @file qs_firmware.h
+ * @brief Contains firmware hex data for the QS1R device.
+ *
+ * This header file provides the firmware data in Intel HEX format for the QS1R device.
+ * The firmware is represented as a multi-line string constant, suitable for direct use 
+ * in applications that require loading or parsing the firmware binary.
+ *
+ * Usage:
+ * - The `firmware_hex` constant can be used to initialize firmware loading routines.
+ * - This data must be handled appropriately based on the target device's requirements.
+ * 
+ * Notes:
+ * - The firmware data is stored as a raw string literal to maintain formatting.
+ * - Ensure that the firmware data remains consistent with the expected layout for 
+ *   successful programming of the device.
+ *
+ * Author: Philip A Covington
+ * Date: 2024-10-16
+ */
+
+#pragma once
 
 // qs1r_firmware_11022011.hex 
 
@@ -554,5 +574,3 @@ const char* firmware_hex = R"(:0600000002106F02006B0C
 :03106A00E49322EA
 :02106D00E0227F
 :00000001FF)";
-
-#endif

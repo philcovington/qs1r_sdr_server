@@ -1,3 +1,40 @@
+/**
+ * @file List.h
+ * @brief A generic list class for managing a dynamic collection of elements.
+ *
+ * The List class provides a flexible and efficient way to manage a collection of
+ * elements of any type. It supports various operations such as adding, inserting,
+ * removing, and accessing elements, making it a versatile alternative to standard
+ * containers. The class can be initialized with vectors or initializer lists.
+ *
+ * Features:
+ * - Constructor overloads for initialization from std::vector and initializer lists.
+ * - Methods to append single elements or another List.
+ * - Insertion and removal of elements at specific indices.
+ * - Ability to remove all occurrences of a specified element.
+ * - Checking for the presence of an element within the list.
+ * - Access to elements through the overloaded operator[] and member functions.
+ * - Static method for creating a List from a std::vector.
+ *
+ * Usage:
+ * To use the List class, create an instance with a type, then utilize its methods:
+ *
+ *   List<int> myList;
+ *   myList.append(10);
+ *   myList.append({20, 30, 40});
+ *   myList.insert(1, 15); // Insert 15 at index 1
+ *
+ * This allows for flexible manipulation of the contained elements.
+ *
+ * @note This class relies on std::vector for storage and is intended for
+ *       dynamic collections of elements. It does not handle concurrent modifications.
+ * 
+ * I tried to provide the same functionality of Qt's QList class.
+ *
+ * Author: [Philip A Covington]
+ * Date: [2024-10-16]
+ */
+
 #pragma once
 
 #include <algorithm>

@@ -1,4 +1,5 @@
 #include "../headers/qs_memory.h"
+#include "../headers/debugloggerclass.h"
 #include "../headers/qs_dataproc.h"
 #include <iostream>
 
@@ -141,12 +142,12 @@ double QsMemory::getAgcFixedGain(int rx_num) { return m_agc_fixed_gain[rx_num]; 
 void QsMemory::setAgcThreshold(double value, int rx_num) {
     m_agc_threshold[rx_num] = value;
     if (value == 0)
-        std::cout << ("agc thesh was 0") << std::endl;
+        _debug() << ("agc thesh was 0");
 }
 
 double QsMemory::getAgcThreshold(int rx_num) {
     if (m_agc_threshold[rx_num] == 0)
-        std::cout << ("agc thesh was 0") << std::endl;
+        _debug() << ("agc thesh was 0");
     return m_agc_threshold[rx_num];
 }
 

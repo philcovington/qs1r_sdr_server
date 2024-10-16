@@ -1,3 +1,32 @@
+/*!
+ * @file qs_data_proc.h
+ * @brief Provides a set of utility functions for audio signal processing.
+ *
+ * The QsDataProc class offers various static methods for performing mathematical 
+ * operations on different data types, including floating point numbers, integers, 
+ * and complex numbers. These functions are optimized for real-time signal processing 
+ * tasks, such as adding values to arrays, rounding, and bounding values.
+ *
+ * Features:
+ * - Max, Min, and Bound functions for clamping values between limits.
+ * - Overloaded Add functions for adding constants or arrays to different data types.
+ * - Support for both real and complex number operations.
+ * - Functions for rounding, absolute value computation, and type conversions.
+ * 
+ * Usage:
+ * - Use the `Add()` methods to apply values to signal arrays.
+ * - `qBound()` and `Bound()` can be used to constrain values within specified limits.
+ * - `Round()` provides an efficient method for rounding float values.
+ *
+ * Notes:
+ * - The constants `INTTOFLOAT`, `FLOATTOINT`, and others are provided for handling 
+ *   type conversions between integers and floating point numbers.
+ * - The `qs_vect_f` and `qs_vect_cpx` types are used for arrays of float and complex values.
+ * 
+ * Author: Philip A Covington
+ * Date: 2024-10-16
+ */
+
 #pragma once
 
 #include <algorithm>

@@ -4,6 +4,7 @@
 #include "../headers/ByteArray.h"
 #include "../headers/bitstream.h"
 #include "../headers/config.h"
+#include "../headers/debugloggerclass.h"
 #include "../headers/qs1r_server.h"
 #include "../headers/qs_io_libusb.h"
 
@@ -18,6 +19,10 @@ libusb_device *findQS1RDevice(QsIOLib_LibUSB *usb, u_int16_t vid, uint16_t pid, 
 }
 
 int main() {
+
+    // Enable debug logging
+    DebugLogger::DEBUG = true;
+
     QS1R_server qs1r;
     QsSleep sleep;
 
@@ -25,27 +30,27 @@ int main() {
 
     int result = qs1r.initQS1RHardware(QS1R_IDX);
 
-    std::cout << "PGA MODE IS: " << qs1r.pgaMode() << std::endl;
-    std::cout << "RAND MODE IS: " << qs1r.randMode() << std::endl;
-    std::cout << "DITHER MODE IS: " << qs1r.ditherMode() << std::endl;
+    _debug() << "PGA MODE IS: " << qs1r.pgaMode();
+    _debug() << "RAND MODE IS: " << qs1r.randMode();
+    _debug() << "DITHER MODE IS: " << qs1r.ditherMode();
 
     result = qs1r.setPgaMode(true);
 
-    std::cout << "setPgaMode result: " << result << std::endl;
+    _debug() << "setPgaMode result: " << result;
 
     result = qs1r.setRandMode(true);
 
-    std::cout << "setRandMode result: " << result << std::endl;
+    _debug() << "setRandMode result: " << result;
 
     result = qs1r.setDitherMode(true);
 
-    std::cout << "setDitherMode result: " << result << std::endl;
+    _debug() << "setDitherMode result: " << result;
 
-    std::cout << "PGA MODE NOW IS: " << qs1r.pgaMode() << std::endl;
-    std::cout << "RAND MODE NOW IS: " << qs1r.randMode() << std::endl;
-    std::cout << "DITHER MODE NOW IS: " << qs1r.ditherMode() << std::endl;
+    _debug() << "PGA MODE NOW IS: " << qs1r.pgaMode();
+    _debug() << "RAND MODE NOW IS: " << qs1r.randMode();
+    _debug() << "DITHER MODE NOW IS: " << qs1r.ditherMode();
 
-    std::cout << "QS1R server shutting down..." << std::endl;
+    _debug() << "QS1R server shutting down...";
 
     qs1r.exit();
 

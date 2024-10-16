@@ -1,3 +1,32 @@
+/*!
+ * @file rt_audio.h
+ * @brief Provides an API for real-time audio input/output using various audio interfaces.
+ *
+ * This file defines the RtAudio class, structures, and constants for managing audio streams 
+ * across different operating system APIs such as ALSA, Direct Sound, and Core Audio. It supports 
+ * both input and output audio streams, and includes options for handling buffer formats, stream 
+ * flags, and device configurations.
+ *
+ * Features:
+ * - Supports multiple audio APIs for cross-platform compatibility.
+ * - Allows real-time audio processing with various stream configurations.
+ * - Provides structures for device information, stream parameters, and options.
+ * - Supports both interleaved and non-interleaved audio buffers.
+ * - Includes options for minimizing latency, using real-time scheduling, and exclusive device use.
+ *
+ * Usage:
+ * - Use the `RtAudio` class to manage and control audio streams.
+ * - Query devices using `getDeviceInfo()` and set stream parameters using `StreamParameters`.
+ * - Start and stop audio streams with `openStream()` and `closeStream()`.
+ *
+ * Notes:
+ * - Audio data is always expected in the host byte order.
+ * - Stream flags such as `RTAUDIO_NONINTERLEAVED` allow for advanced stream customization.
+ * 
+ * Author: Philip A Covington
+ * Date: 2024-10-16
+ */
+
 #pragma once
 
 #include "../headers/rt_audio_error.h"

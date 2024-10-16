@@ -1,3 +1,42 @@
+/**
+ * @file Map.h
+ * @brief A generic map utility class that wraps around std::map.
+ *
+ * The Map class provides a convenient interface for managing key-value pairs,
+ * allowing for easy insertion, removal, and retrieval of elements. It supports
+ * various operations such as checking for the existence of a key, getting
+ * values with default fallbacks, and accessing the first and last keys and
+ * values in sorted order.
+ *
+ * Features:
+ * - Constructors for default initialization, std::map initialization, and
+ *   initializer list support.
+ * - Methods for inserting and removing key-value pairs.
+ * - Functionality to check for the existence of keys.
+ * - Overloaded operator[] for accessing values by key.
+ * - Method to get the value for a key with a default fallback.
+ * - Accessor methods for retrieving the first and last keys and values.
+ * - Size and emptiness checks for the map.
+ * - Iterator support for range-based loops, making it easy to iterate through
+ *   key-value pairs.
+ *
+ * Usage:
+ * To create and use a Map instance, you can do the following:
+ *
+ *   Map<std::string, int> myMap;
+ *   myMap.insert("key1", 100);
+ *   myMap.insert("key2", 200);
+ *   int value = myMap["key1"]; // Retrieves 100
+ *
+ * The class automatically handles the underlying std::map operations,
+ * providing a user-friendly interface for map management.
+ * 
+ * I have tried to provide the similar functionality to Qt's QMap.
+ *
+ * Author: [Philip A covington]
+ * Date: [2024-10-16]
+ */
+
 #pragma once
 
 #include <iostream>
