@@ -1,5 +1,4 @@
-#ifndef RESAMPLER_HELPER_H
-#define RESAMPLER_HELPER_H
+#pragma once
 
 #ifdef _USE_SSE_
 
@@ -18,4 +17,3 @@ double interpolate_product_double(const float *a, const float *b, unsigned int l
 }
 #endif
 #endif
-#endif // RESAMPLER_HELPER_H

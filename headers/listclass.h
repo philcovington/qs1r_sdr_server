@@ -1,3 +1,5 @@
+#pragma once
+
 #include <algorithm>
 #include <iostream>
 #include <vector>
@@ -62,8 +64,8 @@ template <typename T> class List {
     const T &operator[](int index) const { return list.at(index); }
 
     // Static method to create a List from a std::vector of any type
-    template <typename T> static List<T> fromVector(const std::vector<T> &vec) {
-        List<T> list;
+    template <typename U> static List<U> fromVector(const std::vector<U> &vec) {
+        List<U> list;
         for (const auto &item : vec) {
             list.append(item);
         }

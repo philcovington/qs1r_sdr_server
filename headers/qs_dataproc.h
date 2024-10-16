@@ -1,4 +1,3 @@
-// qs_dataproc.h
 #pragma once
 
 #include <algorithm>
@@ -35,9 +34,9 @@ class QsDataProc {
         return b;
     }
 
-	template <typename T> inline static const T qBound(const T& min, const T& val, const T& max) {
-    return (val < min) ? min : (val > max) ? max : val;
-	}
+    template <typename T> inline static const T qBound(const T &min, const T &val, const T &max) {
+        return (val < min) ? min : (val > max) ? max : val;
+    }
 
     template <typename T> inline static const T &Bound(const T &min, const T &val, const T &max) {
         return Max(min, Min(max, val));
@@ -232,9 +231,7 @@ class QsDataProc {
         std::copy(src.begin(), src.begin() + length, dst.begin());
     }
 
-    inline static void Copy(double *src, double *dst, uint32_t length) {
-        memcpy(dst, src, sizeof(double) * length);
-    }
+    inline static void Copy(double *src, double *dst, uint32_t length) { memcpy(dst, src, sizeof(double) * length); }
 
     inline static void Copy(Cpx *src, Cpx *dst, uint32_t length) { memcpy(dst, src, sizeof(Cpx) * length); }
 
@@ -769,8 +766,7 @@ class QsDataProc {
         }
     }
 
-    inline static void SampleDown(Cpx *src, uint32_t src_length, Cpx *dst, uint32_t &dst_length,
-                                  uint32_t factor) {
+    inline static void SampleDown(Cpx *src, uint32_t src_length, Cpx *dst, uint32_t &dst_length, uint32_t factor) {
         uint32_t i, j;
         dst_length = 0;
         for (i = 0, j = 0; i < src_length; i += factor, j++) {

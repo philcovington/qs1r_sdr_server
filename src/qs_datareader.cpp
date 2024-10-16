@@ -1,6 +1,6 @@
 
 #include "../headers/qs_datareader.h"
-
+#include "../headers/debugloggerclass.h"
 #include "../headers/qs_cpx_vector_cb.h"
 #include "../headers/qs_globals.h"
 #include "../headers/qs_types.h"
@@ -21,10 +21,7 @@ void QsDataReader::init() {
     m_circbufsize = m_bsize * CPX_RING_SZ_MULT;
 
     m_samplerate = QsGlobal::g_memory->getDataProcRate();
-
-    file_write_fifo.empty();
-    file_write_fifo.setBlockSize(m_bsizeX2); // interleaved buffer is twice the length of blocksize
-
+   
     in_interleaved_i.resize(m_bsizeX2);
     QsDataProc::Zero(in_interleaved_i);
     in_interleaved_f.resize(m_bsizeX2);
@@ -35,18 +32,9 @@ void QsDataReader::init() {
     QsDataProc::Zero(in_im_f);
     cpx_out.resize(m_bsize);
     QsDataProc::Zero(cpx_out);
-
-    MX_RESIZE.unlock();
 }
 
 void QsDataReader::run() {
-    rxinfo.bAdcDither = 0;
-    rxinfo.bAdcPreamp = 0;
-    rxinfo.bAdcPreselector = 0;
-    rxinfo.nCenterFrequencyHz = 0;
-    rxinfo.nSamplingRateHz = 0;
-    rxinfo.wAttenuator = 0;
-    rxinfo.startTime = time_t();
 
     QsDataProc::Zero(in_interleaved_i);
     QsDataProc::Zero(in_interleaved_f);
@@ -58,23 +46,22 @@ void QsDataReader::run() {
     QsGlobal::g_cpx_readin_ring->init(m_circbufsize);
     QsGlobal::g_cpx_readin_ring->empty();
 
-    file_write_fifo.empty();
-
     m_is_running = true;
     m_thread_go = true;
     m_qs1r_fail_emitted = false;
 
     while (m_thread_go) {
-        if (QsGlobal::g_io->readEP6(reinterpret_cast<unsigned char *>(&in_interleaved_i[0]), m_bsizeX2 * sizeof(int)) !=
+        if (QsGlobal::g_io->readEP6(reinterpret_cast<unsigned char *>(&in_interleaved_i[0]), m_bsizeX2 * sizeof(int)) ==
             -1) {
-        } else {
+
             if (m_qs1r_fail_emitted) {
-                emit onQs1rReadFail();
+                _debug() << "QS1R read failed!";
                 m_qs1r_fail_emitted = true;
             }
             // return zeroed out buffers
             QsDataProc::Zero(&in_interleaved_i[0], m_bsizeX2);
-            usleep(1000);
+            m_thread_go = false;
+            sleep.usleep(1000);
         }
 
         // convert interleaved integers into floats
@@ -92,12 +79,9 @@ void QsDataReader::run() {
 
         QsGlobal::g_cpx_readin_ring->write(cpx_out, m_bsize);
     }
-    else {
-        m_thread_go = false;
-    }
 
     m_is_running = false;
-    std::cout << "datareader thread stopped." << std::endl;
+    _debug() << "datareader thread stopped.";
 }
 
 void QsDataReader::stop() {

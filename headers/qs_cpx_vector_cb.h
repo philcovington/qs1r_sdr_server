@@ -1,11 +1,8 @@
-// qs_cpx_vector_cb.h
 #pragma once
 
+#include "../headers/qs_dataproc.h"
 #include "../headers/qs_types.h"
 #include <complex>
-
-static const std::complex<float> cpx_zero(0.0, 0.0);
-static const std::complex<float> cpx_one(1.0, 1.0);
 
 class QsCpxVectorCircularBuffer {
 

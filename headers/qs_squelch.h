@@ -1,4 +1,3 @@
-// qs_squelch.h
 #pragma once
 
 #include "../headers/qs_dataproc.h"

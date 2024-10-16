@@ -1,3 +1,5 @@
+#pragma once
+
 #include <emmintrin.h>
 #include <stdint.h>
 #include <xmmintrin.h>

@@ -3,25 +3,12 @@
 
 #include <string>
 
-enum QSDEMODMODE {
-    dmAM = 0,
-    dmSAM = 1,
-    dmFMN = 2,
-    dmFMW = 3,
-    dmDSB = 4,
-    dmLSB = 5,
-    dmUSB = 6,
-    dmCW = 7,
-    dmDIG = 8
-};
+enum QSDEMODMODE { dmAM = 0, dmSAM = 1, dmFMN = 2, dmFMW = 3, dmDSB = 4, dmLSB = 5, dmUSB = 6, dmCW = 7, dmDIG = 8 };
 
-extern std::string modeIntToString( int mode );
-extern int modeStringToInt( std::string mode );
+extern std::string modeIntToString(int mode);
+extern int modeStringToInt(std::string mode);
 
-enum QSTXVFOMODE {
-    txFollowRXVfo = 0,
-    txFollowTXVfo = 1
-};
+enum QSTXVFOMODE { txFollowRXVfo = 0, txFollowTXVfo = 1 };
 
 #define NUMBER_OF_RECEIVERS 1
 #define MAX_RECEIVERS 2
@@ -44,4 +31,3 @@ enum QSTXVFOMODE {
 #define DAC_RING_SZ_MULT 4
 
 #define MAX_MAN_NOTCHES 8
-

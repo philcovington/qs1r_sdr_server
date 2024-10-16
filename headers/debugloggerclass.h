@@ -1,3 +1,6 @@
+#pragma once
+
+#include "../headers/stringclass.h"
 #include <ctime>
 #include <iomanip>
 #include <iostream>
@@ -8,13 +11,13 @@
 class DebugLogger {
   public:
     // Log function for basic types and strings
-    template <typename T> DebugLogger &operator<<(const T &value) {
+    template <typename T> inline DebugLogger &operator<<(const T &value) {
         stream << value;
         return *this;
     }
 
     // Function to log a vector of values
-    template <typename T> DebugLogger &operator<<(const std::vector<T> &vec) {
+    template <typename T> inline DebugLogger &operator<<(const std::vector<T> &vec) {
         stream << "[";
         for (size_t i = 0; i < vec.size(); ++i) {
             stream << vec[i];
@@ -37,5 +40,11 @@ class DebugLogger {
     std::ostringstream stream;
 };
 
+// Specialization for the String class (defined outside the class)
+template <> inline DebugLogger &DebugLogger::operator<<(const String &value) {
+    stream << value.toStdString(); // Convert to std::string for logging
+    return *this;
+}
+
 // Helper function to create a logger instance
-DebugLogger _debug() { return DebugLogger(); }
+inline DebugLogger _debug() { return DebugLogger(); }

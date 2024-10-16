@@ -1,16 +1,17 @@
 #pragma once
 
+#include "../headers/listclass.h"
+#include "../headers/mapclass.h"
 #include "../headers/qs_globals.h"
 #include "../headers/qs_rt_audio.h"
 #include "../headers/stringclass.h"
 #include "../headers/stringlistclass.h"
-#include "../headers/mapclass.h"
-#include "../headers/listclass.h"
+#include <memory>
 
 class QsAudio {
 
   private:
-    auto_ptr<RtAudio> p_rta;
+    std::unique_ptr<RtAudio> p_rta;
 
     int RtCallback(void *outputBuffer, void *inputBuffer, unsigned int nBufferFrames, double streamTime,
                    RtAudioStreamStatus status);

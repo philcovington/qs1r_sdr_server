@@ -191,7 +191,7 @@ class QsMemory {
 
     void setRtAudioFrames(int value);
     int getRtAudioFrames();
-    
+
     void setReadBlockSize(int value);
     int getReadBlockSize();
 

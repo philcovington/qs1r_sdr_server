@@ -437,7 +437,6 @@ double QsMemory::getWBPsCorrection() { return m_wb_correction; }
 void QsMemory::setEncodeFreqCorrect(double value) {
     if (m_enc_clock_correction != value) {
         m_enc_clock_correction = value;
-        clockCorrectionChanged(value);
     }
 }
 

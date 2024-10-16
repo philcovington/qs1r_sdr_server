@@ -3,16 +3,14 @@
 
 #include <thread>
 
-#include "../headers/qs_blockfifo.h"
-#include "../headers/qs_globals.h"
+// #include "../headers/qs_globals.h"
+#include "../headers/qs_sleep.h"
 #include "../headers/qs_types.h"
 
 class QsDataReader {
-   public:
+  public:
     QsDataReader();
     ~QsDataReader();
-
-    QsBlockFifo file_write_fifo;
 
     void run();
     void start();
@@ -21,8 +19,7 @@ class QsDataReader {
     void reinit();
     void init();
 
-   private:    
-
+  private:
     void onQs1rReadFail();
     bool m_thread_go;
     bool m_is_running;
@@ -45,4 +42,6 @@ class QsDataReader {
     qs_vect_f in_im_f;
 
     qs_vect_cpx cpx_out;
+
+    QsSleep sleep;
 };

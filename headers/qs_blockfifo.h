@@ -1,11 +1,10 @@
-// qs_blockfifo.h
 #pragma once
 
-#include <queue>
-#include <mutex>
-#include <condition_variable>
 #include "../headers/qs_dataproc.h"
 #include "../headers/qs_globals.h"
+#include "../headers/qs_wait_condition.h"
+#include <mutex>
+#include <queue>
 
 #define BSIZE 8196 * 2
 
@@ -23,19 +22,18 @@ typedef struct cpxfifoblock_t {
 
 #pragma pack(pop)
 
-class QsBlockFifo : public QObject {
-    Q_OBJECT
+class QsBlockFifo {
 
-   public:
+  public:
     QsBlockFifo();
     QsBlockFifo(int blocksize);
     ~QsBlockFifo();
 
-    void enqueue(int* buffer);
-    bool dequeue(int* buffer);
+    void enqueue(int *buffer);
+    bool dequeue(int *buffer);
 
-    void enqueue(Cpx* buffer);
-    bool dequeue(Cpx* buffer);
+    void enqueue(Cpx *buffer);
+    bool dequeue(Cpx *buffer);
 
     int getCount();
     bool isEmpty();
@@ -49,7 +47,7 @@ class QsBlockFifo : public QObject {
 
     void trimFifo(int maxsize);
 
-   private:
+  private:
     FIFOBLOCK eq_fifo_block_;
     FIFOBLOCK dq_fifo_block_;
     CPXFIFOBLOCK cpx_eq_fifo_block_;
@@ -60,5 +58,5 @@ class QsBlockFifo : public QObject {
     int block_size_;
     int type_;
 
-	std::mutex mutex;
+    std::mutex mutex;
 };

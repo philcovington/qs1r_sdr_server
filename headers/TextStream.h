@@ -1,19 +1,19 @@
-#include <iostream>
+#pragma once
+
 #include <fstream>
+#include <iostream>
 #include <string>
 
 class TextStream {
-private:
-    std::ifstream* fileStream;
+  private:
+    std::ifstream *fileStream;
 
-public:
+  public:
     // Constructor that accepts a pointer to a File object
-    TextStream(File* file) {
-        fileStream = &file->fileStream;
-    }
+    TextStream(File *file) { fileStream = &file->fileStream; }
 
     // Overload >> operator for reading from the file stream
-    TextStream& operator>>(std::string& output) {
+    TextStream &operator>>(std::string &output) {
         if (fileStream && *fileStream) {
             *fileStream >> output;
         }
@@ -21,7 +21,7 @@ public:
     }
 
     // Overload for reading integers (you can add more as needed)
-    TextStream& operator>>(int& output) {
+    TextStream &operator>>(int &output) {
         if (fileStream && *fileStream) {
             *fileStream >> output;
         }
@@ -29,7 +29,5 @@ public:
     }
 
     // Check if at the end of file
-    bool atEnd() const {
-        return fileStream->eof();
-    }
+    bool atEnd() const { return fileStream->eof(); }
 };

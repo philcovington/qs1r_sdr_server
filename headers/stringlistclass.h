@@ -1,3 +1,6 @@
+#pragma once
+
+#include "stringclass.h" // Include your String class
 #include <algorithm>
 #include <iostream>
 #include <sstream>
@@ -14,8 +17,17 @@ class StringList {
     // Add a string to the list
     void append(const std::string &str) { list.push_back(str); }
 
-    // Add another list of strings to this list
-    void append(const StringList &other) { list.insert(list.end(), other.list.begin(), other.list.end()); }
+    // Add a String object to the list
+    void append(const String &str) {
+        list.push_back(str.toStdString()); // Convert String to std::string
+    }
+
+    // Add another list of String objects to this list
+    void append(const StringList &other) {
+        for (const String &s : other.getStrings()) { // Use the new method to get the strings
+            append(s);                               // Call the String append method
+        }
+    }
 
     // Insert a string at a specific index
     void insert(int index, const std::string &str) {
@@ -68,8 +80,10 @@ class StringList {
 
     // Overload operator[] for access
     std::string &operator[](int index) { return list.at(index); }
-
     const std::string &operator[](int index) const { return list.at(index); }
+
+    // Getter for the internal string vector (for appending)
+    const std::vector<std::string> &getStrings() const { return list; }
 
   private:
     std::vector<std::string> list;

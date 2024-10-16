@@ -1,8 +1,8 @@
 #include "../headers/qs_audio.h"
-#include "../headers/qs1rserver.h"
-#include "../headers/qs_globals.h"
-#include "../headers/qs_dataproc.h"
 #include "../headers/debugloggerclass.h"
+#include "../headers/qs1r_server.h"
+#include "../headers/qs_dataproc.h"
+#include "../headers/qs_globals.h"
 
 QsAudio ::QsAudio() : p_rta(new RtAudio()), stop_stream_request(0) {}
 
@@ -17,7 +17,7 @@ bool QsAudio ::initAudio(int frames, double sample_rate, int in_dev_id, int out_
     unsigned int devcount = p_rta->getDeviceCount();
 
     if (devcount < 1) {
-        _debug << "Info: No sound devices found!";        
+        _debug() << std::string("Info: No sound devices found!");
         return ok;
     }
 
@@ -31,10 +31,10 @@ bool QsAudio ::initAudio(int frames, double sample_rate, int in_dev_id, int out_
         info = p_rta->getDeviceInfo(i);
         if (info.outputChannels > 0) {
             rtaOutputDeviceMap[i] = String::fromStdString(info.name);
-            rates = List<unsigned int>::fromVector(QVector<unsigned int>::fromStdVector(info.sampleRates));
+            rates = List<unsigned int>::fromVector(info.sampleRates);
         } else if (info.inputChannels > 0) {
             rtaInputDeviceMap[i] = String::fromStdString(info.name);
-            rates = List<unsigned int>::fromVector(QVector<unsigned int>::fromStdVector(info.sampleRates));
+            rates = List<unsigned int>::fromVector(info.sampleRates);
         }
     }
 
@@ -69,31 +69,14 @@ bool QsAudio ::initAudio(int frames, double sample_rate, int in_dev_id, int out_
     unsigned int rate = (unsigned int)sample_rate;
 
     try {
-        if (QsTx::g_qs1e_present == true) {
-            p_rta->openStream(&out_rta_parameters, &in_rta_parameters, RTAUDIO_FLOAT32, rate, &frames_, sta_rt_callback,
-                              this, &rta_options);
-        } else {
-            p_rta->openStream(&out_rta_parameters, NULL, RTAUDIO_FLOAT32, rate, &frames_, sta_rt_callback, this,
-                              &rta_options);
-        }
+        p_rta->openStream(&out_rta_parameters, NULL, RTAUDIO_FLOAT32, rate, &frames_, sta_rt_callback, this,
+                          &rta_options);
+
         m_sample_rate = rate;
         // _debug()() << "frames: " << frames_;
     } catch (RtError &e) {
-        if (String(e.what()).contains("does not support input")) {
-            try {
-                QsTx::g_qs1e_present = false;
-                p_rta->openStream(&out_rta_parameters, NULL, RTAUDIO_FLOAT32, rate, &frames_, sta_rt_callback, this,
-                                  &rta_options);
-                m_sample_rate = rate;
-                _debug() << ("Audio Error: No valid audio input device. QS1E bypassed.");
-            } catch (RtError &e) {
-                _debug() << "Audio Error: " + String(e.what());                
-                return ok;
-            }
-        } else {
-            _debug() << "Audio Error: " + String(e.what());            
-            return ok;
-        }
+        _debug() << std::string("Audio Error: ") << String(e.what());
+        return ok;
     }
 
     ok = true;
@@ -113,11 +96,11 @@ int QsAudio ::RtCallback(void *outputBuffer, void *inputBuffer, unsigned int nBu
         QsDataProc::Zero((float *)outputBuffer, size);
     }
 
-    if (QsTx::g_qs1e_present == true) {
-        if (QsGlobal::g_float_tx_ring->writeAvail() >= size) {
-            QsGlobal::g_float_tx_ring->write((float *)inputBuffer, size);
-        }
-    }
+    // if (QsTx::g_qs1e_present == true) {
+    //     if (QsGlobal::g_float_tx_ring->writeAvail() >= size) {
+    //         QsGlobal::g_float_tx_ring->write((float *)inputBuffer, size);
+    //     }
+    // }
 
     return stop_stream_request;
 }
@@ -130,7 +113,7 @@ StringList QsAudio ::getOutputDevices() {
     list.clear();
 
     if (devcount < 1) {
-        list.append("No audio devices found.");
+        list.append(std::string("No audio devices found."));
     } else {
         rtaOutputDeviceMap.clear();
         for (unsigned int i = 0; i < devcount; i++) {
@@ -152,7 +135,7 @@ StringList QsAudio ::getInputDevices() {
     list.clear();
 
     if (devcount < 1) {
-        list.append("No audio devices found.");
+        list.append(std::string("No audio devices found."));
     } else {
         rtaInputDeviceMap.clear();
         for (unsigned int i = 0; i < devcount; i++) {
@@ -171,7 +154,7 @@ bool QsAudio ::isOutputDeviceValid(int id, String &descr) {
     descr.clear();
     if (rtaOutputDeviceMap.contains(id)) {
         result = true;
-        descr.append(String(rtaOutputDeviceMap[id]));
+        descr.append(rtaOutputDeviceMap[id]);
     }
     return result;
 }
@@ -181,7 +164,7 @@ bool QsAudio ::isInputDeviceValid(int id, String &descr) {
     descr.clear();
     if (rtaInputDeviceMap.contains(id)) {
         result = true;
-        descr.append(String(rtaInputDeviceMap[id]));
+        descr.append(rtaInputDeviceMap[id]);
     }
     return result;
 }

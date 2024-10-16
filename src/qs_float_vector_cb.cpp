@@ -1,6 +1,7 @@
 #include "../headers/qs_float_vector_cb.h"
 
 #include "../headers/qs_types.h"
+#include <memory.h>
 
 QsFloatVectorCircularBuffer::QsFloatVectorCircularBuffer()
     : _size(0), _readPtr(0), _writePtr(0), _writeAvail(0), m_blocksize(0) {}
@@ -15,7 +16,7 @@ void QsFloatVectorCircularBuffer::init(uint32_t size) {
     m_blocksize = 0;
 }
 
-uint32_t QsFloatVectorCircularBuffer::read(qs_vect_f& rdata, uint32_t length) {
+uint32_t QsFloatVectorCircularBuffer::read(qs_vect_f &rdata, uint32_t length) {
     uint32_t count = 0;
 
     if (length != -1)
@@ -38,7 +39,7 @@ uint32_t QsFloatVectorCircularBuffer::read(qs_vect_f& rdata, uint32_t length) {
     return count;
 }
 
-uint32_t QsFloatVectorCircularBuffer::read(float* rdata, uint32_t count) {
+uint32_t QsFloatVectorCircularBuffer::read(float *rdata, uint32_t count) {
     uint32_t len = _size - _readPtr;
 
     if (count > len) {
@@ -54,7 +55,7 @@ uint32_t QsFloatVectorCircularBuffer::read(float* rdata, uint32_t count) {
     return count;
 }
 
-uint32_t QsFloatVectorCircularBuffer::write(qs_vect_f& wdata, uint32_t length) {
+uint32_t QsFloatVectorCircularBuffer::write(qs_vect_f &wdata, uint32_t length) {
     uint32_t count = 0;
 
     if (length != -1)
@@ -77,7 +78,7 @@ uint32_t QsFloatVectorCircularBuffer::write(qs_vect_f& wdata, uint32_t length) {
     return count;
 }
 
-uint32_t QsFloatVectorCircularBuffer::write(float* wdata, uint32_t count) {
+uint32_t QsFloatVectorCircularBuffer::write(float *wdata, uint32_t count) {
     uint32_t len = _size - _writePtr;
 
     if (count > len) {

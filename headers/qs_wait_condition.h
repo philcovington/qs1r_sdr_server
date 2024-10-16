@@ -1,3 +1,5 @@
+#pragma once
+
 #include <condition_variable>
 #include <mutex>
 
@@ -27,6 +29,11 @@ class WaitCondition {
     void notify_all() {
         std::lock_guard<std::mutex> lock(mutex);
         cond_var.notify_all();
+    }
+
+    // Wake all waiting threads (wrapper for notify_all)
+    void wakeAll() {
+        notify_all(); // Simply call notify_all here
     }
 
   private:

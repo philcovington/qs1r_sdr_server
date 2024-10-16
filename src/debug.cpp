@@ -18,7 +18,7 @@
 #include "debug.h"
 
 // Implement the << operator for manipulators (like std::hex, std::endl)
-DebugStream& DebugStream::operator<<(std::ostream& (*manip)(std::ostream&)) {
+DebugStream &DebugStream::operator<<(std::ostream &(*manip)(std::ostream &)) {
 #if DEBUG_MODE
     std::cout << manip;
 #endif

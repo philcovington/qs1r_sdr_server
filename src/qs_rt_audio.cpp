@@ -1,5 +1,5 @@
 #include "../headers/qs_rt_audio.h"
-#include<climits>
+#include <climits>
 #include <cstdlib>
 #include <cstring>
 #include <iostream>
@@ -127,8 +127,8 @@ RtAudio::RtAudio(RtAudio::Api api) throw() {
 RtAudio::~RtAudio() throw() { delete rtapi_; }
 
 void RtAudio::openStream(RtAudio::StreamParameters *outputParameters, RtAudio::StreamParameters *inputParameters,
-                          RtAudioFormat format, unsigned int sampleRate, unsigned int *bufferFrames,
-                          RtAudioCallback callback, void *userData, RtAudio::StreamOptions *options) {
+                         RtAudioFormat format, unsigned int sampleRate, unsigned int *bufferFrames,
+                         RtAudioCallback callback, void *userData, RtAudio::StreamOptions *options) {
     return rtapi_->openStream(outputParameters, inputParameters, format, sampleRate, bufferFrames, callback, userData,
                               options);
 }
@@ -153,8 +153,8 @@ RtApi::RtApi() {
 RtApi::~RtApi() { MUTEX_DESTROY(&stream_.mutex); }
 
 void RtApi::openStream(RtAudio::StreamParameters *oParams, RtAudio::StreamParameters *iParams, RtAudioFormat format,
-                        unsigned int sampleRate, unsigned int *bufferFrames, RtAudioCallback callback, void *userData,
-                        RtAudio::StreamOptions *options) {
+                       unsigned int sampleRate, unsigned int *bufferFrames, RtAudioCallback callback, void *userData,
+                       RtAudio::StreamOptions *options) {
     if (stream_.state != STREAM_CLOSED) {
         errorText_ = "RtApi::openStream: a stream is already open!";
         error(RtError::INVALID_USE);
@@ -247,8 +247,8 @@ void RtApi::closeStream(void) {
 }
 
 bool RtApi::probeDeviceOpen(unsigned int device, StreamMode mode, unsigned int channels, unsigned int firstChannel,
-                             unsigned int sampleRate, RtAudioFormat format, unsigned int *bufferSize,
-                             RtAudio::StreamOptions *options) {
+                            unsigned int sampleRate, RtAudioFormat format, unsigned int *bufferSize,
+                            RtAudio::StreamOptions *options) {
     // MUST be implemented in subclasses!
     return FAILURE;
 }
@@ -715,8 +715,8 @@ OSStatus rateListener(AudioObjectID inDevice, UInt32 nAddresses, const AudioObje
 }
 
 bool RtApiCore::probeDeviceOpen(unsigned int device, StreamMode mode, unsigned int channels, unsigned int firstChannel,
-                                 unsigned int sampleRate, RtAudioFormat format, unsigned int *bufferSize,
-                                 RtAudio::StreamOptions *options) {
+                                unsigned int sampleRate, RtAudioFormat format, unsigned int *bufferSize,
+                                RtAudio::StreamOptions *options) {
     // Get device ID
     unsigned int nDevices = getDeviceCount();
     if (nDevices == 0) {
@@ -1432,7 +1432,7 @@ void RtApiCore::abortStream(void) {
 }
 
 bool RtApiCore::callbackEvent(AudioDeviceID deviceId, const AudioBufferList *inBufferList,
-                               const AudioBufferList *outBufferList) {
+                              const AudioBufferList *outBufferList) {
     if (stream_.state == STREAM_STOPPED)
         return SUCCESS;
     if (stream_.state == STREAM_CLOSED) {
@@ -1968,8 +1968,8 @@ int jackXrun(void *infoPointer) {
 }
 
 bool RtApiJack::probeDeviceOpen(unsigned int device, StreamMode mode, unsigned int channels, unsigned int firstChannel,
-                                 unsigned int sampleRate, RtAudioFormat format, unsigned int *bufferSize,
-                                 RtAudio::StreamOptions *options) {
+                                unsigned int sampleRate, RtAudioFormat format, unsigned int *bufferSize,
+                                RtAudio::StreamOptions *options) {
     JackHandle *handle = (JackHandle *)stream_.apiHandle;
 
     // Look for jack server and try to become a client (only do once per stream).
@@ -2719,8 +2719,8 @@ void RtApiAsio::saveDeviceInfo(void) {
 }
 
 bool RtApiAsio::probeDeviceOpen(unsigned int device, StreamMode mode, unsigned int channels, unsigned int firstChannel,
-                                 unsigned int sampleRate, RtAudioFormat format, unsigned int *bufferSize,
-                                 RtAudio::StreamOptions *options) {
+                                unsigned int sampleRate, RtAudioFormat format, unsigned int *bufferSize,
+                                RtAudio::StreamOptions *options) {
     // For ASIO, a duplex stream MUST use the same driver.
     if (mode == INPUT && stream_.mode == OUTPUT && stream_.device[0] != device) {
         errorText_ = "RtApiAsio::probeDeviceOpen: an ASIO duplex stream must use the same device for input and output!";
@@ -3854,8 +3854,8 @@ probeInput:
 }
 
 bool RtApiDs::probeDeviceOpen(unsigned int device, StreamMode mode, unsigned int channels, unsigned int firstChannel,
-                               unsigned int sampleRate, RtAudioFormat format, unsigned int *bufferSize,
-                               RtAudio::StreamOptions *options) {
+                              unsigned int sampleRate, RtAudioFormat format, unsigned int *bufferSize,
+                              RtAudio::StreamOptions *options) {
     if (channels + firstChannel > 2) {
         errorText_ = "RtApiDs::probeDeviceOpen: DirectSound does not support more than 2 channels per device.";
         return FAILURE;
@@ -5525,8 +5525,8 @@ void RtApiAlsa::saveDeviceInfo(void) {
 }
 
 bool RtApiAlsa::probeDeviceOpen(unsigned int device, StreamMode mode, unsigned int channels, unsigned int firstChannel,
-                                 unsigned int sampleRate, RtAudioFormat format, unsigned int *bufferSize,
-                                 RtAudio::StreamOptions *options)
+                                unsigned int sampleRate, RtAudioFormat format, unsigned int *bufferSize,
+                                RtAudio::StreamOptions *options)
 
 {
 #if defined(__RTAUDIO_DEBUG__)
@@ -6605,8 +6605,8 @@ RtAudio::DeviceInfo RtApiOss::getDeviceInfo(unsigned int device) {
 }
 
 bool RtApiOss::probeDeviceOpen(unsigned int device, StreamMode mode, unsigned int channels, unsigned int firstChannel,
-                                unsigned int sampleRate, RtAudioFormat format, unsigned int *bufferSize,
-                                RtAudio::StreamOptions *options) {
+                               unsigned int sampleRate, RtAudioFormat format, unsigned int *bufferSize,
+                               RtAudio::StreamOptions *options) {
     int mixerfd = open("/dev/mixer", O_RDWR, 0);
     if (mixerfd == -1) {
         errorText_ = "RtApiOss::probeDeviceOpen: error opening '/dev/mixer'.";
@@ -7922,8 +7922,8 @@ void RtApi::convertBuffer(char *outBuffer, char *inBuffer, ConvertInfo &info) {
 // (bswap_32(x>>32)); }
 
 void RtApi::byteSwapBuffer(char *buffer, unsigned int samples, RtAudioFormat format) {
-    register char val;
-    register char *ptr;
+    char val;
+    char *ptr;
 
     ptr = buffer;
     if (format == RTAUDIO_SINT16) {
