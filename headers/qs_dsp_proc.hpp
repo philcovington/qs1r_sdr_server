@@ -55,7 +55,7 @@ class QsSquelch;
 class QsSMeter;
 class QsVolume;
 
-class QsDspProcessor : Thread {
+class QsDspProcessor : public Thread {
 
   public:
     std::unique_ptr<QsToneGenerator> p_tg0;

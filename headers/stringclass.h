@@ -76,11 +76,11 @@ class String {
     // Clear the string
     void clear() { data.clear(); }
 
-    // Static method to convert int to String
-    static String number(int num) { return String(std::to_string(num)); }
+    // Static method to convert int to String with a specified base (default base 10)
+    static String number(int num, int base = 10) { return String(convertIntegerToString(num, base)); }
 
-    // Static method to convert unsigned int to String
-    static String number(unsigned int num) { return String(std::to_string(num)); }
+    // Static method to convert unsigned int to String with a specified base (default base 10)
+    static String number(unsigned int num, int base = 10) { return String(convertIntegerToString(num, base)); }
 
     // Static method to convert double to String (with optional precision)
     static String number(double num, int precision = 6) {
@@ -104,7 +104,8 @@ class String {
         }
 
         // Check if the string is empty or only contains whitespace
-        if (data.empty() || std::all_of(data.begin(), data.end(), isspace)) {
+        // Check if the string is empty or only contains whitespace
+        if (data.empty() || std::all_of(data.begin(), data.end(), [](unsigned char c) { return std::isspace(c); })) {
             return 0; // Invalid input
         }
 
@@ -142,7 +143,7 @@ class String {
         }
 
         // Check if the string is empty or only contains whitespace
-        if (data.empty() || std::all_of(data.begin(), data.end(), isspace)) {
+        if (data.empty() || std::all_of(data.begin(), data.end(), [](unsigned char c) { return std::isspace(c); })) {
             return 0.0f; // Invalid input
         }
 
@@ -185,7 +186,7 @@ class String {
         }
 
         // Check if the string is empty or only contains whitespace
-        if (data.empty() || std::all_of(data.begin(), data.end(), isspace)) {
+        if (data.empty() || std::all_of(data.begin(), data.end(), [](unsigned char c) { return std::isspace(c); })) {
             return 0.0; // Invalid input
         }
 
@@ -258,6 +259,41 @@ class String {
         return result;
     }
 
+  public:
+    // Case-insensitive compare function
+    int compare(const String &other) const {
+        std::string thisLower = toLower(data);
+        std::string otherLower = toLower(other.data);
+        return std::strcmp(thisLower.c_str(), otherLower.c_str());
+    }
+
   private:
     std::string data;
+
+    // Helper method to convert integers to string with different bases
+    static std::string convertIntegerToString(int num, int base) {
+        std::ostringstream out;
+        switch (base) {
+        case 8: // Octal
+            out << std::oct << num;
+            break;
+        case 10: // Decimal (default)
+            out << num;
+            break;
+        case 16: // Hexadecimal
+            out << std::hex << num;
+            break;
+        default:
+            throw std::invalid_argument("Unsupported base");
+        }
+        return out.str();
+    }
+
+    // Helper method to convert string to lowercase
+    static std::string toLower(const std::string &str) {
+        std::string lowerStr = str;
+        std::transform(lowerStr.begin(), lowerStr.end(), lowerStr.begin(),
+                       [](unsigned char c) { return std::tolower(c); });
+        return lowerStr;
+    }
 };

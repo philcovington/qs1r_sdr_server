@@ -33,7 +33,7 @@
 #include "../headers/qs_types.h"
 #include "../headers/qs_threads.h"
 
-class QsDataReader : Thread {
+class QsDataReader : public Thread {
   public:
     QsDataReader();
     ~QsDataReader();

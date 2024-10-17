@@ -27,7 +27,7 @@
 
 #pragma once
 
-#include "../headers/qs1r_server.h"
+#include "../headers/qs1r_server.hpp"
 #include "../headers/qs_cpx_vector_cb.h"
 #include "../headers/qs_datareader.h"
 #include "../headers/qs_float_vector_cb.h"
@@ -48,7 +48,7 @@ Map<int, double> SMETERCORRECTMAP;
 double SMETERCORRECT = 0.0;
 
 namespace QsGlobal {
-extern QS1R_server *g_server;
+extern QS1RServer *g_server;
 extern std::unique_ptr<QsDataReader> g_data_reader;
 extern std::unique_ptr<QsIOLib_LibUSB> g_io;
 extern std::unique_ptr<QsMemory> g_memory;
