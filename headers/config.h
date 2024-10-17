@@ -1,7 +1,7 @@
 #pragma once
 
 // Dynamically updated version number
-#define VERSION "20241016"
+#define VERSION "20241017"
 
 // Define this to enable debug messages
 #define DEBUG_MODE 1  // Set to 1 to enable, 0 to disable

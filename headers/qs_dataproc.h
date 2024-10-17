@@ -2,9 +2,9 @@
  * @file qs_data_proc.h
  * @brief Provides a set of utility functions for audio signal processing.
  *
- * The QsDataProc class offers various static methods for performing mathematical 
- * operations on different data types, including floating point numbers, integers, 
- * and complex numbers. These functions are optimized for real-time signal processing 
+ * The QsDataProc class offers various static methods for performing mathematical
+ * operations on different data types, including floating point numbers, integers,
+ * and complex numbers. These functions are optimized for real-time signal processing
  * tasks, such as adding values to arrays, rounding, and bounding values.
  *
  * Features:
@@ -12,17 +12,17 @@
  * - Overloaded Add functions for adding constants or arrays to different data types.
  * - Support for both real and complex number operations.
  * - Functions for rounding, absolute value computation, and type conversions.
- * 
+ *
  * Usage:
  * - Use the `Add()` methods to apply values to signal arrays.
  * - `qBound()` and `Bound()` can be used to constrain values within specified limits.
  * - `Round()` provides an efficient method for rounding float values.
  *
  * Notes:
- * - The constants `INTTOFLOAT`, `FLOATTOINT`, and others are provided for handling 
+ * - The constants `INTTOFLOAT`, `FLOATTOINT`, and others are provided for handling
  *   type conversions between integers and floating point numbers.
  * - The `qs_vect_f` and `qs_vect_cpx` types are used for arrays of float and complex values.
- * 
+ *
  * Author: Philip A Covington
  * Date: 2024-10-16
  */
@@ -74,6 +74,14 @@ class QsDataProc {
     template <typename T> inline static T Abs(const T &t) { return t >= 0 ? t : -t; }
 
     inline static int Round(float f) { return f >= 0.0 ? int(f + 0.5) : int(f - int(f - 1) + 0.5) + int(f - 1); }
+
+    template <typename T> inline typename std::enable_if<std::is_floating_point<T>::value, int>::type qRound(T value) {
+        return static_cast<int>(std::round(value));
+    }
+
+    template <typename T> inline typename std::enable_if<std::is_integral<T>::value, int>::type qRound(T value) {
+        return static_cast<int>(value);
+    }
 
     inline static void Add(short *src_dst, const short val, uint32_t length) {
         for (uint32_t i = 0; i < length; i++) {
