@@ -30,7 +30,7 @@
  *
  * The String class enhances the standard string functionality while
  * maintaining simplicity and ease of use.
- * 
+ *
  * I tried to provide similar functionality to Qt's QString class.
  *
  * Author: [Philip A Covington]
@@ -39,9 +39,11 @@
 
 #pragma once
 
+#include "../headers/stringlistclass.h"
 #include <algorithm>
 #include <cctype>
 #include <iostream>
+#include <limits>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -94,6 +96,166 @@ class String {
         out.precision(precision);
         out << std::fixed << num;
         return String(out.str());
+    }
+
+    int toInt(bool *ok = nullptr) const {
+        if (ok) {
+            *ok = false; // Assume failure by default
+        }
+
+        // Check if the string is empty or only contains whitespace
+        if (data.empty() || std::all_of(data.begin(), data.end(), isspace)) {
+            return 0; // Invalid input
+        }
+
+        // Check for leading sign
+        size_t startIndex = 0;
+        if (data[0] == '-' || data[0] == '+') {
+            startIndex = 1; // Move past the sign
+        }
+
+        // Validate each character in the string
+        for (size_t i = startIndex; i < data.length(); ++i) {
+            if (!isdigit(data[i])) {
+                return 0; // Invalid character found
+            }
+        }
+
+        // Convert the string to an integer
+        int result = std::stoi(data); // We assume input is valid after checks
+
+        // Check for out of range
+        if (result == std::numeric_limits<int>::max() || result == std::numeric_limits<int>::min()) {
+            return 0; // Indicate failure (or handle it differently based on your requirements)
+        }
+
+        if (ok) {
+            *ok = true; // Set ok to true if conversion is successful
+        }
+
+        return result;
+    }
+
+    float toFloat(bool *ok = nullptr) const {
+        if (ok) {
+            *ok = false; // Assume failure by default
+        }
+
+        // Check if the string is empty or only contains whitespace
+        if (data.empty() || std::all_of(data.begin(), data.end(), isspace)) {
+            return 0.0f; // Invalid input
+        }
+
+        // Check for leading sign
+        size_t startIndex = 0;
+        if (data[0] == '-' || data[0] == '+') {
+            startIndex = 1; // Move past the sign
+        }
+
+        bool decimalFound = false; // Flag to check if we found a decimal point
+        for (size_t i = startIndex; i < data.length(); ++i) {
+            if (data[i] == '.') {
+                if (decimalFound) {
+                    return 0.0f; // Invalid format: multiple decimal points
+                }
+                decimalFound = true; // Found the decimal point
+            } else if (!isdigit(data[i])) {
+                return 0.0f; // Invalid character found
+            }
+        }
+
+        // Convert the string to a float
+        float result = std::strtof(data.c_str(), nullptr);
+
+        // Check for out of range
+        if (result == std::numeric_limits<float>::max() || result == std::numeric_limits<float>::min()) {
+            return 0.0f; // Indicate failure (or handle it differently)
+        }
+
+        if (ok) {
+            *ok = true; // Set ok to true if conversion is successful
+        }
+
+        return result;
+    }
+
+    double toDouble(bool *ok = nullptr) const {
+        if (ok) {
+            *ok = false; // Assume failure by default
+        }
+
+        // Check if the string is empty or only contains whitespace
+        if (data.empty() || std::all_of(data.begin(), data.end(), isspace)) {
+            return 0.0; // Invalid input
+        }
+
+        // Check for leading sign
+        size_t startIndex = 0;
+        if (data[0] == '-' || data[0] == '+') {
+            startIndex = 1; // Move past the sign
+        }
+
+        bool decimalFound = false; // Flag to check if we found a decimal point
+        for (size_t i = startIndex; i < data.length(); ++i) {
+            if (data[i] == '.') {
+                if (decimalFound) {
+                    return 0.0; // Invalid format: multiple decimal points
+                }
+                decimalFound = true; // Found the decimal point
+            } else if (!isdigit(data[i])) {
+                return 0.0; // Invalid character found
+            }
+        }
+
+        // Convert the string to a double
+        double result = std::strtod(data.c_str(), nullptr);
+
+        // Check for out of range
+        if (result == std::numeric_limits<double>::max() || result == std::numeric_limits<double>::min()) {
+            return 0.0; // Indicate failure (or handle it differently)
+        }
+
+        if (ok) {
+            *ok = true; // Set ok to true if conversion is successful
+        }
+
+        return result;
+    }
+
+    bool startsWith(const std::string &prefix) const {
+        return data.rfind(prefix, 0) == 0; // Check if the prefix matches the beginning of the string
+    }
+
+    int indexOf(const std::string &str, size_t start = 0) const {
+        if (start >= data.length()) {
+            return -1; // Start position is out of bounds
+        }
+        size_t pos = data.find(str, start);
+        return (pos != std::string::npos) ? static_cast<int>(pos) : -1;
+    }
+
+    size_t length() const { return data.length(); }
+
+    String mid(size_t start, size_t length) const {
+        if (start >= data.length()) {
+            return String(); // Return an empty String if start is out of bounds
+        }
+        return String(data.substr(start, length));
+    }
+
+    StringList split(const std::string &delimiter) const {
+        StringList result;
+        size_t start = 0;
+        size_t end = data.find(delimiter);
+
+        while (end != std::string::npos) {
+            result.append(data.substr(start, end - start)); // Add the substring to the result
+            start = end + delimiter.length();
+            end = data.find(delimiter, start);
+        }
+
+        result.append(data.substr(start, end)); // Add the last substring
+        return result;
     }
 
   private:
