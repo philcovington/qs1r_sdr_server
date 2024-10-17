@@ -53,6 +53,10 @@ extern std::unique_ptr<QsDataReader> g_data_reader;
 extern std::unique_ptr<QsIOLib_LibUSB> g_io;
 extern std::unique_ptr<QsMemory> g_memory;
 extern std::unique_ptr<QsCpxVectorCircularBuffer> g_cpx_readin_ring;
+extern std::unique_ptr<QsCpxVectorCircularBuffer> g_cpx_ps1_ring;
+extern std::unique_ptr<QsCpxVectorCircularBuffer> g_cpx_ps2_ring;
+extern std::unique_ptr<QsCpxVectorCircularBuffer> g_cpx_sd_ring;
 extern std::unique_ptr<QsFloatVectorCircularBuffer> g_float_rt_ring;
+extern std::unique_ptr<QsFloatVectorCircularBuffer> g_float_dac_ring;
 extern bool g_swap_iq;
 }; // namespace QsGlobal

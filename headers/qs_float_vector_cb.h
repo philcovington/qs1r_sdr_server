@@ -57,10 +57,10 @@ class QsFloatVectorCircularBuffer {
 
     void init(uint32_t size);
 
-    uint32_t read(qs_vect_f &rdata, uint32_t length);
-    uint32_t read(float *rdata, uint32_t length);
-    uint32_t write(qs_vect_f &wdata, uint32_t length);
-    uint32_t write(float *wdata, uint32_t length);
+    uint32_t read(qs_vect_f &rdata, uint32_t length=0);
+    uint32_t read(float *rdata, uint32_t length=0);
+    uint32_t write(qs_vect_f &wdata, uint32_t length=0);
+    uint32_t write(float *wdata, uint32_t length=0);
     uint32_t size();
     uint32_t writeAvail();
     uint32_t readAvail();

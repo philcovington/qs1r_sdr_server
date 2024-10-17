@@ -16,7 +16,7 @@ void QsCpxVectorCircularBuffer::init(uint32_t size) {
 uint32_t QsCpxVectorCircularBuffer::read(qs_vect_cpx &rdata, uint32_t length) {
     uint32_t count = 0;
 
-    if (length != -1)
+    if (length != 0)
         count = length;
     else
         count = rdata.size();
@@ -39,7 +39,7 @@ uint32_t QsCpxVectorCircularBuffer::read(qs_vect_cpx &rdata, uint32_t length) {
 uint32_t QsCpxVectorCircularBuffer::write(qs_vect_cpx &wdata, uint32_t length) {
     uint32_t count = 0;
 
-    if (length != -1)
+    if (length != 0)
         count = length;
     else
         count = wdata.size();

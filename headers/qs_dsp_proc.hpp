@@ -1,0 +1,111 @@
+#pragma once
+
+#include <memory>
+
+#include "../headers/qs_dataproc.h"
+#include "../headers/qs_defines.h"
+#include "../headers/qs_globals.h"
+#include "../headers/speex/headers/speex_resampler.h"
+#include "../headers/qs_sleep.h"
+
+class QsDownConvertor;
+class QsToneGenerator;
+class QsAveragingNoiseBlanker;
+class QsBlockNoiseBlanker;
+class QsState;
+class QsMainRxFilter;
+class QsPostRxFilter;
+class QsFilter;
+class QS_IIR;
+class QsAgc;
+class QsSAMDemodulator;
+class QsAMDemodulator;
+class QsFMNDemodulator;
+class QsFMWDemodulator;
+class QsNoiseReductionFilter;
+class QsAutoNotchFilter;
+class QsSquelch;
+class QsSMeter;
+class QsVolume;
+
+class QsDspProcessor {
+
+  public:
+    std::unique_ptr<QsToneGenerator> p_tg0;
+    std::unique_ptr<QsAveragingNoiseBlanker> p_anb;
+    std::unique_ptr<QsBlockNoiseBlanker> p_bnb;
+    std::unique_ptr<QsDownConvertor> p_downconv;
+    std::unique_ptr<QsToneGenerator> p_tg1;
+    std::unique_ptr<QsAgc> p_agc;
+    std::unique_ptr<QsMainRxFilter> p_main_filter;
+    std::unique_ptr<QsPostRxFilter> p_post_filter;
+    std::unique_ptr<QsAMDemodulator> p_am;
+    std::unique_ptr<QsSAMDemodulator> p_sam;
+    std::unique_ptr<QsFMNDemodulator> p_fmn;
+    std::unique_ptr<QsFMWDemodulator> p_fmw;
+    std::unique_ptr<QsNoiseReductionFilter> p_nr;
+    std::unique_ptr<QsAutoNotchFilter> p_anf;
+    std::unique_ptr<QsSMeter> p_sm;
+    std::unique_ptr<QsSquelch> p_sq;
+    std::unique_ptr<QsVolume> p_vol;
+
+    std::unique_ptr<QS_IIR> p_iir0;
+    std::unique_ptr<QS_IIR> p_iir1;
+    std::unique_ptr<QS_IIR> p_iir2;
+    std::unique_ptr<QS_IIR> p_iir3;
+    std::unique_ptr<QS_IIR> p_iir4;
+    std::unique_ptr<QS_IIR> p_iir5;
+    std::unique_ptr<QS_IIR> p_iir6;
+    std::unique_ptr<QS_IIR> p_iir7;
+
+    explicit QsDspProcessor();
+    ~QsDspProcessor();
+
+    void run();
+    void stop();
+
+    void clearBuffers();
+
+    void init(int rx_num = 1);
+    void reinit();
+
+  private:
+    unsigned int m_rx_num;
+    unsigned int m_bsize;
+    unsigned int m_bsizeX2;
+    unsigned int m_sd_buffer_size;
+    unsigned int m_ps_size;
+    unsigned int m_req_outframes;
+    unsigned int m_outframesX2;
+
+    bool m_thread_go;
+    bool m_is_running;
+    bool m_dac_bypass;
+    bool m_rt_audio_bypass;
+
+    double m_processing_rate;
+    double m_post_processing_rate;
+    double m_rs_rate;
+
+    qs_vect_cpx in_cpx;
+    qs_vect_cpx rs_cpx;
+
+    qs_vect_f re_f;
+    qs_vect_f im_f;
+
+    qs_vect_cpx rs_cpx_n;
+
+	QsSleep sleep;
+
+    // RESAMPLER
+    SpeexResamplerState *resampler;
+    double m_rs_output_rate;
+    double m_rs_input_rate;
+    int m_rs_quality;
+    qs_vect_f rs_in_interleaved;
+    qs_vect_f rs_out_interleaved;
+
+    void initPowerSpectrum(int size);
+    void initResampler(int size);
+    void initManualNotch();
+};

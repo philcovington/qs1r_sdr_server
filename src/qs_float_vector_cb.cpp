@@ -19,7 +19,7 @@ void QsFloatVectorCircularBuffer::init(uint32_t size) {
 uint32_t QsFloatVectorCircularBuffer::read(qs_vect_f &rdata, uint32_t length) {
     uint32_t count = 0;
 
-    if (length != -1)
+    if (length != 0)
         count = length;
     else
         count = rdata.size();
@@ -58,7 +58,7 @@ uint32_t QsFloatVectorCircularBuffer::read(float *rdata, uint32_t count) {
 uint32_t QsFloatVectorCircularBuffer::write(qs_vect_f &wdata, uint32_t length) {
     uint32_t count = 0;
 
-    if (length != -1)
+    if (length != 0)
         count = length;
     else
         count = wdata.size();
