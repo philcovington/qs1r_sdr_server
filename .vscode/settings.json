@@ -77,6 +77,13 @@
 		"xtr1common": "cpp",
 		"condition_variable": "cpp",
 		"mutex": "cpp",
-		"arch.h": "c"
+		"arch.h": "c",
+		"any": "cpp",
+		"codecvt": "cpp",
+		"forward_list": "cpp",
+		"optional": "cpp",
+		"ranges": "cpp",
+		"span": "cpp",
+		"valarray": "cpp"
 	}
 }

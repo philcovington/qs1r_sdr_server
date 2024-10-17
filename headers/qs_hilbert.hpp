@@ -1,5 +1,5 @@
 /**
- * @file    qs_hilbert.h
+ * @file    qs_hilbert.hpp
  * @brief   Hilbert transform filter for signal processing.
  * 
  * This class performs a Hilbert transform on input signals, converting real 

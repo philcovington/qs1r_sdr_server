@@ -1,5 +1,5 @@
 /**
- * @file    qs_iir.h
+ * @file    qs_iir_filter.hpp
  * @brief   Infinite Impulse Response (IIR) filter class for signal processing.
  * 
  * This class provides different types of IIR filters for processing real and 
