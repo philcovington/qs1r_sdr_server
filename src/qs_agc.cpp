@@ -202,6 +202,6 @@ void QsAgc ::process(qs_vect_cpx &src_dst) {
         }
         double gain = 20.0 * log10(m_agc_current_gain) + 3.0;
         QsGlobal::g_memory->setAgcCurrentGain(gain);
-        QsGlobal::g_memory->setAgcCurrentGainC(qRound(gain));
+        QsGlobal::g_memory->setAgcCurrentGainC(std::round(gain));
     }
 }
