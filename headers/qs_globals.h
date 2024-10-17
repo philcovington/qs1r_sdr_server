@@ -34,6 +34,7 @@
 #include "../headers/qs_io_libusb.h"
 #include "../headers/qs_memory.h"
 #include "../headers/qs_wait_condition.h"
+#include "../headers/mapclass.h"
 
 #include <memory>
 
@@ -42,6 +43,9 @@ const double TWO_PI = 6.283185307179586476925286766559;
 
 extern WaitCondition WC_NEED_MORE_DATA;
 extern WaitCondition WC_FILE_FIFO_WRITE;
+
+Map<int, double> SMETERCORRECTMAP;
+double SMETERCORRECT = 0.0;
 
 namespace QsGlobal {
 extern QS1R_server *g_server;
