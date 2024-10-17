@@ -29,13 +29,11 @@
 
 #pragma once
 
-#include <thread>
-
-// #include "../headers/qs_globals.h"
 #include "../headers/qs_sleep.h"
 #include "../headers/qs_types.h"
+#include "../headers/qs_threads.h"
 
-class QsDataReader {
+class QsDataReader : Thread {
   public:
     QsDataReader();
     ~QsDataReader();

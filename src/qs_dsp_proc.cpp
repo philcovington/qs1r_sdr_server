@@ -24,7 +24,7 @@
 #include "../headers/qs_downcnv.h"
 #include <cmath>
 
-QsDspProcessor ::QsDspProcessor()
+QsDspProcessor::QsDspProcessor()
     : m_rx_num(0), m_bsize(0), m_bsizeX2(0), m_sd_buffer_size(0), m_ps_size(0), m_req_outframes(0), m_outframesX2(0),
       m_thread_go(false), m_is_running(false), m_dac_bypass(false), m_rt_audio_bypass(false), m_processing_rate(0),
       m_post_processing_rate(0), m_rs_rate(0), m_rs_quality(4), p_tg0(new QsToneGenerator()),
@@ -37,12 +37,12 @@ QsDspProcessor ::QsDspProcessor()
       p_iir5(new QS_IIR()), p_iir6(new QS_IIR()), p_iir7(new QS_IIR()), resampler(NULL), m_rs_output_rate(0),
       m_rs_input_rate(0) { QsSleep sleep; }
 
-QsDspProcessor ::~QsDspProcessor() {
+QsDspProcessor::~QsDspProcessor() {
     if (resampler != NULL)
         speex_resampler_destroy(resampler);
 }
 
-void QsDspProcessor ::init(int rx_num) {
+void QsDspProcessor::init(int rx_num) {
     m_rx_num = rx_num;
     m_bsize = QsGlobal::g_memory->getReadBlockSize();
     m_bsizeX2 = m_bsize * 2;
@@ -137,9 +137,9 @@ void QsDspProcessor ::init(int rx_num) {
     p_iir7->init(8, QS_IIR::iirBandReject);
 }
 
-void QsDspProcessor ::reinit() { init(m_rx_num); }
+void QsDspProcessor::reinit() { init(m_rx_num); }
 
-void QsDspProcessor ::run() {
+void QsDspProcessor::run() {
     unsigned int sz = 0;
     unsigned int outframes = 0;
 
@@ -177,7 +177,7 @@ void QsDspProcessor ::run() {
     while (m_thread_go) {
         // read data from reader ring buffer
         while (QsGlobal::g_cpx_readin_ring->readAvail() >= m_bsize) {
-            QsGlobal::g_cpx_readin_ring->read(in_cpx, m_bsize);
+            QsGlobal::g_cpx_readin_ring->read(in_cpx);
 
             // Do noiseblankers
             // ======== <AVERAGING NOISE BLANKER> ===========
@@ -191,7 +191,7 @@ void QsDspProcessor ::run() {
             // power spectrum
             // =================<POWER SPECTRUM>==================
             if (QsGlobal::g_cpx_ps1_ring->writeAvail() >= m_bsize) {
-                QsGlobal::g_cpx_ps1_ring->write(in_cpx, m_bsize);
+                QsGlobal::g_cpx_ps1_ring->write(in_cpx);
             }
             // =================</POWER SPECTRUM>==================
 
@@ -326,16 +326,16 @@ void QsDspProcessor ::run() {
     _debug() << "dspproc thread stopped.";
 }
 
-void QsDspProcessor ::stop() { m_thread_go = false; }
+void QsDspProcessor::stop() { m_thread_go = false; }
 
-void QsDspProcessor ::clearBuffers() {
+void QsDspProcessor::clearBuffers() {
     QsGlobal::g_cpx_sd_ring->empty();
     QsGlobal::g_cpx_ps1_ring->empty();
 }
 
 // RESAMPLER
 
-void QsDspProcessor ::initResampler(int size) {
+void QsDspProcessor::initResampler(int size) {
     rs_in_interleaved.resize(size * 8);
     rs_out_interleaved.resize(size * 8);
 

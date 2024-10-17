@@ -1,3 +1,29 @@
+/**
+ * @file    qs_dsp_proc.hpp
+ * @brief   Digital Signal Processing (DSP) processor for managing various audio processing tasks.
+ *
+ * This class is responsible for initializing, managing, and processing digital signals
+ * through various audio processing components, including noise blankers, filters, and demodulators.
+ * It utilizes Speex resampling for audio signal conversion and handles buffer management
+ * for efficient signal processing.
+ *
+ * Features:
+ * - Integration with multiple DSP components such as tone generators, noise blankers, and filters.
+ * - Resampling functionality to adjust audio sample rates.
+ * - Thread management for real-time audio processing.
+ * - Buffer management for input and output signals.
+ *
+ * Usage:
+ * - Create an instance of QsDspProcessor and call init() to set up DSP components.
+ * - Use run() to start processing audio signals and stop() to halt processing.
+ * - Clear buffers using clearBuffers() as needed.
+ *
+ * @note This class is designed to work in real-time audio processing applications.
+ *
+ * @author  Philip A Covington
+ * @date    2024-10-17
+ */
+
 #pragma once
 
 #include <memory>
@@ -5,8 +31,9 @@
 #include "../headers/qs_dataproc.h"
 #include "../headers/qs_defines.h"
 #include "../headers/qs_globals.h"
-#include "../headers/speex/headers/speex_resampler.h"
 #include "../headers/qs_sleep.h"
+#include "../headers/qs_threads.h"
+#include "../headers/speex/headers/speex_resampler.h"
 
 class QsDownConvertor;
 class QsToneGenerator;
@@ -28,7 +55,7 @@ class QsSquelch;
 class QsSMeter;
 class QsVolume;
 
-class QsDspProcessor {
+class QsDspProcessor : Thread {
 
   public:
     std::unique_ptr<QsToneGenerator> p_tg0;
@@ -95,7 +122,7 @@ class QsDspProcessor {
 
     qs_vect_cpx rs_cpx_n;
 
-	QsSleep sleep;
+    QsSleep sleep;
 
     // RESAMPLER
     SpeexResamplerState *resampler;
