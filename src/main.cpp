@@ -1,12 +1,12 @@
 #include <iostream>
 #include <sstream>
 
-#include "../headers/ByteArray.h"
-#include "../headers/bitstream.h"
-#include "../headers/config.h"
-#include "../headers/debugloggerclass.h"
-#include "../headers/qs1r_server.h"
-#include "../headers/qs_io_libusb.h"
+#include "../include/qs_bytearray.hpp"
+#include "../include/qs_bitstream.hpp"
+#include "../include/config.h"
+#include "../include/qs_debugloggerclass.hpp"
+#include "../include/qs1r_server.h"
+#include "../include/qs_io_libusb.hpp"
 
 libusb_device *findQS1RDevice(QsIOLib_LibUSB *usb, u_int16_t vid, uint16_t pid, unsigned int index) {
     libusb_device *device = nullptr;

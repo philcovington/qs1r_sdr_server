@@ -1,4 +1,4 @@
-#include "../headers/qs_am_demod.h"
+#include "../include/qs_am_demod.hpp"
 
 QsAMDemodulator ::QsAMDemodulator() : m_am_mag(0.0), m_am_z0(0.0), m_am_z1(0.0), m_am_dc_alpha(0.999) {}
 

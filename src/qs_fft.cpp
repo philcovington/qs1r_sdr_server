@@ -1,5 +1,5 @@
-#include "../headers/qs_fft.h"
-#include "../headers/qs_globals.h"
+#include "../include/qs_fft.hpp"
+#include "../include/qs_globals.hpp"
 #include <cmath>
 
 QsFFT ::QsFFT() : size(4096), half_sz(size / 2) {

@@ -1,4 +1,4 @@
-#include "../headers/qs_avg_nb.hpp"
+#include "../include/qs_avg_nb.hpp"
 
 QsAveragingNoiseBlanker ::QsAveragingNoiseBlanker()
     : m_anb_avg_sig(0), m_anb_magnitude(0), m_anb_avg_magn(0), m_anb_switch(false), m_anb_thres(0) {}

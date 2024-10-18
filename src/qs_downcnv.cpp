@@ -1,5 +1,5 @@
-#include "../headers/qs_downcnv.h"
-#include "../headers/debugloggerclass.h"
+#include "../include/qs_downcnv.hpp"
+#include "../include/qs_debugloggerclass.hpp"
 
 #define MIN_OUTPUT_RATE (7900.0 * 2.0)
 #define MAX_HALF_BAND_BUFSIZE 32768

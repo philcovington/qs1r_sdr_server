@@ -1,5 +1,5 @@
-#include "../headers/qs_smeter.h"
-#include "../headers/qs_defines.h"
+#include "../include/qs_smeter.hpp"
+#include "../include/qs_defines.hpp"
 
 QsSMeter ::QsSMeter() : m_sm_tmp_val(0), m_sm_value(0) {}
 

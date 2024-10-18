@@ -1,6 +1,6 @@
-#include "../headers/qs_filter.h"
-#include "../headers/qs_dataproc.h"
-#include "../headers/qs_globals.h"
+#include "../include/qs_filter.hpp"
+#include "../include/qs_dataproc.hpp"
+#include "../include/qs_globals.hpp"
 #include <cmath>
 
 QsFilter::QsFilter()

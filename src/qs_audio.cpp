@@ -1,8 +1,8 @@
-#include "../headers/qs_audio.h"
-#include "../headers/debugloggerclass.h"
-#include "../headers/qs1r_server.h"
-#include "../headers/qs_dataproc.h"
-#include "../headers/qs_globals.h"
+#include "../include/qs_audio.hpp"
+#include "../include/qs_debugloggerclass.hpp"
+#include "../include/qs1r_server.h"
+#include "../include/qs_dataproc.hpp"
+#include "../include/qs_globals.hpp"
 
 QsAudio ::QsAudio() : p_rta(new RtAudio()), stop_stream_request(0) {}
 

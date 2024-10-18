@@ -1,4 +1,4 @@
-#include "../headers/qs_blk_nb.hpp"
+#include "../include/qs_blk_nb.hpp"
 
 QsBlockNoiseBlanker ::QsBlockNoiseBlanker()
     : m_bnb_magnitude(0), m_bnb_avg_magn(0), m_bnb_switch(false), m_bnb_thres(0), m_bnb_sig_index(0),

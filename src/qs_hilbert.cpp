@@ -1,5 +1,5 @@
-#include "../headers/qs_hilbert.hpp"
-#include "../headers/qs_filter.h"
+#include "../include/qs_hilbert.hpp"
+#include "../include/qs_filter.hpp"
 
 QsHilbert ::QsHilbert(int ntaps) { m_taps = MakeHilbertTaps(12, ntaps); }
 

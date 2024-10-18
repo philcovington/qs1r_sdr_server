@@ -1,7 +1,7 @@
-#include "../headers/qs_dac_writer.hpp"
-#include "../headers/debugloggerclass.h"
-#include "../headers/qs1r_server.h"
-#include "../headers/qs_dataproc.h"
+#include "../include/qs_dac_writer.hpp"
+#include "../include/qs_debugloggerclass.hpp"
+#include "../include/qs1r_server.h"
+#include "../include/qs_dataproc.hpp"
 
 QsDacWriter::QsDacWriter() : m_bsize(0), m_bsizeX2(0) {}
 

@@ -1,5 +1,5 @@
-#include "../headers/qs_iir_filter.hpp"
-#include "../headers/qs_globals.h"
+#include "../include/qs_iir_filter.hpp"
+#include "../include/qs_globals.hpp"
 
 double asinh(double value) {
     double returned;

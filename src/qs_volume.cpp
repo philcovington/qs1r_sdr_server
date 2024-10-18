@@ -1,4 +1,4 @@
-#include "../headers/qs_volume.h"
+#include "../include/qs_volume.hpp"
 
 QsVolume ::QsVolume() : m_volume_db(0), m_volume_val(0) {}
 

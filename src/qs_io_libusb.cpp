@@ -3,11 +3,11 @@
 #include <sstream>
 #include <vector>
 
-#include "../headers/ByteArray.h"
-#include "../headers/File.h"
-#include "../headers/TextStream.h"
-#include "../headers/debugloggerclass.h"
-#include "../headers/qs_io_libusb.h"
+#include "../include/qs_bytearray.hpp"
+#include "../include/qs_file.hpp"
+#include "../include/qs_textstream.hpp"
+#include "../include/qs_debugloggerclass.hpp"
+#include "../include/qs_io_libusb.hpp"
 #include <libusb-1.0/libusb.h>
 
 std::string QsIOLib_LibUSB ::printVectorInHex(const std::vector<uint8_t> &ba) {

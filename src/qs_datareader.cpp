@@ -1,9 +1,9 @@
 
-#include "../headers/qs_datareader.h"
-#include "../headers/debugloggerclass.h"
-#include "../headers/qs_cpx_vector_cb.h"
-#include "../headers/qs_globals.h"
-#include "../headers/qs_types.h"
+#include "../include/qs_datareader.hpp"
+#include "../include/qs_debugloggerclass.hpp"
+#include "../include/qs_cpx_vector_cb.hpp"
+#include "../include/qs_globals.hpp"
+#include "../include/qs_types.hpp"
 
 QsDataReader::QsDataReader()
     : m_thread_go(false), m_is_running(false), m_qs1r_fail_emitted(false), m_result(-1), m_channels(1), m_bsize(0),

@@ -1,4 +1,4 @@
-#include "../headers/qs_nr_filter.hpp"
+#include "../include/qs_nr_filter.hpp"
 
 QsNoiseReductionFilter ::QsNoiseReductionFilter()
     : m_nr_switch(false), m_nr_lms_sz(0), m_nr_delay(0), m_nr_dl_indx(0), m_nr_mask(0), m_nr_adapt_rate(0),

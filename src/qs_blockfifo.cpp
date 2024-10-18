@@ -1,4 +1,4 @@
-#include "../headers/qs_blockfifo.h"
+#include "../include/qs_blockfifo.hpp"
 
 QsBlockFifo::QsBlockFifo() {
     block_size_ = BSIZE;

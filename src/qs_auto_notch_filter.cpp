@@ -1,4 +1,4 @@
-#include "../headers/qs_auto_notch_filter.hpp"
+#include "../include/qs_auto_notch_filter.hpp"
 
 QsAutoNotchFilter ::QsAutoNotchFilter()
     : m_anf_lms_sz(0), m_anf_mask(0), m_anf_switch(false), m_anf_adapt_rate(0), m_anf_leakage(0), m_anf_adapt_size(0),

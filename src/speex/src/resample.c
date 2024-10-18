@@ -14,9 +14,9 @@
 static void *speex_alloc(int size) { return calloc(size, 1); }
 static void *speex_realloc(void *ptr, int size) { return realloc(ptr, size); }
 static void speex_free(void *ptr) { free(ptr); }
-#include "../headers/arch.h"
-#include "../headers/speex_resampler.h"
-#include "../headers/stack_alloc.h"
+#include "../include/arch.h"
+#include "../include/speex_resampler.h"
+#include "../include/stack_alloc.h"
 #include <math.h>
 #ifndef M_PI
 #define M_PI 3.14159263

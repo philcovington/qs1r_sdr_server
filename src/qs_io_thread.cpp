@@ -1,11 +1,11 @@
-#include "../headers/qs_io_thread.hpp"
-#include "../headers/debugloggerclass.h"
-#include "../headers/qs_dataproc.h"
-#include "../headers/qs_defaults.h"
-#include "../headers/qs_defines.h"
-#include "../headers/qs_globals.h"
-#include "../headers/qs_sleep.h"
-#include "../headers/stringclass.h"
+#include "../include/qs_io_thread.hpp"
+#include "../include/qs_debugloggerclass.hpp"
+#include "../include/qs_dataproc.hpp"
+#include "../include/qs_defaults.hpp"
+#include "../include/qs_defines.hpp"
+#include "../include/qs_globals.hpp"
+#include "../include/qs_sleep.hpp"
+#include "../include/qs_stringclass.hpp"
 
 QsIoThread ::QsIoThread() : m_thread_go(false) {}
 

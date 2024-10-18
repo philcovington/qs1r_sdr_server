@@ -1,4 +1,4 @@
-#include "../headers/qs_rt_audio.h"
+#include "../include/qs_rt_audio.hpp"
 #include <climits>
 #include <cstdlib>
 #include <cstring>

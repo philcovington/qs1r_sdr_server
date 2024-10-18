@@ -1,4 +1,4 @@
-#include "../headers/qs_squelch.h"
+#include "../include/qs_squelch.hpp"
 
 QsSquelch::QsSquelch() : m_sq_switch(false), m_sq_thresh(0), m_sq_hist(0) {}
 

@@ -1,4 +1,4 @@
-#include "../headers/qs_post_rx_filter.hpp"
+#include "../include/qs_post_rx_filter.hpp"
 
 QsPostRxFilter::QsPostRxFilter()
     : m_size(4096), m_samplerate(62500), m_filter_lo(100), m_filter_hi(3000.0), m_one_over_norm(1.0 / (m_size * 2.0)),

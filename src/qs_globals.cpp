@@ -1,4 +1,4 @@
-#include "../headers/qs_globals.h"
+#include "../include/qs_globals.hpp"
 
 WaitCondition WC_NEED_MORE_DATA;
 WaitCondition WC_FILE_FIFO_WRITE;

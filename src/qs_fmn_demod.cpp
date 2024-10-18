@@ -1,4 +1,4 @@
-#include "../headers/qs_fmn_demod.h"
+#include "../include/qs_fmn_demod.hpp"
 
 QsFMNDemodulator ::QsFMNDemodulator()
     : m_fmn_bw(0), m_fmn_limit(0), m_fmn_zeta(0), m_fmn_norm(0), m_fmn_cos(0), m_fmn_sin(0), m_fmn_ncoPhase(0),

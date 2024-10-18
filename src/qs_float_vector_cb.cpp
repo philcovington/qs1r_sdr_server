@@ -1,6 +1,6 @@
-#include "../headers/qs_float_vector_cb.h"
+#include "../include/qs_float_vector_cb.hpp"
 
-#include "../headers/qs_types.h"
+#include "../include/qs_types.hpp"
 #include <memory.h>
 
 QsFloatVectorCircularBuffer::QsFloatVectorCircularBuffer()

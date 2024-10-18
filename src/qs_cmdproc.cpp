@@ -2,7 +2,7 @@
 Copyright (C) 2010 Philip A Covington
 */
 
-#include "../headers/qs_cmdproc.hpp"
+#include "../include/qs_cmdproc.hpp"
 
 CMD::CMD() {
     RW = cmd_error;

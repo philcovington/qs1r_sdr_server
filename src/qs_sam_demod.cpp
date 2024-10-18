@@ -1,4 +1,4 @@
-#include "../headers/qs_sam_demod.h"
+#include "../include/qs_sam_demod.hpp"
 #include <stdexcept>
 
 QsSAMDemodulator ::QsSAMDemodulator()

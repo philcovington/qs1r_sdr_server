@@ -1,6 +1,6 @@
-#include "../headers/qs_tone_gen.h"
-#include "../headers/qs_dataproc.h"
-#include "../headers/qs_globals.h"
+#include "../include/qs_tone_gen.hpp"
+#include "../include/qs_dataproc.hpp"
+#include "../include/qs_globals.hpp"
 
 #include <cmath>
 

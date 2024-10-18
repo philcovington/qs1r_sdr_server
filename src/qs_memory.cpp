@@ -1,6 +1,6 @@
-#include "../headers/qs_memory.h"
-#include "../headers/debugloggerclass.h"
-#include "../headers/qs_dataproc.h"
+#include "../include/qs_memory.hpp"
+#include "../include/qs_debugloggerclass.hpp"
+#include "../include/qs_dataproc.hpp"
 #include <iostream>
 
 QsMemory::QsMemory() {

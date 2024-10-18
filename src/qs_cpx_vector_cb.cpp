@@ -1,6 +1,6 @@
-#include "../headers/qs_cpx_vector_cb.h"
+#include "../include/qs_cpx_vector_cb.hpp"
 
-#include "../headers/qs_types.h"
+#include "../include/qs_types.hpp"
 
 QsCpxVectorCircularBuffer::QsCpxVectorCircularBuffer() : _size(0), _readPtr(0), _writePtr(0), _writeAvail(0) {}
 
