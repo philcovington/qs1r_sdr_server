@@ -264,6 +264,35 @@ class String {
         return String(std::string(ascii, length)); // Create a String from a substring of ASCII data
     }
 
+    // Simplify the string by removing leading/trailing whitespace
+    // and compressing consecutive whitespace into a single space.
+    String simplified() const {
+        std::string result;
+        bool inWhitespace = true; // Flag to track if we are in whitespace
+
+        for (const char &c : data) {
+            if (std::isspace(c)) {
+                if (!inWhitespace) {
+                    result += ' ';       // Add a single space if we were not in whitespace
+                    inWhitespace = true; // Now we are in whitespace
+                }
+            } else {
+                result += c;          // Add non-whitespace character
+                inWhitespace = false; // We are no longer in whitespace
+            }
+        }
+
+        // Trim leading and trailing spaces
+        size_t start = result.find_first_not_of(' ');
+        size_t end = result.find_last_not_of(' ');
+
+        if (start == std::string::npos) { // If the string is empty or all spaces
+            return String();              // Return an empty String
+        }
+
+        return String(result.substr(start, end - start + 1)); // Return the trimmed result
+    }
+
   public:
     // Case-insensitive compare function
     int compare(const String &other) const {

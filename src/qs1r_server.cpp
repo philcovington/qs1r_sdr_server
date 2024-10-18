@@ -3,6 +3,7 @@
 #include "../include/qs_bytearray.hpp"
 #include "../include/qs_dac_writer.hpp"
 #include "../include/qs_datareader.hpp"
+#include "../include/qs_datastreamclass.hpp"
 #include "../include/qs_debugloggerclass.hpp"
 #include "../include/qs_dsp_proc.hpp"
 #include "../include/qs_fft.hpp"
@@ -12,10 +13,10 @@
 #include "../include/qs_io_thread.hpp"
 #include "../include/qs_listclass.hpp"
 #include "../include/qs_memory.hpp"
+#include "../include/qs_signalops.hpp"
 #include "../include/qs_state.hpp"
 #include "../include/qs_stringclass.hpp"
 #include "../include/qs_uuid.hpp"
-#include "../include/qs_datastreamclass.hpp"
 
 QS1RServer::QS1RServer()
     : p_dac_writer(new QsDacWriter()), p_rta(new QsAudio()), p_qsState(new QsState()), p_dsp_proc(new QsDspProcessor()),
@@ -84,7 +85,7 @@ void QS1RServer::initialize() {
     error_flag = false;
     initSupportedSampleRatesList();
     showStartupMessage();
-    m_is_rt_audio_bypass = QsGlobal::g_memory->getRtAudioBypass();    
+    m_is_rt_audio_bypass = QsGlobal::g_memory->getRtAudioBypass();
     initSMeterCorrectionMap();
     initQS1RHardware();
 }
@@ -1152,9 +1153,7 @@ void QS1RServer::setFilter(double width, int rx_num) {
 // ------------------------------------------------------------
 // Update Status Message when QS1R read fails
 // ------------------------------------------------------------
-void QS1RServer::qs1rReadFailure() {
-    _debug() << "Read failure!";
-}
+void QS1RServer::qs1rReadFailure() { _debug() << "Read failure!"; }
 
 // ------------------------------------------------------------
 // Manufacture and Test Functions
@@ -1214,10 +1213,10 @@ void QS1RServer::loadQS1RFPGA() {
 
 UUID QS1RServer::readQS1RUuid() {
     UUID uuid;
-    ByteArray buffer(16, 0);    
+    ByteArray buffer(16, 0);
 
     if (QsGlobal::g_io->readEEPROM(QS1R_EEPROM_ADDR, 16, (unsigned char *)buffer.data(), 16)) {
-        DataStream in(buffer);        
+        DataStream in(buffer);
         in >> uuid;
     } else {
         setStatusText("Failure reading serial number.");
@@ -1227,11 +1226,11 @@ UUID QS1RServer::readQS1RUuid() {
 }
 
 bool QS1RServer::writeQS1RSN(String uuid) {
-    
-    ByteArray buffer(16,0);    
+
+    ByteArray buffer(16, 0);
 
     DataStream out(buffer);
-    
+
     out << uuid.toStdString();
 
     if (QsGlobal::g_io->writeEEPROM(QS1R_EEPROM_ADDR, 16, (unsigned char *)buffer.data(), 16)) {
@@ -1381,11 +1380,11 @@ void QS1RServer::readQS1REEPROM() {
 // ************************************************************
 // ------------------------------------------------------------
 // ------------------------------------------------------------
-// Runs the received command trough the command parser
+// Runs the received command through the command parser
 // and attempts to execute the command if valid.
 // Returns "?" if the command was invalid.
 // ------------------------------------------------------------
-String QS1RServer::doCommandProcessor(String value, int rx_num, QAbstractSocket *socket) {
+String QS1RServer::doCommandProcessor(String value, int rx_num) {
     if (rx_num > NUMBER_OF_RECEIVERS)
         return "NAK";
 
@@ -1404,12 +1403,6 @@ String QS1RServer::doCommandProcessor(String value, int rx_num, QAbstractSocket 
     if (cmd.RW == CMD::cmd_error) // command not found
         return response;
 
-    QHostAddress addr = socket->peerAddress();
-    quint16 port = socket->localPort();
-
-    if (false) {
-    }
-
     //****************************************************//
     //----------------------A-----------------------------//
     //****************************************************//
@@ -1420,8 +1413,10 @@ String QS1RServer::doCommandProcessor(String value, int rx_num, QAbstractSocket 
             QsGlobal::g_memory->setAgcDecaySpeed(cmd.dvalue);
             response = "OK";
         } else if (cmd.RW == CMD::cmd_read) {
-            double agc_decay = QsGlobal::g_memory->getAgcDecaySpeed(rx_num - 1);
-            response = cmd.cmd.append("=") + String::number(agc_decay);
+            double value = QsGlobal::g_memory->getAgcDecaySpeed(rx_num - 1);
+            response.append(cmd.cmd);
+            response.append(String("="));
+            response.append(String::number(value));
         }
     }
 
@@ -1434,8 +1429,10 @@ String QS1RServer::doCommandProcessor(String value, int rx_num, QAbstractSocket 
             QsGlobal::g_memory->setAgcFixedGain(cmd.dvalue);
             response = "OK";
         } else if (cmd.RW == CMD::cmd_read) {
-            double gain = QsGlobal::g_memory->getAgcFixedGain(rx_num - 1);
-            response = cmd.cmd.append("=") + String::number(gain);
+            double value = QsGlobal::g_memory->getAgcFixedGain(rx_num - 1);
+            response.append(cmd.cmd);
+            response.append(String("="));
+            response.append(String::number(value));
         }
     }
 
@@ -1448,8 +1445,10 @@ String QS1RServer::doCommandProcessor(String value, int rx_num, QAbstractSocket 
             QsGlobal::g_memory->setAgcThreshold(cmd.dvalue);
             response = "OK";
         } else if (cmd.RW == CMD::cmd_read) {
-            double gain = QsGlobal::g_memory->getAgcThreshold(rx_num - 1);
-            response = cmd.cmd.append("=") + String::number(gain);
+            double value = QsGlobal::g_memory->getAgcThreshold(rx_num - 1);
+            response.append(cmd.cmd);
+            response.append(String("="));
+            response.append(String::number(value));
         }
     }
 
@@ -1462,8 +1461,10 @@ String QS1RServer::doCommandProcessor(String value, int rx_num, QAbstractSocket 
             QsGlobal::g_memory->setAgcSlope(cmd.dvalue);
             response = "OK";
         } else if (cmd.RW == CMD::cmd_read) {
-            double slope = QsGlobal::g_memory->getAgcSlope(rx_num - 1);
-            response = cmd.cmd.append("=") + String::number(slope);
+            double value = QsGlobal::g_memory->getAgcSlope(rx_num - 1);
+            response.append(cmd.cmd);
+            response.append(String("="));
+            response.append(String::number(value));
         }
     }
 
@@ -1476,8 +1477,10 @@ String QS1RServer::doCommandProcessor(String value, int rx_num, QAbstractSocket 
             QsGlobal::g_memory->setAgcHangTime(cmd.ivalue);
             response = "OK";
         } else if (cmd.RW == CMD::cmd_read) {
-            double ht = QsGlobal::g_memory->getAgcHangTime(rx_num - 1);
-            response = cmd.cmd.append("=") + String::number(ht);
+            double value = QsGlobal::g_memory->getAgcHangTime(rx_num - 1);
+            response.append(cmd.cmd);
+            response.append(String("="));
+            response.append(String::number(value));
         }
     }
 
@@ -1490,8 +1493,10 @@ String QS1RServer::doCommandProcessor(String value, int rx_num, QAbstractSocket 
             QsGlobal::g_memory->setAgcHangTimeSwitch(cmd.ivalue);
             response = "OK";
         } else if (cmd.RW == CMD::cmd_read) {
-            bool sw = QsGlobal::g_memory->getAgcHangTimeSwitch(rx_num - 1);
-            response = cmd.cmd.append("=") + String::number(sw);
+            bool value = QsGlobal::g_memory->getAgcHangTimeSwitch(rx_num - 1);
+            response.append(cmd.cmd);
+            response.append(String("="));
+            response.append(String::number(value));
         }
     }
 
@@ -1505,7 +1510,9 @@ String QS1RServer::doCommandProcessor(String value, int rx_num, QAbstractSocket 
             response = "OK";
         } else if (cmd.RW == CMD::cmd_read) {
             bool value = QsGlobal::g_memory->getAvgNoiseBlankerOn(rx_num - 1);
-            response = cmd.cmd.append("=") + String::number(value);
+            response.append(cmd.cmd);
+            response.append(String("="));
+            response.append(String::number(value));
         }
     }
 
@@ -1519,7 +1526,9 @@ String QS1RServer::doCommandProcessor(String value, int rx_num, QAbstractSocket 
             response = "OK";
         } else if (cmd.RW == CMD::cmd_read) {
             double value = QsGlobal::g_memory->getAvgNoiseBlankerThreshold(rx_num - 1);
-            response = cmd.cmd.append("=") + String::number(value);
+            response.append(cmd.cmd);
+            response.append(String("="));
+            response.append(String::number(value));
         }
     }
 
@@ -1533,7 +1542,9 @@ String QS1RServer::doCommandProcessor(String value, int rx_num, QAbstractSocket 
             response = "OK";
         } else if (cmd.RW == CMD::cmd_read) {
             bool value = QsGlobal::g_memory->getAutoNotchOn(rx_num - 1);
-            response = cmd.cmd.append("=") + String::number(value);
+            response.append(cmd.cmd);
+            response.append(String("="));
+            response.append(String::number(value));
         }
     }
 
@@ -1544,7 +1555,9 @@ String QS1RServer::doCommandProcessor(String value, int rx_num, QAbstractSocket 
             response = "OK";
         } else if (cmd.RW == CMD::cmd_read) {
             double value = QsGlobal::g_memory->getAutoNotchRate(rx_num - 1);
-            response = cmd.cmd.append("=") + String::number(value);
+            response.append(cmd.cmd);
+            response.append(String("="));
+            response.append(String::number(value));
         }
     }
 
@@ -1562,7 +1575,9 @@ String QS1RServer::doCommandProcessor(String value, int rx_num, QAbstractSocket 
             response = "OK";
         } else if (cmd.RW == CMD::cmd_read) {
             bool value = QsGlobal::g_memory->getBinauralMode(rx_num - 1);
-            response = cmd.cmd.append("=") + String::number(value);
+            response.append(cmd.cmd);
+            response.append(String("="));
+            response.append(String::number(value));
         }
     }
 
@@ -1576,7 +1591,9 @@ String QS1RServer::doCommandProcessor(String value, int rx_num, QAbstractSocket 
             response = "OK";
         } else if (cmd.RW == CMD::cmd_read) {
             bool value = QsGlobal::g_memory->getBlockNoiseBlankerOn(rx_num - 1);
-            response = cmd.cmd.append("=") + String::number(value);
+            response.append(cmd.cmd);
+            response.append(String("="));
+            response.append(String::number(value));
         }
     }
 
@@ -1590,7 +1607,9 @@ String QS1RServer::doCommandProcessor(String value, int rx_num, QAbstractSocket 
             response = "OK";
         } else if (cmd.RW == CMD::cmd_read) {
             double value = QsGlobal::g_memory->getBlockNoiseBlankerThreshold(rx_num - 1);
-            response = cmd.cmd.append("=") + String::number(value);
+            response.append(cmd.cmd);
+            response.append(String("="));
+            response.append(String::number(value));
         }
     }
 
@@ -1611,7 +1630,11 @@ String QS1RServer::doCommandProcessor(String value, int rx_num, QAbstractSocket 
             setDitherMode((bool)cmd.ivalue);
             response = "OK";
         } else if (cmd.RW == CMD::cmd_read) {
-            response = cmd.cmd.append("=") + String::number((int)ditherMode());
+            int value = ditherMode();
+            response.append(cmd.cmd);
+            response.append(String("="));
+            response.append(String::number(value));
+            ;
         }
     }
 
@@ -1643,7 +1666,9 @@ String QS1RServer::doCommandProcessor(String value, int rx_num, QAbstractSocket 
         } else if (cmd.RW == CMD::cmd_read) {
             double value = QsGlobal::g_memory->getDisplayFreqOffset(rx_num - 1);
             getDisplayFreqOffset(value, rx_num);
-            response = cmd.cmd.append("=") + String::number(value);
+            response.append(cmd.cmd);
+            response.append(String("="));
+            response.append(String::number(value));
         }
     }
 
@@ -1677,7 +1702,9 @@ String QS1RServer::doCommandProcessor(String value, int rx_num, QAbstractSocket 
         } else if (cmd.RW == CMD::cmd_read) {
             double value = QsGlobal::g_memory->getEncodeFreqCorrect();
             getFreqCorrection(value);
-            response = cmd.cmd.append("=") + String::number(value);
+            response.append(cmd.cmd);
+            response.append(String("="));
+            response.append(String::number(value));
         }
     }
 
@@ -1693,14 +1720,12 @@ String QS1RServer::doCommandProcessor(String value, int rx_num, QAbstractSocket 
         if (cmd.RW == CMD::cmd_write) {
             setRxFrequency(cmd.dvalue, rx_num);
             response = "OK";
-            if (port != RX1_GUI_CMD_TCP_PORT && port != RX2_GUI_CMD_TCP_PORT) {
-                String gui_update = "fhz=" + String::number(cmd.dvalue) + "\n";
-                sendGUIUpdate(gui_update, rx_num);
-            }
         } else if (cmd.RW == CMD::cmd_read) {
             double value = QsGlobal::g_memory->getRxLOFrequency(rx_num - 1);
             getRxFrequency(value, rx_num);
-            response = cmd.cmd.append("=") + String::number(value, 'f', 0);
+            response.append(cmd.cmd);
+            response.append(String("="));
+            response.append(String::number(value));
         }
     }
 
@@ -1712,14 +1737,12 @@ String QS1RServer::doCommandProcessor(String value, int rx_num, QAbstractSocket 
         if (cmd.RW == CMD::cmd_write) {
             setRxFrequency(cmd.dvalue * 1.0e3, rx_num);
             response = "OK";
-            if (port != RX1_GUI_CMD_TCP_PORT && port != RX2_GUI_CMD_TCP_PORT) {
-                String gui_update = "fhz=" + String::number(cmd.dvalue * 1.0e3) + "\n";
-                sendGUIUpdate(gui_update, rx_num);
-            }
         } else if (cmd.RW == CMD::cmd_read) {
             double value = QsGlobal::g_memory->getRxLOFrequency(rx_num - 1);
             getRxFrequency(value, rx_num);
-            response = cmd.cmd.append("=") + String::number(value / 1.0e3, 'f', 3);
+            response.append(cmd.cmd);
+            response.append(String("="));
+            response.append(String::number(value));
         }
     }
 
@@ -1731,14 +1754,12 @@ String QS1RServer::doCommandProcessor(String value, int rx_num, QAbstractSocket 
         if (cmd.RW == CMD::cmd_write) {
             setRxFrequency(cmd.dvalue * 1.0e6, rx_num);
             response = "OK";
-            if (port != RX1_GUI_CMD_TCP_PORT && port != RX2_GUI_CMD_TCP_PORT) {
-                String gui_update = "fhz=" + String::number(cmd.dvalue * 1.0e6) + "\n";
-                sendGUIUpdate(gui_update, rx_num);
-            }
         } else if (cmd.RW == CMD::cmd_read) {
             double value = QsGlobal::g_memory->getRxLOFrequency(rx_num - 1);
             getRxFrequency(value, rx_num);
-            response = cmd.cmd.append("=") + String::number(value / 1.0e6, 'f', 6);
+            response.append(cmd.cmd);
+            response.append(String("="));
+            response.append(String::number(value / 1.0e6));
         }
     }
 
@@ -1750,13 +1771,11 @@ String QS1RServer::doCommandProcessor(String value, int rx_num, QAbstractSocket 
         if (cmd.RW == CMD::cmd_write) {
             QsGlobal::g_memory->setFilterLo(cmd.ivalue);
             response = "OK";
-            if (port != RX1_GUI_CMD_TCP_PORT && port != RX2_GUI_CMD_TCP_PORT) {
-                String gui_update = "fl=" + String::number(cmd.ivalue) + "\n";
-                sendGUIUpdate(gui_update, rx_num);
-            }
         } else if (cmd.RW == CMD::cmd_read) {
             int value = QsGlobal::g_memory->getFilterLo(rx_num - 1);
-            response = cmd.cmd.append("=") + String::number(value);
+            response.append(cmd.cmd);
+            response.append(String("="));
+            response.append(String::number(value));
         }
     }
 
@@ -1768,13 +1787,11 @@ String QS1RServer::doCommandProcessor(String value, int rx_num, QAbstractSocket 
         if (cmd.RW == CMD::cmd_write) {
             QsGlobal::g_memory->setFilterHi(cmd.ivalue);
             response = "OK";
-            if (port != RX1_GUI_CMD_TCP_PORT && port != RX2_GUI_CMD_TCP_PORT) {
-                String gui_update = "fh=" + String::number(cmd.ivalue) + "\n";
-                sendGUIUpdate(gui_update, rx_num);
-            }
         } else if (cmd.RW == CMD::cmd_read) {
             int value = QsGlobal::g_memory->getFilterHi(rx_num - 1);
-            response = cmd.cmd.append("=") + String::number(value);
+            response.append(cmd.cmd);
+            response.append(String("="));
+            response.append(String::number(value));
         }
     }
 
@@ -1790,16 +1807,15 @@ String QS1RServer::doCommandProcessor(String value, int rx_num, QAbstractSocket 
                 QsGlobal::g_memory->setFilterHi(fhi);
                 QsGlobal::g_memory->setFilterLo(flo);
                 response = "OK";
-                if (port != RX1_GUI_CMD_TCP_PORT && port != RX2_GUI_CMD_TCP_PORT) {
-                    String gui_update = "filter=" + String::number(flo) + ", " + String::number(fhi) + "\n";
-                    sendGUIUpdate(gui_update, rx_num);
-                }
             }
         } else if (cmd.RW == CMD::cmd_read) {
             int value1 = QsGlobal::g_memory->getFilterLo(rx_num - 1);
             int value2 = QsGlobal::g_memory->getFilterHi(rx_num - 1);
-            response = String("%1, %2;").arg((int)(value1)).arg((int)(value2));
-            response.prepend(cmd.cmd.append("="));
+            response.append(cmd.cmd);
+            response.append(String("="));
+            response.append(String::number(value1));
+            response.append(String(", "));
+            response.append(String::number(value2));
         }
     }
 
@@ -1811,13 +1827,11 @@ String QS1RServer::doCommandProcessor(String value, int rx_num, QAbstractSocket 
         if (cmd.RW == CMD::cmd_write) {
             QsGlobal::g_memory->setTxFilterLo(cmd.ivalue);
             response = "OK";
-            if (port != RX1_GUI_CMD_TCP_PORT && port != RX2_GUI_CMD_TCP_PORT) {
-                String gui_update = "fltx=" + String::number(cmd.ivalue) + "\n";
-                sendGUIUpdate(gui_update, rx_num);
-            }
         } else if (cmd.RW == CMD::cmd_read) {
             int value = QsGlobal::g_memory->getTxFilterLo();
-            response = cmd.cmd.append("=") + String::number(value);
+            response.append(cmd.cmd);
+            response.append(String("="));
+            response.append(String::number(value));
         }
     }
 
@@ -1829,13 +1843,11 @@ String QS1RServer::doCommandProcessor(String value, int rx_num, QAbstractSocket 
         if (cmd.RW == CMD::cmd_write) {
             QsGlobal::g_memory->setTxFilterHi(cmd.ivalue);
             response = "OK";
-            if (port != RX1_GUI_CMD_TCP_PORT && port != RX2_GUI_CMD_TCP_PORT) {
-                String gui_update = "fhtx=" + String::number(cmd.ivalue) + "\n";
-                sendGUIUpdate(gui_update, rx_num);
-            }
         } else if (cmd.RW == CMD::cmd_read) {
             int value = QsGlobal::g_memory->getTxFilterHi();
-            response = cmd.cmd.append("=") + String::number(value);
+            response.append(cmd.cmd);
+            response.append(String("="));
+            response.append(String::number(value));
         }
     }
 
@@ -1848,7 +1860,9 @@ String QS1RServer::doCommandProcessor(String value, int rx_num, QAbstractSocket 
             response = "NAK";
         } else if (cmd.RW == CMD::cmd_read) {
             int value = QsGlobal::g_io->readFwSn();
-            response = cmd.cmd.append("=") + String::number(value);
+            response.append(cmd.cmd);
+            response.append(String("="));
+            response.append(String::number(value));
         }
     }
 
@@ -1861,7 +1875,9 @@ String QS1RServer::doCommandProcessor(String value, int rx_num, QAbstractSocket 
             response = "NAK";
         } else if (cmd.RW == CMD::cmd_read) {
             int value = QsGlobal::g_io->readMultibusInt(MB_VERSION_REG);
-            response = cmd.cmd.append("=") + String::number(value, 16);
+            response.append(cmd.cmd);
+            response.append(String("="));
+            response.append(String::number(value, 16));
         }
     }
 
@@ -1869,49 +1885,9 @@ String QS1RServer::doCommandProcessor(String value, int rx_num, QAbstractSocket 
     //----------------------G-----------------------------//
     //****************************************************//
 
-    //
-    // GUIUpdateHostAddress  Note: should only be used by GUI for update notifications
-    //
-    else if (cmd.cmd.compare("__gui_update_ip_adddress__") == 0) // GUI Update Host Address
-    {
-        if (cmd.RW == CMD::cmd_write) {
-            if (port == RX1_GUI_CMD_TCP_PORT) {
-                gui_update_rx1_host_address = addr;
-                response = "OK";
-            } else if (port == RX2_GUI_CMD_TCP_PORT) {
-                gui_update_rx2_host_address = addr;
-                response = "OK";
-            } else
-                response = "NAK";
-        } else if (cmd.RW == CMD::cmd_read) {
-            if (port == RX1_GUI_CMD_TCP_PORT) {
-                response = cmd.cmd.append("=") + gui_update_rx1_host_address.toString();
-            } else if (port == RX1_GUI_CMD_TCP_PORT) {
-                response = cmd.cmd.append("=") + gui_update_rx2_host_address.toString();
-            } else
-                response = "NAK";
-        }
-    }
-
     //****************************************************//
     //----------------------H-----------------------------//
     //****************************************************//
-
-    //
-    // Hide
-    //
-    else if (cmd.cmd.compare("Hide") == 0) // hides the server window
-    {
-        if (cmd.RW == CMD::cmd_write) {
-            hideWindow();
-            response = "OK";
-        } else if (cmd.RW == CMD::cmd_read) {
-            if (this->isVisible())
-                response = "0";
-            else
-                response = "1";
-        }
-    }
 
     //****************************************************//
     //----------------------I-----------------------------//
@@ -1926,27 +1902,15 @@ String QS1RServer::doCommandProcessor(String value, int rx_num, QAbstractSocket 
             initQS1RHardware();
             response = "OK";
         } else if (cmd.RW == CMD::cmd_read) {
-            response = cmd.cmd.append("=") + String::number(m_is_hardware_init);
+            response.append(cmd.cmd);
+            response.append(String("="));
+            response.append(String::number(m_is_hardware_init));
         }
     }
 
     //****************************************************//
     //----------------------L-----------------------------//
     //****************************************************//
-
-    //
-    // logout
-    //
-    else if (cmd.cmd.compare("logout") == 0 || cmd.cmd.compare("logoff") == 0) // logout
-    {
-        if (cmd.RW == CMD::cmd_write) {
-            socket->write("GOODBYE\n");
-            socket->disconnectFromHost();
-            response = "\0";
-        } else if (cmd.RW == CMD::cmd_read) {
-            response = "NAK";
-        }
-    }
 
     //****************************************************//
     //----------------------M-----------------------------//
@@ -1960,13 +1924,11 @@ String QS1RServer::doCommandProcessor(String value, int rx_num, QAbstractSocket 
         if (cmd.RW == CMD::cmd_write) {
             setModeDirect(cmd.ivalue);
             response = "OK";
-            if (port != RX1_GUI_CMD_TCP_PORT && port != RX2_GUI_CMD_TCP_PORT) {
-                String gui_update = "mode=" + String::number(cmd.ivalue) + "\n";
-                sendGUIUpdate(gui_update, rx_num);
-            }
         } else if (cmd.RW == CMD::cmd_read) {
             QSDEMODMODE value = QsGlobal::g_memory->getDemodMode(rx_num - 1);
-            response = cmd.cmd.append("=") + String::number(value);
+            response.append(cmd.cmd);
+            response.append(String("="));
+            response.append(String::number(value));
         }
     }
     //
@@ -1979,14 +1941,12 @@ String QS1RServer::doCommandProcessor(String value, int rx_num, QAbstractSocket 
             int value = (int)modeStringToMode(cmd.svalue);
             setModeDirect(value);
             response = "OK";
-            if (port != RX1_GUI_CMD_TCP_PORT && port != RX2_GUI_CMD_TCP_PORT) {
-                String gui_update = "mode=" + String::number(value) + "\n";
-                sendGUIUpdate(gui_update, rx_num);
-            }
         } else if (cmd.RW == CMD::cmd_read) {
             QSDEMODMODE value = QsGlobal::g_memory->getDemodMode(rx_num - 1);
             String mode_str = getModeString(value);
-            response = cmd.cmd.append("=") + mode_str;
+            response.append(cmd.cmd);
+            response.append(String("="));
+            response.append(String::number(value));
         }
     }
     //
@@ -2000,11 +1960,6 @@ String QS1RServer::doCommandProcessor(String value, int rx_num, QAbstractSocket 
             QsGlobal::g_memory->setFilterHi(fh);
             QsGlobal::g_memory->setFilterLo(fl);
             response = "OK";
-            if (port != RX1_GUI_CMD_TCP_PORT && port != RX2_GUI_CMD_TCP_PORT) {
-                String gui_update =
-                    "mflh=" + String::number(dmAM) + ", " + String::number(fl) + ", " + String::number(fh) + "\n";
-                sendGUIUpdate(gui_update, rx_num);
-            }
         } else if (cmd.RW == CMD::cmd_read) {
             response = "NAK";
         }
@@ -2020,11 +1975,6 @@ String QS1RServer::doCommandProcessor(String value, int rx_num, QAbstractSocket 
             QsGlobal::g_memory->setFilterHi(4000.0);
             QsGlobal::g_memory->setFilterLo(-4000.0);
             response = "OK";
-            if (port != RX1_GUI_CMD_TCP_PORT && port != RX2_GUI_CMD_TCP_PORT) {
-                String gui_update =
-                    "mflh=" + String::number(dmSAM) + ", " + String::number(fl) + ", " + String::number(fh) + "\n";
-                sendGUIUpdate(gui_update, rx_num);
-            }
         } else if (cmd.RW == CMD::cmd_read) {
             response = "NAK";
         }
@@ -2040,11 +1990,6 @@ String QS1RServer::doCommandProcessor(String value, int rx_num, QAbstractSocket 
             QsGlobal::g_memory->setFilterHi(fh);
             QsGlobal::g_memory->setFilterLo(fl);
             response = "OK";
-            if (port != RX1_GUI_CMD_TCP_PORT && port != RX2_GUI_CMD_TCP_PORT) {
-                String gui_update =
-                    "mflh=" + String::number(dmLSB) + ", " + String::number(fl) + ", " + String::number(fh) + "\n";
-                sendGUIUpdate(gui_update, rx_num);
-            }
         } else if (cmd.RW == CMD::cmd_read) {
             response = "NAK";
         }
@@ -2060,11 +2005,6 @@ String QS1RServer::doCommandProcessor(String value, int rx_num, QAbstractSocket 
             QsGlobal::g_memory->setFilterHi(fh);
             QsGlobal::g_memory->setFilterLo(fl);
             response = "OK";
-            if (port != RX1_GUI_CMD_TCP_PORT && port != RX2_GUI_CMD_TCP_PORT) {
-                String gui_update =
-                    "mflh=" + String::number(dmUSB) + ", " + String::number(fl) + ", " + String::number(fh) + "\n";
-                sendGUIUpdate(gui_update, rx_num);
-            }
         } else if (cmd.RW == CMD::cmd_read) {
             response = "NAK";
         }
@@ -2080,11 +2020,6 @@ String QS1RServer::doCommandProcessor(String value, int rx_num, QAbstractSocket 
             QsGlobal::g_memory->setFilterHi(fh);
             QsGlobal::g_memory->setFilterLo(fl);
             response = "OK";
-            if (port != RX1_GUI_CMD_TCP_PORT && port != RX2_GUI_CMD_TCP_PORT) {
-                String gui_update =
-                    "mflh=" + String::number(dmDSB) + ", " + String::number(fl) + ", " + String::number(fh) + "\n";
-                sendGUIUpdate(gui_update, rx_num);
-            }
         } else if (cmd.RW == CMD::cmd_read) {
             response = "NAK";
         }
@@ -2100,11 +2035,6 @@ String QS1RServer::doCommandProcessor(String value, int rx_num, QAbstractSocket 
             QsGlobal::g_memory->setFilterHi(fh);
             QsGlobal::g_memory->setFilterLo(fl);
             response = "OK";
-            if (port != RX1_GUI_CMD_TCP_PORT && port != RX2_GUI_CMD_TCP_PORT) {
-                String gui_update =
-                    "mflh=" + String::number(dmCW) + ", " + String::number(fl) + ", " + String::number(fh) + "\n";
-                sendGUIUpdate(gui_update, rx_num);
-            }
         } else if (cmd.RW == CMD::cmd_read) {
             response = "NAK";
         }
@@ -2122,10 +2052,6 @@ String QS1RServer::doCommandProcessor(String value, int rx_num, QAbstractSocket 
                 QsGlobal::g_memory->setVolume(m_prev_vol_val, rx_num - 1);
             }
             response = "OK";
-            if (port != RX1_GUI_CMD_TCP_PORT && port != RX2_GUI_CMD_TCP_PORT) {
-                String gui_update = "mute=" + String::number(cmd.ivalue) + "\n";
-                sendGUIUpdate(gui_update, rx_num);
-            }
         } else if (cmd.RW == CMD::cmd_read) {
             response = "NAK";
         }
@@ -2145,7 +2071,9 @@ String QS1RServer::doCommandProcessor(String value, int rx_num, QAbstractSocket 
             response = "OK";
         } else if (cmd.RW == CMD::cmd_read) {
             bool value = QsGlobal::g_memory->getNoiseReductionOn(rx_num - 1);
-            response = cmd.cmd.append("=") + String::number(value);
+            response.append(cmd.cmd);
+            response.append(String("="));
+            response.append(String::number(value));
         }
     }
 
@@ -2156,7 +2084,9 @@ String QS1RServer::doCommandProcessor(String value, int rx_num, QAbstractSocket 
             response = "OK";
         } else if (cmd.RW == CMD::cmd_read) {
             double value = QsGlobal::g_memory->getNoiseReductionRate(rx_num - 1);
-            response = cmd.cmd.append("=") + String::number(value);
+            response.append(cmd.cmd);
+            response.append(String("="));
+            response.append(String::number(value));
         }
     }
 
@@ -2174,24 +2104,15 @@ String QS1RServer::doCommandProcessor(String value, int rx_num, QAbstractSocket 
             response = "OK";
         } else if (cmd.RW == CMD::cmd_read) {
             double value = QsGlobal::g_memory->getOffsetGeneratorFrequency(rx_num - 1);
-            response = cmd.cmd.append("=") + String::number(value);
+            response.append(cmd.cmd);
+            response.append(String("="));
+            response.append(String::number(value));
         }
     }
 
     //****************************************************//
     //----------------------P-----------------------------//
     //****************************************************//
-
-    //
-    // ping
-    //
-    else if (cmd.cmd.compare("ping") == 0) // ping from gui
-    {
-        if (cmd.RW == CMD::cmd_write) {
-            _debug() << "Received ping at: " << QDateTime::currentDateTime().toString();
-            response = "OK";
-        }
-    }
 
     //
     // PgaSwitch n, n = 0,1
@@ -2202,7 +2123,9 @@ String QS1RServer::doCommandProcessor(String value, int rx_num, QAbstractSocket 
             setPgaMode((bool)cmd.ivalue);
             response = "OK";
         } else if (cmd.RW == CMD::cmd_read) {
-            response = cmd.cmd.append("=") + String::number((int)pgaMode());
+            response.append(cmd.cmd);
+            response.append(String("="));
+            response.append(String::number(pgaMode()));
         }
     }
 
@@ -2216,7 +2139,9 @@ String QS1RServer::doCommandProcessor(String value, int rx_num, QAbstractSocket 
             response = "OK";
         } else if (cmd.RW == CMD::cmd_read) {
             double value = QsGlobal::g_memory->getPsCorrection();
-            response = cmd.cmd.append("=") + String::number(value);
+            response.append(cmd.cmd);
+            response.append(String("="));
+            response.append(String::number(value));
         }
     }
 
@@ -2230,7 +2155,9 @@ String QS1RServer::doCommandProcessor(String value, int rx_num, QAbstractSocket 
             response = "OK";
         } else if (cmd.RW == CMD::cmd_read) {
             double value = QsGlobal::g_memory->getPostPsCorrection();
-            response = cmd.cmd.append("=") + String::number(value);
+            response.append(cmd.cmd);
+            response.append(String("="));
+            response.append(String::number(value));
         }
     }
 
@@ -2247,7 +2174,9 @@ String QS1RServer::doCommandProcessor(String value, int rx_num, QAbstractSocket 
             setRandMode((bool)cmd.ivalue);
             response = "OK";
         } else if (cmd.RW == CMD::cmd_read) {
-            response = cmd.cmd.append("=") + String::number((int)randMode());
+            response.append(cmd.cmd);
+            response.append(String("="));
+            response.append(String::number(randMode()));
         }
     }
 
@@ -2259,20 +2188,10 @@ String QS1RServer::doCommandProcessor(String value, int rx_num, QAbstractSocket 
         if (cmd.RW == CMD::cmd_write) {
             response = "NAK";
         } else if (cmd.RW == CMD::cmd_read) {
-            QUuid uuid = readQS1RUuid();
-            response = cmd.cmd.append("=") + uuid.toString();
-        }
-    }
-
-    //
-    // ReadQSLSFile
-    //
-    else if (cmd.cmd.compare("_ReadQSLSFile_") == 0) // read qs1r serial number
-    {
-        if (cmd.RW == CMD::cmd_write) {
-            response = "NAK";
-        } else if (cmd.RW == CMD::cmd_read) {
-            response = cmd.cmd.append("=") + readQSLSFile();
+            UUID value = readQS1RUuid();
+            response.append(cmd.cmd);
+            response.append(String("="));
+            response.append(value.toString());
         }
     }
 
@@ -2289,20 +2208,9 @@ String QS1RServer::doCommandProcessor(String value, int rx_num, QAbstractSocket 
             startIo(false);
             response = "OK";
         } else if (cmd.RW == CMD::cmd_read) {
-            response = cmd.cmd.append("=") + String::number(m_is_io_running);
-        }
-    }
-
-    //
-    // StartWavInput
-    //
-    else if (cmd.cmd.compare("StartWavInput") == 0) // start wav input mode
-    {
-        if (cmd.RW == CMD::cmd_write) {
-            startIo(true);
-            response = "OK";
-        } else if (cmd.RW == CMD::cmd_read) {
-            response = cmd.cmd.append("=") + String::number(is_wav_in);
+            response.append(cmd.cmd);
+            response.append(String("="));
+            response.append(String::number(m_is_io_running));
         }
     }
 
@@ -2319,8 +2227,14 @@ String QS1RServer::doCommandProcessor(String value, int rx_num, QAbstractSocket 
             double dvalue = QsGlobal::g_memory->getRxLOFrequency(rx_num - 1);
             getRxFrequency(dvalue, rx_num);
             double tvalue = QsGlobal::g_memory->getToneLoFrequency(rx_num - 1);
-            response = cmd.cmd.append("=") + mode_str + "," + String::number(dvalue, 'f', 0) + "," +
-                       String::number(tvalue, 'f', 0) + ";";
+            response.append(cmd.cmd);
+            response.append(String("="));
+            response.append(String(mode_str));
+            response.append(String(","));
+            response.append(String::number(dvalue));
+            response.append(String(","));
+            response.append(String::number(tvalue, 0));
+            response.append(String(";"));
         }
     }
 
@@ -2333,7 +2247,9 @@ String QS1RServer::doCommandProcessor(String value, int rx_num, QAbstractSocket 
             stopIo();
             response = "OK";
         } else if (cmd.RW == CMD::cmd_read) {
-            response = cmd.cmd.append("=") + String::number(!m_is_io_running);
+            response.append(cmd.cmd);
+            response.append(String("="));
+            response.append(String::number(!m_is_io_running));
         }
     }
 
@@ -2348,7 +2264,9 @@ String QS1RServer::doCommandProcessor(String value, int rx_num, QAbstractSocket 
             else
                 response = "NAK";
         } else if (cmd.RW == CMD::cmd_read) {
-            response = cmd.cmd.append("=") + String::number(QsGlobal::g_memory->getDataProcRate());
+            response.append(cmd.cmd);
+            response.append(String("="));
+            response.append(String::number(QsGlobal::g_memory->getDataProcRate()));
         }
     }
 
@@ -2361,7 +2279,9 @@ String QS1RServer::doCommandProcessor(String value, int rx_num, QAbstractSocket 
             response = "NAK";
         } else if (cmd.RW == CMD::cmd_read) {
             StringList list = getSupportedSampleRates();
-            response = cmd.cmd.append("=") + list.join(", ");
+            response.append(cmd.cmd);
+            response.append(String("="));
+            response.append(list.join(", "));
         }
     }
 
@@ -2375,7 +2295,9 @@ String QS1RServer::doCommandProcessor(String value, int rx_num, QAbstractSocket 
             response = "OK";
         } else if (cmd.RW == CMD::cmd_read) {
             bool value = QsGlobal::g_memory->getSquelchOn(rx_num - 1);
-            response = cmd.cmd.append("=") + String::number(value);
+            response.append(cmd.cmd);
+            response.append(String("="));
+            response.append(String::number(value));
         }
     }
 
@@ -2389,7 +2311,9 @@ String QS1RServer::doCommandProcessor(String value, int rx_num, QAbstractSocket 
             response = "OK";
         } else if (cmd.RW == CMD::cmd_read) {
             double value = QsGlobal::g_memory->getSquelchThreshold(rx_num - 1);
-            response = cmd.cmd.append("=") + String::number(value);
+            response.append(cmd.cmd);
+            response.append(String("="));
+            response.append(String::number(value));
         }
     }
 
@@ -2403,7 +2327,9 @@ String QS1RServer::doCommandProcessor(String value, int rx_num, QAbstractSocket 
             response = "OK";
         } else if (cmd.RW == CMD::cmd_read) {
             double value = QsGlobal::g_memory->getSMeterCorrection();
-            response = cmd.cmd.append("=") + String::number(value);
+            response.append(cmd.cmd);
+            response.append(String("="));
+            response.append(String::number(value));
         }
     }
 
@@ -2416,31 +2342,9 @@ String QS1RServer::doCommandProcessor(String value, int rx_num, QAbstractSocket 
             response = "NAK";
         } else if (cmd.RW == CMD::cmd_read) {
             double value = QsGlobal::g_memory->getSMeterCurrentValue(rx_num - 1);
-            response = cmd.cmd.append("=") + String::number(value);
-        }
-    }
-
-    //
-    // Show
-    //
-    else if (cmd.cmd.compare("Show") == 0) // shows the server window
-    {
-        if (cmd.RW == CMD::cmd_write) {
-            showWindow();
-            response = "OK";
-        } else if (cmd.RW == CMD::cmd_read) {
-            if (this->isVisible())
-                response = "1";
-            else
-                response = "0";
-        }
-    }
-
-    else if (cmd.cmd.compare("serverpid") == 0) {
-        if (cmd.RW == CMD::cmd_write) {
-            response = "NAK";
-        } else if (cmd.RW == CMD::cmd_read) {
-            response = cmd.cmd.append("=") + String::number(qApp->applicationPid());
+            response.append(cmd.cmd);
+            response.append(String("="));
+            response.append(String::number(value));
         }
     }
 
@@ -2456,13 +2360,11 @@ String QS1RServer::doCommandProcessor(String value, int rx_num, QAbstractSocket 
         if (cmd.RW == CMD::cmd_write) {
             QsGlobal::g_memory->setToneLoFrequency(cmd.dvalue);
             response = "OK";
-            if (port != RX1_GUI_CMD_TCP_PORT && port != RX2_GUI_CMD_TCP_PORT) {
-                String gui_update = "tf=" + String::number(cmd.dvalue) + "\n";
-                sendGUIUpdate(gui_update, rx_num);
-            }
         } else if (cmd.RW == CMD::cmd_read) {
             double value = QsGlobal::g_memory->getToneLoFrequency(rx_num - 1);
-            response = cmd.cmd.append("=") + String::number(value);
+            response.append(cmd.cmd);
+            response.append(String("="));
+            response.append(String::number(value));
         }
     }
 
@@ -2493,8 +2395,9 @@ String QS1RServer::doCommandProcessor(String value, int rx_num, QAbstractSocket 
         if (cmd.RW == CMD::cmd_write) {
             response = "NAK";
         } else if (cmd.RW == CMD::cmd_read) {
-            response = cmd.cmd.append("=") + String(SDRMAXV_VERSION);
-            // setStatusText( "version request made" );
+            response.append(cmd.cmd);
+            response.append(String("="));
+            response.append(String(SDRMAXV_VERSION));
         }
     }
 
@@ -2504,302 +2407,19 @@ String QS1RServer::doCommandProcessor(String value, int rx_num, QAbstractSocket 
     else if (cmd.cmd.compare("Vol") == 0 || cmd.cmd.compare("v") == 0) // rx volume
     {
         if (cmd.RW == CMD::cmd_write) {
-            QsGlobal::g_memory->setVolume(qBound(-120.0, cmd.dvalue, 0.0));
+            QsGlobal::g_memory->setVolume(std::qBound(-120.0, cmd.dvalue, 0.0));
             response = "OK";
         } else if (cmd.RW == CMD::cmd_read) {
             double value = QsGlobal::g_memory->getVolume(rx_num - 1);
-            response = cmd.cmd.append("=") + String::number(value);
+            response.append(cmd.cmd);
+            response.append(String("="));
+            response.append(String::number(value));
         }
     }
 
     //****************************************************//
     //----------------------W-----------------------------//
     //****************************************************//
-
-    //
-    // WBCorrection d, d = -120.0 to +120.0
-    //
-    else if (cmd.cmd.compare("WBCorrection") == 0) // set wb power spectrum correction in dbm
-    {
-        if (cmd.RW == CMD::cmd_write) {
-            QsGlobal::g_memory->setWBPsCorrection(cmd.dvalue);
-            response = "OK";
-        } else if (cmd.RW == CMD::cmd_read) {
-            double value = QsGlobal::g_memory->getWBPsCorrection();
-            response = cmd.cmd.append("=") + String::number(value);
-        }
-    }
-
-    //
-    // WavRecord n, n=0,1
-    //
-    else if (cmd.cmd.compare("WavRecord") == 0) // starts or stops wav file recording
-    {
-        if (cmd.RW == CMD::cmd_write) {
-            p_wav_writer->setRecordingOn((bool)cmd.ivalue, rx_num);
-            response = "OK";
-        } else if (cmd.RW == CMD::cmd_read) {
-            bool value = false;
-            p_wav_writer->getRecordingOn(value, rx_num);
-            response = cmd.cmd.append("=") + String::number(value);
-        }
-    }
-
-    //
-    // WavContinuous n, n=0,1
-    //
-    else if (cmd.cmd.compare("WavContinuous") == 0) // sets wav file continuous recording mode
-    {
-        if (cmd.RW == CMD::cmd_write) {
-            p_wav_writer->setContinuousRecordOn((bool)cmd.ivalue, rx_num);
-            QsGlobal::g_memory->setWavRecContinuous((bool)cmd.ivalue);
-            response = "OK";
-        } else if (cmd.RW == CMD::cmd_read) {
-            bool value = QsGlobal::g_memory->getWavRecContinuous();
-            p_wav_writer->getContinuousRecordOn(value, rx_num);
-            response = cmd.cmd.append("=") + String::number(value);
-        }
-    }
-
-    //
-    // WavPreBuffering n, n=0,1
-    //
-    else if (cmd.cmd.compare("WavPreBuffering") == 0) // enables wav file prebuffering
-    {
-        if (cmd.RW == CMD::cmd_write) {
-            p_wav_writer->setPrebufferingOn((bool)cmd.ivalue, rx_num);
-            QsGlobal::g_memory->setWavRecordPrebufferOn((bool)cmd.ivalue);
-            response = "OK";
-        } else if (cmd.RW == CMD::cmd_read) {
-            bool value = QsGlobal::g_memory->getWavRecordPrebufferOn();
-            p_wav_writer->getPrebufferingOn(value, rx_num);
-            response = cmd.cmd.append("=") + String::number(value);
-        }
-    }
-
-    //
-    // WavPreBufferTime n, n=0,1,...
-    //
-    else if (cmd.cmd.compare("WavPreBufferTime") == 0) // wav file prebuffering time
-    {
-        if (cmd.RW == CMD::cmd_write) {
-            p_wav_writer->setPrebufferTime(cmd.dvalue, rx_num);
-            QsGlobal::g_memory->setWavRecordPrebufferTime(cmd.dvalue);
-            response = "OK";
-        } else if (cmd.RW == CMD::cmd_read) {
-            double value = QsGlobal::g_memory->getWavRecordPrebufferTime();
-            p_wav_writer->getPrebufferTime(value, rx_num);
-            response = cmd.cmd.append("=") + String::number(value);
-        }
-    }
-
-    //
-    // WavRecordPath s, s = path
-    //
-    else if (cmd.cmd.compare("WavRecordPath") == 0) // wav record path
-    {
-        if (cmd.RW == CMD::cmd_write) {
-            QsGlobal::g_memory->setWavRecordPath(cmd.svalue);
-            response = "OK";
-        } else if (cmd.RW == CMD::cmd_read) {
-            String value = QDir::toNativeSeparators(QsGlobal::g_memory->getWavRecordPath());
-            response = cmd.cmd.append("=") + value;
-        }
-    }
-
-    //
-    // WavInLoop n, n=0,1
-    //
-    else if (cmd.cmd.compare("WavInLoop") == 0) // enables wav in looping
-    {
-        if (cmd.RW == CMD::cmd_write) {
-            setWavInLoopDirect(cmd.ivalue);
-            response = "OK";
-        } else if (cmd.RW == CMD::cmd_read) {
-            bool value = QsGlobal::g_memory->getWavInLooping();
-            response = cmd.cmd.append("=") + String::number(value);
-        }
-    }
-
-    //
-    // WavInfo s, r, f, s= filename, r = sample_rate, f = center_frequency
-    //
-    else if (cmd.cmd.compare("WavInfo") == 0) // sets wav in filename
-    {
-        if (cmd.RW == CMD::cmd_write) {
-            QFile f;
-            bool ok = false;
-            if (cmd.slist.count() == 3 && f.exists(cmd.slist[0])) {
-                QsGlobal::g_memory->setWavInFileName(cmd.slist[0]);
-                setWavInputFile(cmd.slist[0], rx_num, ok);
-                if (ok) {
-                    response = "OK";
-                } else
-                    response = "NAK";
-            } else {
-                response = "Wav file: " + cmd.svalue + " does not exist";
-            }
-        } else if (cmd.RW == CMD::cmd_read) {
-            String value = QsGlobal::g_memory->getWavInFileName();
-            response = cmd.cmd.append("=") + value;
-        }
-    }
-
-    //
-    // WavInRewind
-    //
-    else if (cmd.cmd.compare("WavInRewind") == 0) // sets wav in filename
-    {
-        if (cmd.RW == CMD::cmd_write) {
-            QsGlobal::g_data_reader->p_wavreader->setReadPosition(0);
-            response = "OK";
-        } else if (cmd.RW == CMD::cmd_read) {
-            response = "NAK";
-        }
-    }
-
-    //
-    // WavInPosition
-    //
-    else if (cmd.cmd.compare("WavInPosition") == 0) // sets wav in play position in file
-    {
-        if (cmd.RW == CMD::cmd_write) {
-            QsGlobal::g_data_reader->p_wavreader->setReadPosition(cmd.ivalue);
-            response = "OK";
-
-        } else if (cmd.RW == CMD::cmd_read) {
-            int value = QsGlobal::g_data_reader->p_wavreader->currentReadPos();
-            response = cmd.cmd.append("=") + String::number(value);
-        }
-    }
-
-    //
-    // WavInPositionPercent
-    //
-    else if (cmd.cmd.compare("WavInPositionPercent") == 0) // sets wav in play position in file
-    {
-        if (cmd.RW == CMD::cmd_write) {
-            QsGlobal::g_data_reader->p_wavreader->setReadPositionPercent(cmd.dvalue);
-            response = "OK";
-        } else if (cmd.RW == CMD::cmd_read) {
-            double value = QsGlobal::g_data_reader->p_wavreader->currentReadPosPercent();
-            response = cmd.cmd.append("=") + String::number(value);
-        }
-    }
-
-    //
-    // WavInLoopStartPosition
-    //
-    else if (cmd.cmd.compare("WavInLoopStartPosition") == 0) // sets wav in play loop start position in file
-    {
-        if (cmd.RW == CMD::cmd_write) {
-            QsGlobal::g_data_reader->p_wavreader->setLoopStartPosition(cmd.ivalue);
-            response = "OK";
-        } else if (cmd.RW == CMD::cmd_read) {
-            int value = QsGlobal::g_data_reader->p_wavreader->loopStartPosition();
-            response = cmd.cmd.append("=") + String::number(value);
-        }
-    }
-
-    //
-    // WavInLoopStartPosPercent
-    //
-    else if (cmd.cmd.compare("WavInLoopStartPosPercent") == 0) // sets wav in play loop start position in file
-    {
-        if (cmd.RW == CMD::cmd_write) {
-            QsGlobal::g_data_reader->p_wavreader->setLoopStartPosPercent(cmd.dvalue);
-            response = "OK";
-        } else if (cmd.RW == CMD::cmd_read) {
-            double value = QsGlobal::g_data_reader->p_wavreader->loopStartPosPercent();
-            response = cmd.cmd.append("=") + String::number(value);
-        }
-    }
-
-    //
-    // WavInLoopEndPosition
-    //
-    else if (cmd.cmd.compare("WavInLoopEndPosition") == 0) // sets wav in play loop end position in file
-    {
-        if (cmd.RW == CMD::cmd_write) {
-            QsGlobal::g_data_reader->p_wavreader->setLoopEndPosition(cmd.ivalue);
-            response = "OK";
-        } else if (cmd.RW == CMD::cmd_read) {
-            int value = QsGlobal::g_data_reader->p_wavreader->loopEndPosition();
-            response = cmd.cmd.append("=") + String::number(value);
-        }
-    }
-
-    //
-    // WavInLoopEndPosPercent
-    //
-    else if (cmd.cmd.compare("WavInLoopEndPosPercent") == 0) // sets wav in play loop end position in file
-    {
-        if (cmd.RW == CMD::cmd_write) {
-            QsGlobal::g_data_reader->p_wavreader->setLoopEndPosPercent(cmd.dvalue);
-            response = "OK";
-        } else if (cmd.RW == CMD::cmd_read) {
-            double value = QsGlobal::g_data_reader->p_wavreader->loopEndPosPercent();
-            response = cmd.cmd.append("=") + String::number(value);
-        }
-    }
-
-    //
-    // WavInLength
-    //
-    else if (cmd.cmd.compare("WavInLength") == 0) // sets wav in play loop start position in file
-    {
-        if (cmd.RW == CMD::cmd_write) {
-            response = "NAK";
-        } else if (cmd.RW == CMD::cmd_read) {
-            int value = QsGlobal::g_data_reader->p_wavreader->dataLength();
-            response = cmd.cmd.append("=") + String::number(value);
-        }
-    }
-
-    //
-    // WavInCenterFrequency
-    //
-    else if (cmd.cmd.compare("WavInCenterFrequency") == 0) // sets wav in play loop start position in file
-    {
-        if (cmd.RW == CMD::cmd_write) {
-            response = "NAK";
-        } else if (cmd.RW == CMD::cmd_read) {
-            int value = QsGlobal::g_data_reader->p_wavreader->fileCenterFreq();
-            response = cmd.cmd.append("=") + String::number(value);
-        }
-    }
-
-    //
-    // WavInSampleRate
-    //
-    else if (cmd.cmd.compare("WavInSampleRate") == 0) // sets wav in play loop start position in file
-    {
-        if (cmd.RW == CMD::cmd_write) {
-            response = "NAK";
-        } else if (cmd.RW == CMD::cmd_read) {
-            int value = QsGlobal::g_data_reader->p_wavreader->fileSampleRate();
-            response = cmd.cmd.append("=") + String::number(value);
-        }
-    }
-
-    //
-    // WavInStartTime
-    //
-    else if (cmd.cmd.compare("WavInStartTime") == 0) // gets wav in start time
-    {
-        if (cmd.RW == CMD::cmd_write) {
-            response = "NAK";
-        } else if (cmd.RW == CMD::cmd_read) {
-            time_t t = QsGlobal::g_data_reader->p_wavreader->fileStartTime();
-            struct tm *gmt;
-            gmt = gmtime(&t);
-            String str;
-            str.sprintf("%04d%02d%02d_%02d%02d%02dZ", gmt->tm_year + 1900, gmt->tm_mon + 1, gmt->tm_mday, gmt->tm_hour,
-                        gmt->tm_min, gmt->tm_sec);
-
-            response = cmd.cmd.append("=") + str;
-        }
-    }
 
     //****************************************************//
     //----------------------Z-----------------------------//
@@ -2811,9 +2431,11 @@ String QS1RServer::doCommandProcessor(String value, int rx_num, QAbstractSocket 
             response = "NAK";
         } else if (cmd.RW == CMD::cmd_read) {
             short *data = new short[WB_BLOCK_SIZE];
-            int count = QsGlobal::g_io->readEP8((unsigned char *)data, WB_BLOCK_SIZE * sizeof(short));
+            int value = QsGlobal::g_io->readEP8((unsigned char *)data, WB_BLOCK_SIZE * sizeof(short));
             delete[] data;
-            response = cmd.cmd.append("=") + String::number(count);
+            response.append(cmd.cmd);
+            response.append(String("="));
+            response.append(String::number(value));
         }
     }
 
