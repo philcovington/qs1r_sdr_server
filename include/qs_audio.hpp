@@ -35,7 +35,7 @@
 #include "../include/qs_globals.hpp"
 #include "../include/qs_rt_audio.hpp"
 #include "../include/qs_stringclass.hpp"
-#include "../include/stringqs_listclass.hpppp"
+#include "../include/qs_stringlistclass.hpp"
 #include <memory>
 
 class QsAudio {

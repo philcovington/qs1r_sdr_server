@@ -26,38 +26,38 @@
 
 #pragma once
 
+#include "../include/qs_agc.hpp"
+#include "../include/qs_am_demod.hpp"
+#include "../include/qs_auto_notch_filter.hpp"
+#include "../include/qs_avg_nb.hpp"
+#include "../include/qs_blk_nb.hpp"
+#include "../include/qs_cpx_vector_cb.hpp"
+#include "../include/qs_debugloggerclass.hpp"
+#include "../include/qs_defines.hpp"
+#include "../include/qs_downcnv.hpp"
+#include "../include/qs_fmn_demod.hpp"
+#include "../include/qs_fmw_demod.hpp"
+#include "../include/qs_globals.hpp"
+#include "../include/qs_iir_filter.hpp"
+#include "../include/qs_io_libusb.hpp"
+#include "../include/qs_main_rx_filter.hpp"
+#include "../include/qs_nr_filter.hpp"
+#include "../include/qs_post_rx_filter.hpp"
+#include "../include/qs_sam_demod.hpp"
+#include "../include/qs_signalops.hpp"
+#include "../include/qs_sleep.hpp"
+#include "../include/qs_smeter.hpp"
+#include "../include/qs_squelch.hpp"
+#include "../include/qs_state.hpp"
+#include "../include/qs_threading.hpp"
+#include "../include/qs_tone_gen.hpp"
+#include "../include/qs_volume.hpp"
+#include "../include/speex/headers/speex_resampler.h"
 #include <memory>
 
-#include "../include/qs_dataproc.hpp"
-#include "../include/qs_defines.hpp"
-#include "../include/qs_globals.hpp"
-#include "../include/qs_sleep.hpp"
-#include "../include/qs_thread.hpp"
-#include "../include/speex/headers/speex_resampler.h"
-
-class QsDownConvertor;
-class QsToneGenerator;
-class QsAveragingNoiseBlanker;
-class QsBlockNoiseBlanker;
-class QsState;
-class QsMainRxFilter;
-class QsPostRxFilter;
-class QsFilter;
-class QS_IIR;
-class QsAgc;
-class QsSAMDemodulator;
-class QsAMDemodulator;
-class QsFMNDemodulator;
-class QsFMWDemodulator;
-class QsNoiseReductionFilter;
-class QsAutoNotchFilter;
-class QsSquelch;
-class QsSMeter;
-class QsVolume;
-
 class QsDspProcessor : public Thread {
-
   public:
+    // Unique pointers to DSP components
     std::unique_ptr<QsToneGenerator> p_tg0;
     std::unique_ptr<QsAveragingNoiseBlanker> p_anb;
     std::unique_ptr<QsBlockNoiseBlanker> p_bnb;
@@ -75,7 +75,6 @@ class QsDspProcessor : public Thread {
     std::unique_ptr<QsSMeter> p_sm;
     std::unique_ptr<QsSquelch> p_sq;
     std::unique_ptr<QsVolume> p_vol;
-
     std::unique_ptr<QS_IIR> p_iir0;
     std::unique_ptr<QS_IIR> p_iir1;
     std::unique_ptr<QS_IIR> p_iir2;
@@ -88,15 +87,16 @@ class QsDspProcessor : public Thread {
     explicit QsDspProcessor();
     ~QsDspProcessor();
 
-    void run();
-    void stop();
-
     void clearBuffers();
-
     void init(int rx_num = 1);
     void reinit();
 
+    // Overriding Thread's run method
+    void run() override;
+    void stop() override;
+
   private:
+    // Member variables for DSP processing
     unsigned int m_rx_num;
     unsigned int m_bsize;
     unsigned int m_bsizeX2;
@@ -116,10 +116,8 @@ class QsDspProcessor : public Thread {
 
     qs_vect_cpx in_cpx;
     qs_vect_cpx rs_cpx;
-
     qs_vect_f re_f;
     qs_vect_f im_f;
-
     qs_vect_cpx rs_cpx_n;
 
     QsSleep sleep;
@@ -132,7 +130,6 @@ class QsDspProcessor : public Thread {
     qs_vect_f rs_in_interleaved;
     qs_vect_f rs_out_interleaved;
 
-    void initPowerSpectrum(int size);
     void initResampler(int size);
     void initManualNotch();
 };

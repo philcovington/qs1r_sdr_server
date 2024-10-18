@@ -7,9 +7,9 @@
 #include "../include/qs_avg_nb.hpp"
 #include "../include/qs_blk_nb.hpp"
 #include "../include/qs_cpx_vector_cb.hpp"
-#include "../include/qs_dataproc.hpp"
+#include "../include/qs_signalops.hpp"
 #include "../include/qs_fmn_demod.hpp"
-#include "../include/qs_fmwdemod.hpp"
+#include "../include/qs_fmw_demod.hpp"
 #include "../include/qs_iir_filter.hpp"
 #include "../include/qs_io_libusb.hpp"
 #include "../include/qs_main_rx_filter.hpp"
@@ -61,15 +61,15 @@ void QsDspProcessor::init(int rx_num) {
     QsGlobal::g_cpx_ps1_ring->init(m_ps_size * 16);
 
     in_cpx.resize(m_bsize);
-    QsDataProc::Zero(in_cpx);
+    QsSignalOps::Zero(in_cpx);
     rs_cpx.resize(m_bsize);
-    QsDataProc::Zero(rs_cpx);
+    QsSignalOps::Zero(rs_cpx);
     re_f.resize(m_bsize);
-    QsDataProc::Zero(re_f);
+    QsSignalOps::Zero(re_f);
     im_f.resize(m_bsize);
-    QsDataProc::Zero(im_f);
+    QsSignalOps::Zero(im_f);
     rs_cpx_n.resize(m_bsize);
-    QsDataProc::Zero(rs_cpx_n);
+    QsSignalOps::Zero(rs_cpx_n);
 
     m_rs_input_rate = QsGlobal::g_memory->getDataPostProcRate();
     m_rs_output_rate = m_rs_rate;
@@ -146,8 +146,8 @@ void QsDspProcessor::run() {
     m_sd_buffer_size = m_bsize * SD_RING_SZ_MULT;
     m_ps_size = m_bsize;
 
-    QsDataProc::Zero(in_cpx);
-    QsDataProc::Zero(rs_cpx);
+    QsSignalOps::Zero(in_cpx);
+    QsSignalOps::Zero(rs_cpx);
 
     QsGlobal::g_cpx_sd_ring->init(m_sd_buffer_size);
     QsGlobal::g_cpx_ps1_ring->init(m_ps_size * 8);
@@ -163,9 +163,9 @@ void QsDspProcessor::run() {
     m_req_outframes = std::ceil((double)m_bsize * m_rs_output_rate / m_rs_input_rate);
     m_outframesX2 = m_req_outframes * 2;
 
-    QsDataProc::Zero(re_f);
-    QsDataProc::Zero(im_f);
-    QsDataProc::Zero(rs_cpx_n);
+    QsSignalOps::Zero(re_f);
+    QsSignalOps::Zero(im_f);
+    QsSignalOps::Zero(rs_cpx_n);
 
     QsGlobal::g_float_rt_ring->init(m_outframesX2 * RT_RING_SZ_MULT);
     QsGlobal::g_float_dac_ring->init(m_outframesX2 * DAC_RING_SZ_MULT);
@@ -187,14 +187,7 @@ void QsDspProcessor::run() {
             // ======== <BLOCK NOISE BLANKER> ===========
             p_bnb->process(in_cpx);
             // ======== </BLOCK NOISE BLANKER> ===========
-
-            // power spectrum
-            // =================<POWER SPECTRUM>==================
-            if (QsGlobal::g_cpx_ps1_ring->writeAvail() >= m_bsize) {
-                QsGlobal::g_cpx_ps1_ring->write(in_cpx);
-            }
-            // =================</POWER SPECTRUM>==================
-
+            
             // apply LO
             // ======== <TONE GENERATOR> ===========
             p_tg0->process(in_cpx);
@@ -243,7 +236,7 @@ void QsDspProcessor::run() {
             // Do AGC
             p_agc->process(rs_cpx_n);
 
-            QsDataProc::Limit(rs_cpx_n, m_bsize);
+            QsSignalOps::Limit(rs_cpx_n, m_bsize);
 
             // ======== <DEMODULATORS> ===========
 
@@ -272,7 +265,7 @@ void QsDspProcessor::run() {
 
             // ======== <BINAURAL> =============
             if (!QsGlobal::g_memory->getBinauralMode()) {
-                QsDataProc::CopyRealToImag(rs_cpx_n);
+                QsSignalOps::CopyRealToImag(rs_cpx_n);
             }
             // ======== </BINAURAL> =============
 
@@ -288,7 +281,7 @@ void QsDspProcessor::run() {
             p_sq->process(rs_cpx_n);
             // ======== </SQUELCH> ===========
 
-            QsDataProc::Interleave(rs_cpx_n, rs_in_interleaved, m_bsize);
+            QsSignalOps::Interleave(rs_cpx_n, rs_in_interleaved, m_bsize);
 
             // do fractional resampler to port audio rate
             // ======== <RESAMPLER> ==========

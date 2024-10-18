@@ -1,19 +1,24 @@
 #include "../include/qs_io_thread.hpp"
 #include "../include/qs_debugloggerclass.hpp"
-#include "../include/qs_dataproc.hpp"
 #include "../include/qs_defaults.hpp"
 #include "../include/qs_defines.hpp"
 #include "../include/qs_globals.hpp"
+#include "../include/qs_signalops.hpp"
 #include "../include/qs_sleep.hpp"
-#include "../include/qs_stringclass.hpp"
 
-QsIoThread ::QsIoThread() : m_thread_go(false) {}
+QsIoThread::QsIoThread() : m_thread_go(false) {}
 
-void QsIoThread ::run() {
-    std::vector<unsigned char> buffer;
-    buffer.resize(4);
-    std::fill(buffer.begin(), buffer.end(), 0);
+void QsIoThread::startThread() {
+    start([this]() { this->run(); }, ThreadPriority::Normal);
+}
 
+void QsIoThread::stopThread() {
+    stop(); // Set m_thread_go to false and stop the base class thread
+    wait(); // Wait for the thread to finish
+}
+
+void QsIoThread::run() {
+    std::vector<unsigned char> buffer(4, 0);
     int counter = 0;
 
     if (QsGlobal::g_server->isHardwareInit())
@@ -44,18 +49,14 @@ void QsIoThread ::run() {
     }
 }
 
-void QsIoThread ::stop() { m_thread_go = false; }
+void QsIoThread::stop() {
+    m_thread_go = false; // Set thread running flag to false
+    Thread::stop();      // Call base class stop
+}
 
-//
-// message ID 0x1 is IO status message with 24 bits of io info
-// message[0] = message ID
-// message[1] = bits 0 through 7
-// message[2] = bits 8 through 15
-// message[3] = bits 16 through 23
-//
-void QsIoThread ::decodeMessageId(std::vector<unsigned char> &vector) {
-    switch ((int)vector[0]) {
-    case 0x1: // io status message
+void QsIoThread::decodeMessageId(std::vector<unsigned char> &vector) {
+    switch (vector[0]) {
+    case 0x1: // IO status message
         decodeBitStatus(vector);
         break;
     default:
@@ -63,17 +64,6 @@ void QsIoThread ::decodeMessageId(std::vector<unsigned char> &vector) {
     }
 }
 
-void QsIoThread ::decodeBitStatus(std::vector<unsigned char> &vector) {
-    // check ptt bit status
-    // if ((vector[1] & PTT_BIT) == PTT_BIT) {
-    //     _debug() << "ext ptt on";
-    //     if (!QsTx::g_soft_ptt) {
-    //         QsGlobal::g_server->setTxPttDirect(true);
-    //     }
-    // } else {
-    //     _debug() << "ext ptt off";
-    //     if (!QsTx::g_soft_ptt) {
-    //         QsGlobal::g_server->setTxPttDirect(false);
-    //     }
-    // }
+void QsIoThread::decodeBitStatus(std::vector<unsigned char> &vector) {
+    // Example decoding logic
 }

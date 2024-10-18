@@ -1,5 +1,5 @@
 /**
- * @file DebugLogger.h
+ * @file qs_debuglogger.hpp
  * @brief A logging utility class for formatted output with timestamps.
  *
  * The DebugLogger class provides a flexible and convenient way to log messages
@@ -33,8 +33,8 @@
  *
  * I have tried to make it provide similar functionality to Qt's qDebug().
  *
- * Author: [Philip A Covington]
- * Date: [2024-10-16]
+ * Author: Philip A Covington
+ * Date: 2024-10-16
  */
 
 #pragma once

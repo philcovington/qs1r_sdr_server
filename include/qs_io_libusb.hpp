@@ -29,8 +29,8 @@
  * communication with USB devices, such as DSP systems, data acquisition systems, and
  * custom hardware interfacing.
  *
- * Author: [Philip A Covington]
- * Date: [2024-10-16]
+ * Author: Philip A Covington
+ * Date: 2024-10-16
  */
 
 #pragma once

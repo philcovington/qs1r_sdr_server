@@ -1,5 +1,5 @@
 #include "../include/qs_tone_gen.hpp"
-#include "../include/qs_dataproc.hpp"
+#include "../include/qs_signalops.hpp"
 #include "../include/qs_globals.hpp"
 
 #include <cmath>

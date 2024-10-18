@@ -13,7 +13,7 @@ int QsHilbert::process(qs_vect_f &in_f, qs_vect_cpx &out_cpx, unsigned int lengt
 
 int QsHilbert ::process(qs_vect_cpx &in_cpx, qs_vect_cpx &out_cpx, unsigned int length) {
     qs_vect_f in_f(length);
-    QsDataProc::RealFromComplex(in_cpx.data(), in_f.data(), length);
+    QsSignalOps::RealFromComplex(in_cpx.data(), in_f.data(), length);
     return process(in_f, out_cpx, length);
 }
 

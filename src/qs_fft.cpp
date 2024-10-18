@@ -4,16 +4,16 @@
 
 QsFFT ::QsFFT() : size(4096), half_sz(size / 2) {
     p_ip_workarea.resize((int)sqrt((float)size) + 2);
-    QsDataProc::Zero(p_ip_workarea);
+    QsSignalOps::Zero(p_ip_workarea);
     p_w_cossintable.resize(half_sz);
-    QsDataProc::Zero(p_w_cossintable);
+    QsSignalOps::Zero(p_w_cossintable);
 
     p_tmp_buffer.resize(size * 2);
-    QsDataProc::Zero(p_tmp_buffer);
+    QsSignalOps::Zero(p_tmp_buffer);
     p_tmp_re.resize(size * 2);
-    QsDataProc::Zero(p_tmp_re);
+    QsSignalOps::Zero(p_tmp_re);
     p_tmp_im.resize(size * 2);
-    QsDataProc::Zero(p_tmp_im);
+    QsSignalOps::Zero(p_tmp_im);
 
     makewt(half_sz, p_ip_workarea, p_w_cossintable);
 }
@@ -23,68 +23,68 @@ void QsFFT ::resize(int size) {
     half_sz = size / 2;
 
     p_ip_workarea.resize((int)sqrt((float)size) + 2);
-    QsDataProc::Zero(p_ip_workarea);
+    QsSignalOps::Zero(p_ip_workarea);
     p_w_cossintable.resize(half_sz);
-    QsDataProc::Zero(p_w_cossintable);
+    QsSignalOps::Zero(p_w_cossintable);
 
     p_tmp_buffer.resize(size * 2);
-    QsDataProc::Zero(p_tmp_buffer);
+    QsSignalOps::Zero(p_tmp_buffer);
     p_tmp_re.resize(size * 2);
-    QsDataProc::Zero(p_tmp_re);
+    QsSignalOps::Zero(p_tmp_re);
     p_tmp_im.resize(size * 2);
-    QsDataProc::Zero(p_tmp_im);
+    QsSignalOps::Zero(p_tmp_im);
 
     makewt(half_sz, p_ip_workarea, p_w_cossintable);
 }
 
 void QsFFT ::doDFTForward(qs_vect_cpx &src_dst, int length, float normalize_value) {
-    QsDataProc::Interleave(src_dst, p_tmp_buffer, size);
+    QsSignalOps::Interleave(src_dst, p_tmp_buffer, size);
     cdft_fwd(2 * size, p_tmp_buffer, p_ip_workarea, p_w_cossintable);
-    QsDataProc::DeInterleave(p_tmp_buffer, src_dst, size);
+    QsSignalOps::DeInterleave(p_tmp_buffer, src_dst, size);
     if (normalize_value != 1.0)
-        QsDataProc::Multiply(src_dst, normalize_value, size);
+        QsSignalOps::Multiply(src_dst, normalize_value, size);
 }
 
 void QsFFT ::doDFTForward(qs_vect_cpx &src, qs_vect_cpx &dst, int length, float normalize_value) {
-    QsDataProc::Interleave(src, p_tmp_buffer, size);
+    QsSignalOps::Interleave(src, p_tmp_buffer, size);
     cdft_fwd(2 * size, p_tmp_buffer, p_ip_workarea, p_w_cossintable);
-    QsDataProc::DeInterleave(p_tmp_buffer, dst, size);
+    QsSignalOps::DeInterleave(p_tmp_buffer, dst, size);
     if (normalize_value != 1.0)
-        QsDataProc::Multiply(dst, normalize_value, size);
+        QsSignalOps::Multiply(dst, normalize_value, size);
 }
 
 void QsFFT ::doDFTForward(qs_vect_f &src_re, qs_vect_f &src_im, qs_vect_f &dst_re, qs_vect_f &dst_im, int length,
                           float normalize_value) {
-    QsDataProc::Interleave(src_re, src_im, p_tmp_buffer, size);
+    QsSignalOps::Interleave(src_re, src_im, p_tmp_buffer, size);
     cdft_fwd(2 * size, p_tmp_buffer, p_ip_workarea, p_w_cossintable);
-    QsDataProc::DeInterleave(p_tmp_buffer, dst_re, dst_im, size);
+    QsSignalOps::DeInterleave(p_tmp_buffer, dst_re, dst_im, size);
     if (normalize_value != 1.0)
-        QsDataProc::Multiply(dst_re, dst_im, normalize_value, size);
+        QsSignalOps::Multiply(dst_re, dst_im, normalize_value, size);
 }
 
 void QsFFT ::doDFTInverse(qs_vect_cpx &src_dst, int length, float normalize_value) {
-    QsDataProc::Interleave(src_dst, p_tmp_buffer, size);
+    QsSignalOps::Interleave(src_dst, p_tmp_buffer, size);
     cdft_rev(2 * size, p_tmp_buffer, p_ip_workarea, p_w_cossintable);
-    QsDataProc::DeInterleave(p_tmp_buffer, src_dst, size);
+    QsSignalOps::DeInterleave(p_tmp_buffer, src_dst, size);
     if (normalize_value != 1.0)
-        QsDataProc::Multiply(src_dst, normalize_value, size);
+        QsSignalOps::Multiply(src_dst, normalize_value, size);
 }
 
 void QsFFT ::doDFTInverse(qs_vect_cpx &src, qs_vect_cpx &dst, int length, float normalize_value) {
-    QsDataProc::Interleave(src, p_tmp_buffer, size);
+    QsSignalOps::Interleave(src, p_tmp_buffer, size);
     cdft_rev(2 * size, p_tmp_buffer, p_ip_workarea, p_w_cossintable);
-    QsDataProc::DeInterleave(p_tmp_buffer, dst, size);
+    QsSignalOps::DeInterleave(p_tmp_buffer, dst, size);
     if (normalize_value != 1.0)
-        QsDataProc::Multiply(dst, normalize_value, size);
+        QsSignalOps::Multiply(dst, normalize_value, size);
 }
 
 void QsFFT ::doDFTInverse(qs_vect_f &src_re, qs_vect_f &src_im, qs_vect_f &dst_re, qs_vect_f &dst_im, int length,
                           float normalize_value) {
-    QsDataProc::Interleave(src_re, src_im, p_tmp_buffer, size);
+    QsSignalOps::Interleave(src_re, src_im, p_tmp_buffer, size);
     cdft_rev(2 * size, p_tmp_buffer, p_ip_workarea, p_w_cossintable);
-    QsDataProc::DeInterleave(p_tmp_buffer, dst_re, dst_im, size);
+    QsSignalOps::DeInterleave(p_tmp_buffer, dst_re, dst_im, size);
     if (normalize_value != 1.0)
-        QsDataProc::Multiply(dst_re, dst_im, normalize_value, size);
+        QsSignalOps::Multiply(dst_re, dst_im, normalize_value, size);
 }
 
 inline float QsFFT ::GetPower(float re, float im) { return re * re + im * im; }

@@ -31,8 +31,8 @@
  * 
  * I tried to provide the same functionality of Qt's QList class.
  *
- * Author: [Philip A Covington]
- * Date: [2024-10-16]
+ * Author: Philip A Covington
+ * Date: 2024-10-16
  */
 
 #pragma once

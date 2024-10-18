@@ -22,7 +22,7 @@
  */
 #pragma once
 
-#include "../include/qs_dataproc.hpp"
+#include "../include/qs_signalops.hpp"
 
 class QsHilbert {
 

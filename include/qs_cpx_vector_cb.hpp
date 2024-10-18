@@ -33,13 +33,13 @@
  * other applications where complex number data needs to be efficiently managed 
  * in a circular buffer format.
  *
- * Author: [Philip A Covington]
- * Date: [2024-10-16]
+ * Author: Philip A Covington
+ * Date: 2024-10-16
  */
 
 #pragma once
 
-#include "../include/qs_dataproc.hpp"
+#include "../include/qs_signalops.hpp"
 #include "../include/qs_types.hpp"
 #include <complex>
 

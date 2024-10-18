@@ -23,8 +23,8 @@
  * This class is useful for implementing time delays in applications such as
  * data processing, device communication, and timing control in embedded systems.
  *
- * Author: [Philip A Covington]
- * Date: [2024-10-16]
+ * Author: Philip A Covington
+ * Date: 2024-10-16
  */
 
 #pragma once

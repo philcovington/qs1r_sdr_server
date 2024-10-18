@@ -4,11 +4,12 @@
 #include "../include/qs_globals.hpp"
 #include "../include/qs_sleep.hpp"
 #include "../include/qs_cmdproc.hpp"
-#include "../include/qs_dataproc.hpp"
+#include "../include/qs_signalops.hpp"
 #include "../include/qs_stringclass.hpp"
-#include "../include/stringqs_listclass.hpp"
-#include "../include/qs_thread.hpp"
-#include"../include/qs_bytearray.hpp"
+#include "../include/qs_stringlistclass.hpp"
+#include "../include/qs_threading.hpp"
+#include "../include/qs_bytearray.hpp"
+#include "../include/qs_uuid.hpp"
 #include <memory>
 #include <vector>
 
@@ -100,24 +101,16 @@ class QS1RServer {
     void boostTicks();
 
     void initQsAudio(double rate);
-    void initQS1RHardware();
-    void initCmdSockets();
-    void initTCPCmdServers();
-    void initSpectrumDataServer();
-    void initWBDataServer();
+    int initQS1RHardware();    
     void initQsMemory();
-    void initCommandEntryBox();
-    void initSMeterCorrectionMap();
-    void initPSCorrectionMap();
-    void initAudioSetupDialog();
-    void initSerialComms();
+    void initSMeterCorrectionMap();    
 
     void loadFPGAFile(String filename);
     void updateFPGARegisters();
 
-    void setPgaMode(bool on);
-    void setRandMode(bool on);
-    void setDitherMode(bool on);
+    int setPgaMode(bool on);
+    int setRandMode(bool on);
+    int setDitherMode(bool on);
     void setDacOutputDisable(bool on);
     void setDacExtMuteEnable(bool on);
     void setDdcMasterReset(bool on);
@@ -233,18 +226,13 @@ class QS1RServer {
     StringList cmdList;
     StringList m_supported_samplerates;
 
-    QsSleep qssleep;
-    Thread work_thread;
+    QsSleep qssleep;    
 
     CMD cmd;  
     
-    String readQS1RUuid();
+    UUID readQS1RUuid();
     bool writeQS1RSN(String uuid);
-    bool updateQS1RSN();
-    bool validateQS1RSN(String uuid);
-    bool hardwareSNCheck();
-
-    String readQSLSFile();
+    
     String readQS1REEPROMData();
 
     int m_wb_bsize;

@@ -33,13 +33,13 @@
  *
  * I tried to provide similar functionality to Qt's QString class.
  *
- * Author: [Philip A Covington]
- * Date: [2024-10-16]
+ * Author: Philip A Covington
+ * Date: 2024-10-16
  */
 
 #pragma once
 
-#include "../include/stringqs_listclass.hpp"
+#include "../include/qs_stringlistclass.hpp"
 #include <algorithm>
 #include <cctype>
 #include <iostream>
@@ -257,6 +257,11 @@ class String {
 
         result.append(data.substr(start, end)); // Add the last substring
         return result;
+    }
+
+    // Static method to create a String object from ASCII data
+    static String fromAscii(const char *ascii, size_t length) {
+        return String(std::string(ascii, length)); // Create a String from a substring of ASCII data
     }
 
   public:

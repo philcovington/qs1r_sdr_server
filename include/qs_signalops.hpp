@@ -1,8 +1,8 @@
 /*!
- * @file qs_data_proc.h
+ * @file qs_signalops.hpp
  * @brief Provides a set of utility functions for audio signal processing.
  *
- * The QsDataProc class offers various static methods for performing mathematical
+ * The QsSignalOps class offers various static methods for performing mathematical
  * operations on different data types, including floating point numbers, integers,
  * and complex numbers. These functions are optimized for real-time signal processing
  * tasks, such as adding values to arrays, rounding, and bounding values.
@@ -49,7 +49,7 @@ static const Cpx cpx_one(1.0, 1.0);
 #define SHORTTOFLOAT 3.0517578125e-5
 #define INT24TOFLOAT 1.1920928955078125e-7
 
-class QsDataProc {
+class QsSignalOps {
   public:
     template <typename T> inline static const T &Max(const T &a, const T &b) {
         if (a < b)
@@ -480,7 +480,7 @@ class QsDataProc {
         double max = 0.0;
         double val = 0.0;
         for (uint32_t i = 0; i < length; i++) {
-            val = QsDataProc::Abs(src[i]);
+            val = QsSignalOps::Abs(src[i]);
             if (val > max)
                 max = val;
         }
@@ -498,8 +498,8 @@ class QsDataProc {
         double mmax = 0.0;
 
         for (uint32_t i = 0; i < length; i++) {
-            val.real(QsDataProc::Abs(src[i].real()));
-            val.imag(QsDataProc::Abs(src[i].imag()));
+            val.real(QsSignalOps::Abs(src[i].real()));
+            val.imag(QsSignalOps::Abs(src[i].imag()));
 
             if (val.real() > maxx.real()) {
                 maxx.real(val.real());
@@ -508,7 +508,7 @@ class QsDataProc {
                 maxx.imag(val.imag());
             }
         }
-        mmax = QsDataProc::Max(maxx.real(), maxx.imag());
+        mmax = QsSignalOps::Max(maxx.real(), maxx.imag());
         if (mmax > 1.0) {
             mmax = 0.95 / mmax;
             for (uint32_t i = 0; i < length; i++) {
@@ -525,14 +525,14 @@ class QsDataProc {
         if (src.size() < length)
             length = src.size();
         for (uint32_t i = 0; i < length; i++) {
-            val.real(QsDataProc::Abs(src[i].real()));
-            val.imag(QsDataProc::Abs(src[i].imag()));
+            val.real(QsSignalOps::Abs(src[i].real()));
+            val.imag(QsSignalOps::Abs(src[i].imag()));
             if (val.real() > maxx.real())
                 maxx.real(val.real());
             if (val.imag() > maxx.imag())
                 maxx.imag(val.imag());
         }
-        mmax = QsDataProc::Max(maxx.real(), maxx.imag());
+        mmax = QsSignalOps::Max(maxx.real(), maxx.imag());
         if (mmax > 1.0) {
             mmax = 0.95 / mmax;
             for (uint32_t i = 0; i < length; i++) {
@@ -547,7 +547,7 @@ class QsDataProc {
         double val = 0.0;
         for (uint32_t i = 0; i < length; i++) {
             src[i] *= volume;
-            val = QsDataProc::Abs(src[i]);
+            val = QsSignalOps::Abs(src[i]);
             if (val > max)
                 max = val;
         }
@@ -566,7 +566,7 @@ class QsDataProc {
             length = src.size();
         for (uint32_t i = 0; i < length; i++) {
             src[i] *= volume;
-            val = QsDataProc::Abs(src[i]);
+            val = QsSignalOps::Abs(src[i]);
             if (val > max)
                 max = val;
         }

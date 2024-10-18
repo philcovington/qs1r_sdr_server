@@ -1,15 +1,38 @@
 #pragma once
 
 #include <atomic>
+#include <chrono>
 #include <condition_variable>
 #include <functional>
 #include <future>
 #include <mutex>
+#include <optional>
+#include <stdexcept>
 #include <thread>
 
 class Thread {
   public:
     Thread() : m_thread(), m_stopFlag(false) {}
+
+    // Delete copy constructor and assignment operator
+    Thread(const Thread &) = delete;
+    Thread &operator=(const Thread &) = delete;
+
+    // Allow move constructor and assignment
+    Thread(Thread &&other) noexcept : m_thread(std::move(other.m_thread)), m_stopFlag(other.m_stopFlag.load()) {
+        other.m_stopFlag = true; // Set the moved-from object's stop flag
+    }
+
+    Thread &operator=(Thread &&other) noexcept {
+        if (this != &other) {
+            stop(); // Ensure current thread is stopped before assignment
+            wait(); // Wait for the current thread to finish
+            m_thread = std::move(other.m_thread);
+            m_stopFlag.store(other.m_stopFlag.load()); // Move the atomic flag
+            other.m_stopFlag = true;                   // Avoid joining the moved-from thread
+        }
+        return *this;
+    }
 
     enum class ThreadPriority {
         Low,
@@ -23,19 +46,37 @@ class Thread {
         m_thread = std::thread([this, func]() {
             func();
             // Signal that the thread has finished executing
-            std::lock_guard<std::mutex> lock(m_mutex);
-            m_stopFlag = true;
-            m_cv.notify_all();
+            {
+                std::lock_guard<std::mutex> lock(m_mutex);
+                m_stopFlag = true;
+                m_cv.notify_all();
+            }
         });
 
         // Set thread priority based on the provided priority
         setThreadPriority(priority);
     }
 
-    // Wait for the thread to finish execution
-    void wait() {
+    // Make run virtual to allow overriding
+    virtual void run() = 0; // Pure virtual function
+
+    // Wait for the thread to finish execution with an optional timeout
+    void wait(std::optional<std::chrono::milliseconds> timeout = std::nullopt) {
         if (m_thread.joinable()) {
-            m_thread.join();
+            if (timeout.has_value()) {
+                std::unique_lock<std::mutex> lock(m_mutex);
+                // Capture m_stopFlag by reference in the lambda
+                if (m_cv.wait_for(lock, timeout.value(), [this]() { return m_stopFlag.load(); })) {
+                    // Thread finished within the timeout
+                    m_thread.join();
+                } else {
+                    // Timeout occurred
+                    throw std::runtime_error("Thread wait timed out.");
+                }
+            } else {
+                // No timeout provided, just join
+                m_thread.join();
+            }
         }
     }
 
@@ -45,10 +86,9 @@ class Thread {
         return !m_stopFlag;
     }
 
-    // Stop the thread
-    void stop() {
+    virtual void stop() { // Make this virtual
         m_stopFlag = true;
-        m_cv.notify_all(); // Notify any waiting thread
+        m_cv.notify_all(); // Notify any waiting threads
     }
 
     ~Thread() {

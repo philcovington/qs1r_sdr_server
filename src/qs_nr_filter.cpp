@@ -16,9 +16,9 @@ void QsNoiseReductionFilter ::init(unsigned int size) {
     m_nr_dl_indx = 0;
 
     m_nr_delay_line.resize(m_nr_lms_sz);
-    QsDataProc::Zero(m_nr_delay_line);
+    QsSignalOps::Zero(m_nr_delay_line);
     m_nr_coeff.resize(m_nr_lms_sz * 2);
-    QsDataProc::Zero(m_nr_coeff);
+    QsSignalOps::Zero(m_nr_coeff);
 }
 
 void QsNoiseReductionFilter ::process(qs_vect_cpx &src_dst) {
@@ -32,23 +32,23 @@ void QsNoiseReductionFilter ::process(qs_vect_cpx &src_dst) {
             m_nr_lms_sz = src_dst.size();
             m_nr_mask = m_nr_lms_sz - 1;
             m_nr_delay_line.resize(m_nr_lms_sz);
-            QsDataProc::Zero(m_nr_delay_line);
+            QsSignalOps::Zero(m_nr_delay_line);
             m_nr_coeff.resize(m_nr_lms_sz * 2);
-            QsDataProc::Zero(m_nr_coeff);
+            QsSignalOps::Zero(m_nr_coeff);
         }
 
         if (m_nr_adapt_size != QsGlobal::g_memory->getNoiseReductionTaps()) {
             m_nr_adapt_size = QsGlobal::g_memory->getNoiseReductionTaps();
             m_nr_dl_indx = 0;
-            QsDataProc::Zero(m_nr_delay_line);
-            QsDataProc::Zero(m_nr_coeff);
+            QsSignalOps::Zero(m_nr_delay_line);
+            QsSignalOps::Zero(m_nr_coeff);
         }
 
         if (m_nr_delay != QsGlobal::g_memory->getNoiseReductionDelay()) {
             m_nr_delay = QsGlobal::g_memory->getNoiseReductionDelay();
             m_nr_dl_indx = 0;
-            QsDataProc::Zero(m_nr_delay_line);
-            QsDataProc::Zero(m_nr_coeff);
+            QsSignalOps::Zero(m_nr_delay_line);
+            QsSignalOps::Zero(m_nr_coeff);
         }
 
         double scl1 = 1.0 - m_nr_adapt_rate * m_nr_leakage;

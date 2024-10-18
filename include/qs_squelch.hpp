@@ -1,5 +1,5 @@
 /**
- * @file QsSquelch.h
+ * @file qs_squelch.hpp
  * @brief A class for implementing squelch functionality in signal processing.
  *
  * The QsSquelch class provides methods to manage squelch operations,
@@ -24,13 +24,13 @@
  * unwanted signals or noise below a certain threshold in communication systems
  * or audio processing.
  *
- * Author: [Philip A Covington]
+ * Author: Philip A Covington
  * Date: 2024-10-16
  */
 
 #pragma once
 
-#include "../include/qs_dataproc.hpp"
+#include "../include/qs_signalops.hpp"
 #include "../include/qs_globals.hpp"
 
 class QsSquelch {

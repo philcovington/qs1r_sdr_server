@@ -29,7 +29,7 @@
 
 #pragma once
 
-#include "../include/qs_dataproc.hpp"
+#include "../include/qs_signalops.hpp"
 #include "../include/qs_defines.hpp"
 
 #define AGC_ATTACK_RISE_TC 0.0005

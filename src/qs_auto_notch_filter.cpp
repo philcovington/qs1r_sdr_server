@@ -16,9 +16,9 @@ void QsAutoNotchFilter ::init(unsigned int size) {
     m_anf_dl_indx = 0;
 
     m_anf_delay_line.resize(size);
-    QsDataProc::Zero(m_anf_delay_line);
+    QsSignalOps::Zero(m_anf_delay_line);
     m_anf_coeff.resize(size * 2);
-    QsDataProc::Zero(m_anf_coeff);
+    QsSignalOps::Zero(m_anf_coeff);
 }
 
 void QsAutoNotchFilter ::process(qs_vect_cpx &src_dst) {
@@ -32,23 +32,23 @@ void QsAutoNotchFilter ::process(qs_vect_cpx &src_dst) {
             m_anf_lms_sz = src_dst.size();
             m_anf_mask = m_anf_lms_sz - 1;
             m_anf_delay_line.resize(m_anf_lms_sz);
-            QsDataProc::Zero(m_anf_delay_line);
+            QsSignalOps::Zero(m_anf_delay_line);
             m_anf_coeff.resize(m_anf_lms_sz * 2);
-            QsDataProc::Zero(m_anf_coeff);
+            QsSignalOps::Zero(m_anf_coeff);
         }
 
         if (m_anf_adapt_size != QsGlobal::g_memory->getAutoNotchTaps()) {
             m_anf_adapt_size = QsGlobal::g_memory->getAutoNotchTaps();
             m_anf_dl_indx = 0;
-            QsDataProc::Zero(m_anf_delay_line);
-            QsDataProc::Zero(m_anf_coeff);
+            QsSignalOps::Zero(m_anf_delay_line);
+            QsSignalOps::Zero(m_anf_coeff);
         }
 
         if (m_anf_delay != QsGlobal::g_memory->getAutoNotchDelay()) {
             m_anf_delay = QsGlobal::g_memory->getAutoNotchDelay();
             m_anf_dl_indx = 0;
-            QsDataProc::Zero(m_anf_delay_line);
-            QsDataProc::Zero(m_anf_coeff);
+            QsSignalOps::Zero(m_anf_delay_line);
+            QsSignalOps::Zero(m_anf_coeff);
         }
 
         double scl1 = 1.0 - m_anf_adapt_rate * m_anf_leakage;

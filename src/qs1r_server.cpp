@@ -1,19 +1,21 @@
 #include "../include/qs1r_server.hpp"
-#include "../include/qs_bytearray.hpp"
-#include "../include/qs_file.hpp"
-#include "../include/qs_debugloggerclass.hpp"
-#include "../include/qs_listclass.hpp"
 #include "../include/qs_audio.hpp"
+#include "../include/qs_bytearray.hpp"
 #include "../include/qs_dac_writer.hpp"
 #include "../include/qs_datareader.hpp"
+#include "../include/qs_debugloggerclass.hpp"
 #include "../include/qs_dsp_proc.hpp"
 #include "../include/qs_fft.hpp"
+#include "../include/qs_file.hpp"
 #include "../include/qs_filter.hpp"
 #include "../include/qs_io_libusb.hpp"
 #include "../include/qs_io_thread.hpp"
+#include "../include/qs_listclass.hpp"
 #include "../include/qs_memory.hpp"
 #include "../include/qs_state.hpp"
 #include "../include/qs_stringclass.hpp"
+#include "../include/qs_uuid.hpp"
+#include "../include/qs_datastreamclass.hpp"
 
 QS1RServer::QS1RServer()
     : p_dac_writer(new QsDacWriter()), p_rta(new QsAudio()), p_qsState(new QsState()), p_dsp_proc(new QsDspProcessor()),
@@ -49,8 +51,7 @@ void QS1RServer::shutdown() {
     if (p_io_thread->isRunning()) {
         _debug() << "stopping io thread...";
         p_io_thread->stop();
-        p_io_thread->wait(10000);
-        p_io_thread->terminate();        
+        p_io_thread->wait(std::chrono::milliseconds(10000));
     }
 
     _debug() << "Close Event";
@@ -82,18 +83,10 @@ void QS1RServer::initialize() {
     setErrorText("Log initialized");
     error_flag = false;
     initSupportedSampleRatesList();
-    initCommandEntryBox();
     showStartupMessage();
-    m_is_rt_audio_bypass = QsGlobal::g_memory->getRtAudioBypass();
-    boostTicks();
-    initCmdSockets();
-    initTCPCmdServers();
-    initSpectrumDataServer();
+    m_is_rt_audio_bypass = QsGlobal::g_memory->getRtAudioBypass();    
     initSMeterCorrectionMap();
-    initPSCorrectionMap();
-    initAudioSetupDialog();
     initQS1RHardware();
-    // initSerialComms( );
 }
 
 void QS1RServer::initSupportedSampleRatesList() {
@@ -162,7 +155,7 @@ void QS1RServer::initQsMemory() {
     QsGlobal::g_memory->setAdcRandomOn(p_qsState->rand());
     QsGlobal::g_memory->setAdcDitherOn(p_qsState->dith());
     QsGlobal::g_memory->setDataProcRate(p_qsState->startupSampleRate());
-    QsGlobal::g_memory->setSMeterCorrection(p_qsState->smeterCorrection());    
+    QsGlobal::g_memory->setSMeterCorrection(p_qsState->smeterCorrection());
     QsGlobal::g_memory->setEncodeFreqCorrect(p_qsState->clockCorrection());
     QsGlobal::g_memory->setRtAudioFrames(p_qsState->rtAudioFrameSize());
     QsGlobal::g_memory->setDataProcRate(p_qsState->startupSampleRate());
@@ -171,7 +164,7 @@ void QS1RServer::initQsMemory() {
     QsGlobal::g_memory->setReadBlockSize(p_qsState->blockSize());
     QsGlobal::g_memory->setResamplerQuality(p_qsState->rsQual());
     QsGlobal::g_memory->setEncodeFreqCorrect(p_qsState->clockCorrection());
-    QsGlobal::g_memory->setEncodeClockFrequency(p_qsState->encodeClockFrequency());    
+    QsGlobal::g_memory->setEncodeClockFrequency(p_qsState->encodeClockFrequency());
     QsGlobal::g_memory->setTxBlockSize(p_qsState->txBlockSize());
     m_prev_vol_val = QsGlobal::g_memory->getVolume();
 }
@@ -179,7 +172,7 @@ void QS1RServer::initQsMemory() {
 // ------------------------------------------------------------
 // Initialize the QS1R Hardware
 // ------------------------------------------------------------
-void QS1RServer::initQS1RHardware() {
+int QS1RServer::initQS1RHardware() {
     m_driver_type = "None";
 
     if (m_is_hardware_init) {
@@ -201,7 +194,7 @@ void QS1RServer::initQS1RHardware() {
         setStatusText("Type 'setup audio' to configure audio in/out, or");
         setStatusText("Type 'gui' to start the GUI.");
         QsGlobal::g_io->close();
-        return;
+        return -1;
     } else {
         m_driver_type = "libUSB";
         setStatusText("Using the libusb driver");
@@ -211,7 +204,7 @@ void QS1RServer::initQS1RHardware() {
             setStatusText("");
             setStatusText("Type 'setup audio' to configure audio in/out, or");
             setStatusText("Type 'gui' to start the GUI.");
-            return;
+            return -1;
         }
     }
 
@@ -223,7 +216,7 @@ void QS1RServer::initQS1RHardware() {
         setStatusText("");
         setStatusText("Type 'setup audio' to configure audio in/out, or");
         setStatusText("Type 'gui' to start the GUI.");
-        return;
+        return -1;
     } else {
         setStatusText("QS1R Firmware loaded...");
     }
@@ -246,7 +239,7 @@ void QS1RServer::initQS1RHardware() {
                 setStatusText("");
                 setStatusText("Type 'setup audio' to configure audio in/out, or");
                 setStatusText("Type 'gui' to start the GUI.");
-                return;
+                return -1;
             }
             if (QsGlobal::g_io->writeMultibusInt(MB_CONTRL1, 0x0) == -1) // try write to multibus
             {
@@ -264,7 +257,7 @@ void QS1RServer::initQS1RHardware() {
         setStatusText("Type 'setup audio' to configure audio in/out, or");
         setStatusText("Type 'gui' to start the GUI.");
 
-        return;
+        return -1;
     }
     m_is_hardware_init = true;
     m_is_was_factory_init = false;
@@ -294,19 +287,14 @@ void QS1RServer::initQS1RHardware() {
 
     _debug() << "FPGA ID: " << String::number(id_fpga, 16);
 
-    initWBPowerSpectrum();
-    initWBDataServer(); // this needs to be done after qsio is valid ( not NULL )
-
 #ifdef HARDWARE_SN_CHECK
     hardwareSNCheck();
 #else
     hardware_is_registered = true;
 #endif
 
-    setStatusText("QS1R Hardware: Ready");    
-    setStatusText("");
-    setStatusText("Type 'setup audio' to configure audio in/out, or");
-    setStatusText("Type 'gui' to start the GUI.");
+    setStatusText("QS1R Hardware: Ready");
+    return 0;
 }
 
 bool QS1RServer::hardwareSNCheck() { return hardware_is_registered; }
@@ -642,8 +630,6 @@ void QS1RServer::setupIo() {
 
     QsGlobal::g_data_reader->init();
 
-    connect(&(*QsGlobal::g_data_reader), SIGNAL(onQs1rReadFail()), this, SLOT(qs1rReadFailure()));
-
     bool dac_bypass = false;
     dac_bypass = QsGlobal::g_memory->getDacBypass();
 
@@ -684,19 +670,17 @@ void QS1RServer::startIo(bool iswav) {
 
     // start the dsp processor thread
     if (!p_dsp_proc->isRunning())
-        p_dsp_proc->start(Thread::TimeCriticalPriority);
-
-    QsGlobal::g_data_reader->setSource(src_qs1r);
+        p_dsp_proc->start(Thread::ThreadPriority::TimeCritical);
 
     if (!QsGlobal::g_data_reader->isRunning())
-        QsGlobal::g_data_reader->start(Thread::TimeCriticalPriority);
+        QsGlobal::g_data_reader->start(Thread::ThreadPriority::TimeCritical);
 
     bool dac_bypass = false;
     dac_bypass = p_qsState->dacBypass();
 
     if (!dac_bypass) {
         if (!p_dac_writer->isRunning())
-            p_dac_writer->start(Thread::NormalPriority);
+            p_dac_writer->start(Thread::ThreadPriority::Normal);
     }
 
     if (!m_is_rt_audio_bypass) {
@@ -730,19 +714,19 @@ void QS1RServer::stopIo() {
     _debug() << "stopping dac writer...";
     if (p_dac_writer->isRunning()) {
         p_dac_writer->stop();
-        p_dac_writer->wait(10000);
+        p_dac_writer->wait(std::chrono::milliseconds(10000));
     }
 
     _debug() << "stopping dsp processor...";
     if (p_dsp_proc->isRunning()) {
         p_dsp_proc->stop();
-        p_dsp_proc->wait(10000);
+        p_dsp_proc->wait(std::chrono::milliseconds(10000));
     }
 
     _debug() << "stopping data reader...";
     if (QsGlobal::g_data_reader->isRunning()) {
         QsGlobal::g_data_reader->stop();
-        QsGlobal::g_data_reader->wait(10000);
+        QsGlobal::g_data_reader->wait(std::chrono::milliseconds(10000));
     }
 
     _debug() << "stopping wav writer...";
@@ -889,7 +873,7 @@ void QS1RServer::clearFpgaControlRegisters() {
 // ------------------------------------------------------------
 // Sets/Clears the ADC PGA mode
 // ------------------------------------------------------------
-void QS1RServer::setPgaMode(bool on) {
+int QS1RServer::setPgaMode(bool on) {
     if (!m_is_hardware_init) {
         setStatusText("Error: Please initialize QS1R Hardware first!");
         setErrorText("Please initialize QS1R Hardware first!");
@@ -902,9 +886,10 @@ void QS1RServer::setPgaMode(bool on) {
         result &= ~PGA;
     }
 
-    QsGlobal::g_io->writeMultibusInt(MB_CONTRL1, result);
+    int res = QsGlobal::g_io->writeMultibusInt(MB_CONTRL1, result);
 
     p_qsState->setPGA(on);
+    return res;
 }
 
 bool QS1RServer::pgaMode() {
@@ -918,7 +903,7 @@ bool QS1RServer::pgaMode() {
 // ------------------------------------------------------------
 // Sets/Clears the ADC Random mode
 // ------------------------------------------------------------
-void QS1RServer::setRandMode(bool on) {
+int QS1RServer::setRandMode(bool on) {
     if (!m_is_hardware_init) {
         setStatusText("Error: Please initialize QS1R Hardware first!");
         setErrorText("Please initialize QS1R Hardware first!");
@@ -930,9 +915,11 @@ void QS1RServer::setRandMode(bool on) {
     } else {
         result &= ~RANDOM;
     }
-    QsGlobal::g_io->writeMultibusInt(MB_CONTRL1, result);
+
+    int res = QsGlobal::g_io->writeMultibusInt(MB_CONTRL1, result);
 
     p_qsState->setRAND(on);
+    return res;
 }
 
 bool QS1RServer::randMode() {
@@ -946,7 +933,7 @@ bool QS1RServer::randMode() {
 // ------------------------------------------------------------
 // Sets/Clears the ADC Dither mode
 // ------------------------------------------------------------
-void QS1RServer::setDitherMode(bool on) {
+int QS1RServer::setDitherMode(bool on) {
     if (!m_is_hardware_init) {
         setStatusText("Error: Please initialize QS1R Hardware first!");
         setErrorText("Please initialize QS1R Hardware first!");
@@ -958,9 +945,12 @@ void QS1RServer::setDitherMode(bool on) {
     } else {
         result &= ~DITHER;
     }
-    QsGlobal::g_io->writeMultibusInt(MB_CONTRL1, result);
+
+    int res = QsGlobal::g_io->writeMultibusInt(MB_CONTRL1, result);
 
     p_qsState->setDITH(on);
+
+    return res;
 }
 
 bool QS1RServer::ditherMode() {
@@ -1163,8 +1153,7 @@ void QS1RServer::setFilter(double width, int rx_num) {
 // Update Status Message when QS1R read fails
 // ------------------------------------------------------------
 void QS1RServer::qs1rReadFailure() {
-    setStatusText("QS1R Read Failure!");
-    this->show();
+    _debug() << "Read failure!";
 }
 
 // ------------------------------------------------------------
@@ -1223,15 +1212,12 @@ void QS1RServer::loadQS1RFPGA() {
     setStatusText("QS1R FPGA loaded successfully.");
 }
 
-QUuid QS1RServer::readQS1RUuid() {
-    QUuid uuid;
-    QByteArray buffer;
-    buffer.resize(16);
-    buffer.fill(0);
+UUID QS1RServer::readQS1RUuid() {
+    UUID uuid;
+    ByteArray buffer(16, 0);    
 
     if (QsGlobal::g_io->readEEPROM(QS1R_EEPROM_ADDR, 16, (unsigned char *)buffer.data(), 16)) {
-        QDataStream in(&buffer, QIODevice::ReadOnly);
-        in.setVersion(QDataStream::Qt_4_7);
+        DataStream in(buffer);        
         in >> uuid;
     } else {
         setStatusText("Failure reading serial number.");
@@ -1240,77 +1226,13 @@ QUuid QS1RServer::readQS1RUuid() {
     return uuid;
 }
 
-String QS1RServer::readQSLSFile() {
-    QUuid uuid;
-    String file_name = QDir::currentPath() + "/qsls.qsn";
-    QFile f(file_name);
-    QDataStream in(&f);
-    in.setVersion(QDataStream::Qt_4_7);
+bool QS1RServer::writeQS1RSN(String uuid) {
+    
+    ByteArray buffer(16,0);    
 
-    QDateTime dt; // dummies
-    String name;  // dummies
-    String sn;    // dummies
-
-    if (f.open(QIODevice::ReadOnly)) {
-        in >> dt >> name >> sn >> uuid;
-        f.close();
-        return String("Date: %1, Name: %2, SN: %3, UUID: %4").arg(dt.toString()).arg(name).arg(sn).arg(uuid.toString());
-    } else {
-        f.close();
-        return "Registration file does not exist";
-    }
-}
-
-bool QS1RServer::updateQS1RSN() {
-    QUuid uuid;
-    String file_name = QDir::currentPath() + "/qsls.qsn";
-    QFile f(file_name);
-    QDataStream in(&f);
-    in.setVersion(QDataStream::Qt_4_7);
-
-    QDateTime dt; // dummies
-    String name;  // dummies
-    String sn;    // dummies
-
-    if (f.open(QIODevice::ReadOnly)) {
-        in >> dt >> name >> sn >> uuid;
-        f.close();
-        if (writeQS1RSN(uuid)) {
-            setStatusText("Registering QS1R to: " + name);
-            return true;
-        } else {
-            return false;
-        }
-    } else {
-        setStatusText("Could find serial number file");
-        setErrorText("Could find serial number file");
-        f.close();
-        return false;
-    }
-}
-
-bool QS1RServer::validateQS1RSN(QUuid uuid) {
-    if (uuid.isNull())
-        return false;
-
-    for (int i = 0; i < QS1R_GUID_COUNT; i++) {
-        if (uuid == qs1r_guids[i]) {
-            return true;
-            break;
-        }
-    }
-    return false;
-}
-
-bool QS1RServer::writeQS1RSN(QUuid uuid) {
-    QByteArray buffer;
-    buffer.resize(16);
-    buffer.fill(0);
-
-    QDataStream out(&buffer, QIODevice::WriteOnly);
-    out.setVersion(QDataStream::Qt_4_7);
-
-    out << uuid;
+    DataStream out(buffer);
+    
+    out << uuid.toStdString();
 
     if (QsGlobal::g_io->writeEEPROM(QS1R_EEPROM_ADDR, 16, (unsigned char *)buffer.data(), 16)) {
         setStatusText("Updated Serial Number");
@@ -1326,7 +1248,7 @@ void QS1RServer::unregisteredHardwareTimeout() {
     if (!hardware_is_registered) {
         setStatusText("Server is shutting down...");
         setErrorText("Server is shutting down...");
-        QTimer::singleShot(5000, this, SLOT(quit()));
+        quit();
     }
 }
 
@@ -1391,7 +1313,7 @@ String QS1RServer::readQS1REEPROMData() {
         eeprom_data_str.append(", REV: " + String::number(data.rev, 16));
         eeprom_data_str.append(", CONFIG: " + String::number(data.config, 16));
         eeprom_data_str.append(", FREQ: " + String::fromAscii((const char *)data.freq, 8));
-        eeprom_data_str.append("}");
+        eeprom_data_str.append(String("}"));
         return eeprom_data_str;
     } else {
         return "Cannot read EEPROM Data";
@@ -1441,7 +1363,7 @@ void QS1RServer::readQS1REEPROM() {
                 str.append(String::number((int)buf[i], 16));
             } else {
                 str.append(String::number((int)buf[i], 16));
-                str.append(":");
+                str.append(String(":"));
             }
         }
         setStatusText(str);
@@ -1449,80 +1371,6 @@ void QS1RServer::readQS1REEPROM() {
     } else {
         setStatusText("Failure reading EEPROM.");
     }
-}
-
-// ------------------------------------------------------------
-// Wideband Power Spectrum
-// ------------------------------------------------------------
-void QS1RServer::initWBPowerSpectrum() {
-    wb_window.resize(m_wb_bsize);
-    std::fill(wb_window.begin(), wb_window.end(), cpx_one);
-
-    QsFilter::MakeWindow(12, m_wb_bsize, wb_window);
-
-    wb_cpx_buf1.resize(m_wb_bsize);
-    std::fill(wb_cpx_buf1.begin(), wb_cpx_buf1.end(), cpx_zero);
-
-    wb_cpx_buf2.resize(m_wb_bsize);
-    std::fill(wb_cpx_buf2.begin(), wb_cpx_buf2.end(), cpx_zero);
-
-    wb_f_buf1.resize(m_wb_bsizeDiv2);
-    std::fill(wb_f_buf1.begin(), wb_f_buf1.end(), 0.0);
-
-    wb_adc_data.resize(m_wb_bsize);
-    std::fill(wb_adc_data.begin(), wb_adc_data.end(), 0);
-
-    wb_adc_f.resize(m_wb_bsizeX2);
-    std::fill(wb_adc_f.begin(), wb_adc_f.end(), 0.0);
-
-    wb_adc_cpx.resize(m_wb_bsizeX2);
-    std::fill(wb_adc_cpx.begin(), wb_adc_cpx.end(), cpx_zero);
-
-    wb_fvPsdBm.resize(m_wb_bsizeDiv2);
-    wb_fvPsdBm.fill(0.0);
-
-    wb_mean = 0;
-    m_wb_one_over_norm = 1.0 / m_wb_bsizeDiv2;
-
-    p_wb_fft->resize(m_wb_bsize);
-}
-
-std::vector<float> QS1RServer::getWBPowerSpectrum() {
-    int count = QsGlobal::g_io->readEP8(reinterpret_cast<unsigned char *>(&wb_adc_data[0]), m_wb_bsize * sizeof(short));
-
-    if (count == m_wb_bsizeX2) {
-        // convert to floats
-        QsSpl::Convert(wb_adc_data, wb_adc_f, m_wb_bsize);
-
-        // find mean for dc removal
-        QsSpl::Mean(wb_adc_f, wb_mean, m_wb_bsize);
-
-        // subtract mean
-        QsSpl::Subtract(wb_adc_f, wb_mean, m_wb_bsize);
-
-        // Real to Complex
-        QsSpl::RealToComplex(wb_adc_f, wb_adc_f, wb_adc_cpx, m_wb_bsize);
-
-        // window the block
-        QsSpl::Multiply(wb_adc_cpx, wb_window, wb_cpx_buf1, m_wb_bsizeDiv2);
-
-        // fwd fft
-        p_wb_fft->doDFTForward(wb_cpx_buf1, wb_cpx_buf2, m_wb_bsizeDiv2, m_wb_one_over_norm);
-
-        // get 10log10 magnitude squared
-        QsSpl::x10Log10PowerSpectrum(wb_cpx_buf2, wb_f_buf1, m_wb_bsizeDiv2);
-
-        // add correction
-        m_wb_correction = QsGlobal::g_memory->getWBPsCorrection();
-        QsSpl::Add(wb_f_buf1, static_cast<float>(m_wb_correction + QS_DEFAULT_WB_PS_CORRECT), m_wb_bsizeDiv2);
-
-        // copy data into vector
-        wb_fvPsdBm = std::vector<float>::fromStdVector(wb_f_buf1);
-    } else {
-        wb_fvPsdBm.resize(0);
-        wb_fvPsdBm.fill(-170.0);
-    }
-    return wb_fvPsdBm;
 }
 
 // ------------------------------------------------------------
@@ -1786,8 +1634,7 @@ String QS1RServer::doCommandProcessor(String value, int rx_num, QAbstractSocket 
     //
     // DisplayFreqOffset d
     //
-    else if (cmd.cmd.compare("DisplayFreqOffset") == 0 ||
-             cmd.cmd.compare("dfo") == 0) //  display offset freq
+    else if (cmd.cmd.compare("DisplayFreqOffset") == 0 || cmd.cmd.compare("dfo") == 0) //  display offset freq
     {
         if (cmd.RW == CMD::cmd_write) {
             QsGlobal::g_memory->setDisplayFreqOffset(cmd.dvalue, 0);
@@ -1822,8 +1669,7 @@ String QS1RServer::doCommandProcessor(String value, int rx_num, QAbstractSocket 
     //
     // EncodeClockCorrection d, d = ...
     //
-    else if (cmd.cmd.compare("EncodeClockCorrection") ==
-             0) // set encode clock frequency correction in Hz
+    else if (cmd.cmd.compare("EncodeClockCorrection") == 0) // set encode clock frequency correction in Hz
     {
         if (cmd.RW == CMD::cmd_write) {
             setFreqCorrection(cmd.dvalue);
@@ -1842,8 +1688,7 @@ String QS1RServer::doCommandProcessor(String value, int rx_num, QAbstractSocket 
     //
     // Freq d, d = 0.0 to 62.5e6 Hz
     //
-    else if (cmd.cmd.compare("Freq") == 0 ||
-             cmd.cmd.compare("fHz") == 0) // set frequency in Hz
+    else if (cmd.cmd.compare("Freq") == 0 || cmd.cmd.compare("fHz") == 0) // set frequency in Hz
     {
         if (cmd.RW == CMD::cmd_write) {
             setRxFrequency(cmd.dvalue, rx_num);
@@ -1900,8 +1745,7 @@ String QS1RServer::doCommandProcessor(String value, int rx_num, QAbstractSocket 
     //
     // FilterLow d, d = 0 to 20000.0
     //
-    else if (cmd.cmd.compare("FilterLow") == 0 ||
-             cmd.cmd.compare("fl") == 0) // filter low value
+    else if (cmd.cmd.compare("FilterLow") == 0 || cmd.cmd.compare("fl") == 0) // filter low value
     {
         if (cmd.RW == CMD::cmd_write) {
             QsGlobal::g_memory->setFilterLo(cmd.ivalue);
@@ -1919,8 +1763,7 @@ String QS1RServer::doCommandProcessor(String value, int rx_num, QAbstractSocket 
     //
     // FilterHigh d, d = 0 to 20000.0
     //
-    else if (cmd.cmd.compare("FilterHigh") == 0 ||
-             cmd.cmd.compare("fh") == 0) // filter hi value
+    else if (cmd.cmd.compare("FilterHigh") == 0 || cmd.cmd.compare("fh") == 0) // filter hi value
     {
         if (cmd.RW == CMD::cmd_write) {
             QsGlobal::g_memory->setFilterHi(cmd.ivalue);
@@ -1963,8 +1806,7 @@ String QS1RServer::doCommandProcessor(String value, int rx_num, QAbstractSocket 
     //
     // FilterLowTx d, d = 0 to 20000.0
     //
-    else if (cmd.cmd.compare("FilterLowTx") == 0 ||
-             cmd.cmd.compare("fltx") == 0) // tx filter low value
+    else if (cmd.cmd.compare("FilterLowTx") == 0 || cmd.cmd.compare("fltx") == 0) // tx filter low value
     {
         if (cmd.RW == CMD::cmd_write) {
             QsGlobal::g_memory->setTxFilterLo(cmd.ivalue);
@@ -1982,8 +1824,7 @@ String QS1RServer::doCommandProcessor(String value, int rx_num, QAbstractSocket 
     //
     // FilterHighTx d, d = 0 to 20000.0
     //
-    else if (cmd.cmd.compare("FilterTxHigh") == 0 ||
-             cmd.cmd.compare("fhtx") == 0) // txfilter hi value
+    else if (cmd.cmd.compare("FilterTxHigh") == 0 || cmd.cmd.compare("fhtx") == 0) // txfilter hi value
     {
         if (cmd.RW == CMD::cmd_write) {
             QsGlobal::g_memory->setTxFilterHi(cmd.ivalue);
@@ -2096,8 +1937,7 @@ String QS1RServer::doCommandProcessor(String value, int rx_num, QAbstractSocket 
     //
     // logout
     //
-    else if (cmd.cmd.compare("logout") == 0 ||
-             cmd.cmd.compare("logoff") == 0) // logout
+    else if (cmd.cmd.compare("logout") == 0 || cmd.cmd.compare("logoff") == 0) // logout
     {
         if (cmd.RW == CMD::cmd_write) {
             socket->write("GOODBYE\n");
@@ -2327,8 +2167,7 @@ String QS1RServer::doCommandProcessor(String value, int rx_num, QAbstractSocket 
     //
     // OffsetGenFreq d, n = -20000.0 to 20000.0
     //
-    else if (cmd.cmd.compare("OffsetGenFreq") == 0 ||
-             cmd.cmd.compare("ogf") == 0) //  oscillator offset freq
+    else if (cmd.cmd.compare("OffsetGenFreq") == 0 || cmd.cmd.compare("ogf") == 0) //  oscillator offset freq
     {
         if (cmd.RW == CMD::cmd_write) {
             QsGlobal::g_memory->setOffsetGeneratorFrequency(cmd.dvalue);
@@ -2612,8 +2451,7 @@ String QS1RServer::doCommandProcessor(String value, int rx_num, QAbstractSocket 
     //
     // ToneFrequency d, n = -20000.0 to 20000.0
     //
-    else if (cmd.cmd.compare("ToneFrequency") == 0 ||
-             cmd.cmd.compare("tf") == 0) // tone oscillator tone freq
+    else if (cmd.cmd.compare("ToneFrequency") == 0 || cmd.cmd.compare("tf") == 0) // tone oscillator tone freq
     {
         if (cmd.RW == CMD::cmd_write) {
             QsGlobal::g_memory->setToneLoFrequency(cmd.dvalue);
@@ -2663,8 +2501,7 @@ String QS1RServer::doCommandProcessor(String value, int rx_num, QAbstractSocket 
     //
     // Vol d, d = -120 to 0
     //
-    else if (cmd.cmd.compare("Vol") == 0 ||
-             cmd.cmd.compare("v") == 0) // rx volume
+    else if (cmd.cmd.compare("Vol") == 0 || cmd.cmd.compare("v") == 0) // rx volume
     {
         if (cmd.RW == CMD::cmd_write) {
             QsGlobal::g_memory->setVolume(qBound(-120.0, cmd.dvalue, 0.0));
@@ -2853,8 +2690,7 @@ String QS1RServer::doCommandProcessor(String value, int rx_num, QAbstractSocket 
     //
     // WavInLoopStartPosition
     //
-    else if (cmd.cmd.compare("WavInLoopStartPosition") ==
-             0) // sets wav in play loop start position in file
+    else if (cmd.cmd.compare("WavInLoopStartPosition") == 0) // sets wav in play loop start position in file
     {
         if (cmd.RW == CMD::cmd_write) {
             QsGlobal::g_data_reader->p_wavreader->setLoopStartPosition(cmd.ivalue);
@@ -2868,8 +2704,7 @@ String QS1RServer::doCommandProcessor(String value, int rx_num, QAbstractSocket 
     //
     // WavInLoopStartPosPercent
     //
-    else if (cmd.cmd.compare("WavInLoopStartPosPercent") ==
-             0) // sets wav in play loop start position in file
+    else if (cmd.cmd.compare("WavInLoopStartPosPercent") == 0) // sets wav in play loop start position in file
     {
         if (cmd.RW == CMD::cmd_write) {
             QsGlobal::g_data_reader->p_wavreader->setLoopStartPosPercent(cmd.dvalue);
@@ -2883,8 +2718,7 @@ String QS1RServer::doCommandProcessor(String value, int rx_num, QAbstractSocket 
     //
     // WavInLoopEndPosition
     //
-    else if (cmd.cmd.compare("WavInLoopEndPosition") ==
-             0) // sets wav in play loop end position in file
+    else if (cmd.cmd.compare("WavInLoopEndPosition") == 0) // sets wav in play loop end position in file
     {
         if (cmd.RW == CMD::cmd_write) {
             QsGlobal::g_data_reader->p_wavreader->setLoopEndPosition(cmd.ivalue);
@@ -2898,8 +2732,7 @@ String QS1RServer::doCommandProcessor(String value, int rx_num, QAbstractSocket 
     //
     // WavInLoopEndPosPercent
     //
-    else if (cmd.cmd.compare("WavInLoopEndPosPercent") ==
-             0) // sets wav in play loop end position in file
+    else if (cmd.cmd.compare("WavInLoopEndPosPercent") == 0) // sets wav in play loop end position in file
     {
         if (cmd.RW == CMD::cmd_write) {
             QsGlobal::g_data_reader->p_wavreader->setLoopEndPosPercent(cmd.dvalue);
@@ -2926,8 +2759,7 @@ String QS1RServer::doCommandProcessor(String value, int rx_num, QAbstractSocket 
     //
     // WavInCenterFrequency
     //
-    else if (cmd.cmd.compare("WavInCenterFrequency") ==
-             0) // sets wav in play loop start position in file
+    else if (cmd.cmd.compare("WavInCenterFrequency") == 0) // sets wav in play loop start position in file
     {
         if (cmd.RW == CMD::cmd_write) {
             response = "NAK";
@@ -2940,8 +2772,7 @@ String QS1RServer::doCommandProcessor(String value, int rx_num, QAbstractSocket 
     //
     // WavInSampleRate
     //
-    else if (cmd.cmd.compare("WavInSampleRate") ==
-             0) // sets wav in play loop start position in file
+    else if (cmd.cmd.compare("WavInSampleRate") == 0) // sets wav in play loop start position in file
     {
         if (cmd.RW == CMD::cmd_write) {
             response = "NAK";

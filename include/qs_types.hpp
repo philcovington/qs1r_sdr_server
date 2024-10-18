@@ -24,8 +24,8 @@
  *   qs_vect_f floatData;         // Vector of floating-point numbers
  *   qs_vect_i intData;           // Vector of integers
  *
- * Author: [Philip A Covington]
- * Date: [2024-10-16]
+ * Author: Philip A Covington
+ * Date: 2024-10-16
  */
 
 #pragma once

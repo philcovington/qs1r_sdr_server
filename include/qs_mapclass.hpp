@@ -33,8 +33,8 @@
  * 
  * I have tried to provide the similar functionality to Qt's QMap.
  *
- * Author: [Philip A covington]
- * Date: [2024-10-16]
+ * Author: Philip A Covington
+ * Date: 2024-10-16
  */
 
 #pragma once

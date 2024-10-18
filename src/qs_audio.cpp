@@ -1,7 +1,7 @@
 #include "../include/qs_audio.hpp"
 #include "../include/qs_debugloggerclass.hpp"
 #include "../include/qs1r_server.h"
-#include "../include/qs_dataproc.hpp"
+#include "../include/qs_signalops.hpp"
 #include "../include/qs_globals.hpp"
 
 QsAudio ::QsAudio() : p_rta(new RtAudio()), stop_stream_request(0) {}
@@ -93,7 +93,7 @@ int QsAudio ::RtCallback(void *outputBuffer, void *inputBuffer, unsigned int nBu
     if (QsGlobal::g_float_rt_ring->readAvail() >= size) {
         QsGlobal::g_float_rt_ring->read((float *)outputBuffer, size);
     } else {
-        QsDataProc::Zero((float *)outputBuffer, size);
+        QsSignalOps::Zero((float *)outputBuffer, size);
     }
 
     // if (QsTx::g_qs1e_present == true) {

@@ -21,7 +21,7 @@ void QsSquelch::process(qs_vect_cpx &src_dst) {
             m_sq_hist = (m_sq_hist * 0.9) + (s_meter_value * 0.1);
 
         if (m_sq_hist < m_sq_thresh) {
-            QsDataProc::Zero(src_dst);
+            QsSignalOps::Zero(src_dst);
         }
     }
 }

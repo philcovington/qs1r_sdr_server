@@ -29,8 +29,8 @@
  * This class abstracts the complexity of file reading operations, providing 
  * a straightforward method for extracting data from text files in C++.
  *
- * Author: [Philip A Covington]
- * Date: [2024-10-16]
+ * Author: Philip A Covington
+ * Date: 2024-10-16
  */
 
 #pragma once

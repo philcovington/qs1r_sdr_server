@@ -34,8 +34,8 @@
  * other applications where floating-point data needs to be efficiently managed in a
  * circular buffer format.
  *
- * Author: [Philip A Covington]
- * Date: [2024-10-16]
+ * Author: Philip A Covington
+ * Date: 2024-10-16
  */
 
 #pragma once

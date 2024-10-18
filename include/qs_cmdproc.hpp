@@ -1,5 +1,5 @@
 /**
- * @file cmd.hpp
+ * @file qs_stringlist.hpp
  * @brief Command Processor Class
  *
  * This class processes commands with read and write operations.
@@ -25,7 +25,7 @@
 #pragma once
 
 #include "../include/qs_stringclass.hpp"
-#include "../include/stringqs_listclass.hpp"
+#include "../include/qs_stringlistclass.hpp"
 
 class CMD {
 

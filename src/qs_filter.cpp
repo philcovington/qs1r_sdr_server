@@ -1,5 +1,5 @@
 #include "../include/qs_filter.hpp"
-#include "../include/qs_dataproc.hpp"
+#include "../include/qs_signalops.hpp"
 #include "../include/qs_globals.hpp"
 #include <cmath>
 
@@ -47,83 +47,83 @@ void QsFilter ::init(String filtertype, float samplerate, int size) {
 }
 
 void QsFilter ::doFilter(qs_vect_cpx &src_dst) {
-    QsDataProc::Zero(&cpx_0[0] + m_size, m_size);
-    QsDataProc::Copy(&src_dst[0], &cpx_0[0], m_size);
+    QsSignalOps::Zero(&cpx_0[0] + m_size, m_size);
+    QsSignalOps::Copy(&src_dst[0], &cpx_0[0], m_size);
 
     // filter
     p_ovlpfft->doDFTForward(cpx_0, m_size * 2);
-    QsDataProc::Multiply(filt_cpx0, cpx_0, cpx_1, m_size * 2);
+    QsSignalOps::Multiply(filt_cpx0, cpx_0, cpx_1, m_size * 2);
     p_ovlpfft->doDFTInverse(cpx_1, m_size * 2, m_one_over_norm);
 
     // overlap add
-    QsDataProc::Add(&cpx_1[0], &ovlp[0], &cpx_0[0], m_size);
-    QsDataProc::Copy(&cpx_1[0] + m_size, &ovlp[0], m_size);
+    QsSignalOps::Add(&cpx_1[0], &ovlp[0], &cpx_0[0], m_size);
+    QsSignalOps::Copy(&cpx_1[0] + m_size, &ovlp[0], m_size);
 
-    QsDataProc::Copy(&cpx_0[0], &src_dst[0], m_size);
+    QsSignalOps::Copy(&cpx_0[0], &src_dst[0], m_size);
 }
 
 void QsFilter ::doFilter(qs_vect_cpx &src, qs_vect_cpx &dst) {
-    QsDataProc::Zero(&cpx_0[0] + m_size, m_size);
-    QsDataProc::Copy(&src[0], &cpx_0[0], m_size);
+    QsSignalOps::Zero(&cpx_0[0] + m_size, m_size);
+    QsSignalOps::Copy(&src[0], &cpx_0[0], m_size);
 
     // filter
     p_ovlpfft->doDFTForward(cpx_0, m_size * 2);
-    QsDataProc::Multiply(filt_cpx0, cpx_0, cpx_1, m_size * 2);
+    QsSignalOps::Multiply(filt_cpx0, cpx_0, cpx_1, m_size * 2);
     p_ovlpfft->doDFTInverse(cpx_1, m_size * 2, m_one_over_norm);
 
     // overlap add
-    QsDataProc::Add(&cpx_1[0], &ovlp[0], &cpx_0[0], m_size);
-    QsDataProc::Copy(&cpx_1[0] + m_size, &ovlp[0], m_size);
+    QsSignalOps::Add(&cpx_1[0], &ovlp[0], &cpx_0[0], m_size);
+    QsSignalOps::Copy(&cpx_1[0] + m_size, &ovlp[0], m_size);
 
-    QsDataProc::Copy(&cpx_0[0], &dst[0], m_size);
+    QsSignalOps::Copy(&cpx_0[0], &dst[0], m_size);
 }
 
 void QsFilter ::doFilter(qs_vect_f &src_dst_re, qs_vect_f &src_dst_im) {
-    QsDataProc::Zero(&cpx_0[0] + m_size, m_size);
-    QsDataProc::Copy(&src_dst_re[0], &src_dst_im[0], &cpx_0[0], m_size);
+    QsSignalOps::Zero(&cpx_0[0] + m_size, m_size);
+    QsSignalOps::Copy(&src_dst_re[0], &src_dst_im[0], &cpx_0[0], m_size);
 
     // filter
     p_ovlpfft->doDFTForward(cpx_0, m_size * 2);
-    QsDataProc::Multiply(filt_cpx0, cpx_0, cpx_1, m_size * 2);
+    QsSignalOps::Multiply(filt_cpx0, cpx_0, cpx_1, m_size * 2);
     p_ovlpfft->doDFTInverse(cpx_1, m_size * 2, m_one_over_norm);
 
     // overlap add
-    QsDataProc::Add(&cpx_1[0], &ovlp[0], &cpx_0[0], m_size);
-    QsDataProc::Copy(&cpx_1[0] + m_size, &ovlp[0], m_size);
+    QsSignalOps::Add(&cpx_1[0], &ovlp[0], &cpx_0[0], m_size);
+    QsSignalOps::Copy(&cpx_1[0] + m_size, &ovlp[0], m_size);
 
-    QsDataProc::Copy(&cpx_0[0], &src_dst_re[0], &src_dst_im[0], m_size);
+    QsSignalOps::Copy(&cpx_0[0], &src_dst_re[0], &src_dst_im[0], m_size);
 }
 
 void QsFilter ::doFilter(qs_vect_f &src, qs_vect_cpx &dst) {
-    QsDataProc::Zero(&cpx_0[0] + m_size, m_size);
-    QsDataProc::RealToComplex(&src[0], &src[0], &cpx_0[0], m_size);
+    QsSignalOps::Zero(&cpx_0[0] + m_size, m_size);
+    QsSignalOps::RealToComplex(&src[0], &src[0], &cpx_0[0], m_size);
 
     // filter
     p_ovlpfft->doDFTForward(cpx_0, m_size * 2);
-    QsDataProc::Multiply(filt_cpx0, cpx_0, cpx_1, m_size * 2);
+    QsSignalOps::Multiply(filt_cpx0, cpx_0, cpx_1, m_size * 2);
     p_ovlpfft->doDFTInverse(cpx_1, m_size * 2, m_one_over_norm);
 
     // overlap add
-    QsDataProc::Add(&cpx_1[0], &ovlp[0], &cpx_0[0], m_size);
-    QsDataProc::Copy(&cpx_1[0] + m_size, &ovlp[0], m_size);
+    QsSignalOps::Add(&cpx_1[0], &ovlp[0], &cpx_0[0], m_size);
+    QsSignalOps::Copy(&cpx_1[0] + m_size, &ovlp[0], m_size);
 
-    QsDataProc::Copy(&cpx_0[0], &dst[0], m_size);
+    QsSignalOps::Copy(&cpx_0[0], &dst[0], m_size);
 }
 
 void QsFilter ::doFilter(qs_vect_f &src, qs_vect_f &dst_re, qs_vect_f &dst_im) {
-    QsDataProc::Zero(&cpx_0[0] + m_size, m_size);
-    QsDataProc::RealToComplex(&src[0], &src[0], &cpx_0[0], m_size);
+    QsSignalOps::Zero(&cpx_0[0] + m_size, m_size);
+    QsSignalOps::RealToComplex(&src[0], &src[0], &cpx_0[0], m_size);
 
     // filter
     p_ovlpfft->doDFTForward(cpx_0, m_size * 2);
-    QsDataProc::Multiply(filt_cpx0, cpx_0, cpx_1, m_size * 2);
+    QsSignalOps::Multiply(filt_cpx0, cpx_0, cpx_1, m_size * 2);
     p_ovlpfft->doDFTInverse(cpx_1, m_size * 2, m_one_over_norm);
 
     // overlap add
-    QsDataProc::Add(&cpx_1[0], &ovlp[0], &cpx_0[0], m_size);
-    QsDataProc::Copy(&cpx_1[0] + m_size, &ovlp[0], m_size);
+    QsSignalOps::Add(&cpx_1[0], &ovlp[0], &cpx_0[0], m_size);
+    QsSignalOps::Copy(&cpx_1[0] + m_size, &ovlp[0], m_size);
 
-    QsDataProc::Copy(&cpx_0[0], &dst_re[0], &dst_im[0], m_size);
+    QsSignalOps::Copy(&cpx_0[0], &dst_re[0], &dst_im[0], m_size);
 }
 
 void QsFilter ::setSampleRate(double value) { m_samplerate = value; }
@@ -149,7 +149,7 @@ int QsFilter ::getFilterLo() const { return m_filter_lo; }
 int QsFilter ::getFilterHi() const { return m_filter_hi; }
 
 void QsFilter ::MakeFilter(float lo, float hi, int ftype) {
-    QsDataProc::Zero(&filt_cpx0[0], m_size * 2);
+    QsSignalOps::Zero(&filt_cpx0[0], m_size * 2);
 
     switch (ftype) {
     case 1: // lowpass
@@ -167,7 +167,7 @@ void QsFilter ::MakeFilter(float lo, float hi, int ftype) {
         break;
     }
 
-    QsDataProc::RealToComplex(&tmpfilt0_re[0], &tmpfilt0_im[0], &filt_cpx0[0], m_size);
+    QsSignalOps::RealToComplex(&tmpfilt0_re[0], &tmpfilt0_im[0], &filt_cpx0[0], m_size);
     p_filtfft->doDFTForward(filt_cpx0, m_size * 2);
 }
 

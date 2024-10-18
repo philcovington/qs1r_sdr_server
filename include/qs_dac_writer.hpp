@@ -30,8 +30,9 @@
 #include "../include/qs_defines.hpp"
 #include "../include/qs_globals.hpp"
 #include "../include/qs_memory.hpp"
-#include "../include/qs_thread.hpp"
+#include "../include/qs_threading.hpp"
 #include "../include/qs_sleep.hpp"
+#include <atomic>
 
 class QsDacWriter : public Thread {
   public:
@@ -40,14 +41,16 @@ class QsDacWriter : public Thread {
     void init();
     void reinit();
 
-    void run();
-    void stop();
+    void run() override; // Override the run method from the Thread class
+    void stop() override; // Override the stop method from the Thread class
 
   private:
-    int m_bsize;
-    int m_bsizeX2;
 
-    bool m_thread_go;
+    std::atomic<bool> m_thread_go;
+    std::atomic<bool> m_is_running;
+
+    int m_bsize;
+    int m_bsizeX2;    
 
     qs_vect_f out_f;
     qs_vect_s out_s;

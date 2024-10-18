@@ -15,7 +15,7 @@ QsBlockFifo::~QsBlockFifo() {}
 void QsBlockFifo::enqueue(int *buffer) {
     mutex.lock();
 
-    QsDataProc::Copy(buffer, reinterpret_cast<int *>(&eq_fifo_block_), block_size_);
+    QsSignalOps::Copy(buffer, reinterpret_cast<int *>(&eq_fifo_block_), block_size_);
 
     fifo_.push(eq_fifo_block_);
 
@@ -30,7 +30,7 @@ bool QsBlockFifo::dequeue(int *buffer) {
             dq_fifo_block_ = fifo_.front(); // Get the front element
             fifo_.pop();
 
-            QsDataProc::Copy(reinterpret_cast<int *>(&dq_fifo_block_), buffer, block_size_);
+            QsSignalOps::Copy(reinterpret_cast<int *>(&dq_fifo_block_), buffer, block_size_);
 
             mutex.unlock();
         } else
@@ -44,7 +44,7 @@ bool QsBlockFifo::dequeue(int *buffer) {
 void QsBlockFifo::enqueue(Cpx *buffer) {
     mutex.lock();
 
-    QsDataProc::Copy(buffer, reinterpret_cast<Cpx *>(&cpx_eq_fifo_block_), block_size_);
+    QsSignalOps::Copy(buffer, reinterpret_cast<Cpx *>(&cpx_eq_fifo_block_), block_size_);
 
     cpx_fifo_.push(cpx_eq_fifo_block_);
 
@@ -59,7 +59,7 @@ bool QsBlockFifo::dequeue(Cpx *buffer) {
             cpx_dq_fifo_block_ = cpx_fifo_.front();
             cpx_fifo_.pop();
 
-            QsDataProc::Copy(reinterpret_cast<Cpx *>(&cpx_dq_fifo_block_), buffer, block_size_);
+            QsSignalOps::Copy(reinterpret_cast<Cpx *>(&cpx_dq_fifo_block_), buffer, block_size_);
 
             mutex.unlock();
         } else
@@ -85,11 +85,11 @@ bool QsBlockFifo::isEmpty() {
 }
 
 void QsBlockFifo::empty() {
-    QsDataProc::Zero(reinterpret_cast<int *>(&eq_fifo_block_), BSIZE);
-    QsDataProc::Zero(reinterpret_cast<int *>(&dq_fifo_block_), BSIZE);
+    QsSignalOps::Zero(reinterpret_cast<int *>(&eq_fifo_block_), BSIZE);
+    QsSignalOps::Zero(reinterpret_cast<int *>(&dq_fifo_block_), BSIZE);
 
-    QsDataProc::Zero(reinterpret_cast<Cpx *>(&cpx_eq_fifo_block_), BSIZE);
-    QsDataProc::Zero(reinterpret_cast<Cpx *>(&cpx_dq_fifo_block_), BSIZE);
+    QsSignalOps::Zero(reinterpret_cast<Cpx *>(&cpx_eq_fifo_block_), BSIZE);
+    QsSignalOps::Zero(reinterpret_cast<Cpx *>(&cpx_dq_fifo_block_), BSIZE);
 
     std::queue<FIFOBLOCK> empty_fifo;
     std::swap(fifo_, empty_fifo);

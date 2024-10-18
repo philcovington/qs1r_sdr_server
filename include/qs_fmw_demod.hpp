@@ -19,7 +19,7 @@
  * @notes 
  * - Ensure that the data processing rate is correctly set in 
  *   the QsGlobal memory before initialization.
- * - This class requires the `qs_globals.hpp` and `qs_dataproc.hpp` 
+ * - This class requires the `qs_globals.hpp` and `qs_signalops.hpp` 
  *   headers to function correctly.
  * 
  * @author Philip A Covington
@@ -28,7 +28,7 @@
 
 #pragma once
 
-#include "../include/qs_dataproc.hpp"
+#include "../include/qs_signalops.hpp"
 #include "../include/qs_globals.hpp"
 
 class QsFMWDemodulator {

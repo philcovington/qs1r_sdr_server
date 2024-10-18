@@ -1,6 +1,6 @@
 #include "../include/qs_agc.hpp"
 #include "../include/qs_globals.hpp"
-#include "../include/qs_dataproc.hpp"
+#include "../include/qs_signalops.hpp"
 #include <iterator>
 #include <stdexcept>
 

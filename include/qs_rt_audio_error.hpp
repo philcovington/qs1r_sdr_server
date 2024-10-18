@@ -1,5 +1,5 @@
 /*
- * File: RtError.h
+ * File: qs_rt_audio_error.h
  * Brief: Custom exception class for handling RtAudio-related errors.
  * 
  * This header defines the `RtError` class, a custom exception used to handle 

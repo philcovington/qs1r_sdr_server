@@ -1,11 +1,11 @@
 #include <iostream>
 #include <sstream>
 
-#include "../include/qs_bytearray.hpp"
-#include "../include/qs_bitstream.hpp"
 #include "../include/config.h"
+#include "../include/qs1r_server.hpp"
+#include "../include/qs_bitstream.hpp"
+#include "../include/qs_bytearray.hpp"
 #include "../include/qs_debugloggerclass.hpp"
-#include "../include/qs1r_server.h"
 #include "../include/qs_io_libusb.hpp"
 
 libusb_device *findQS1RDevice(QsIOLib_LibUSB *usb, u_int16_t vid, uint16_t pid, unsigned int index) {
@@ -23,12 +23,10 @@ int main() {
     // Enable debug logging
     DebugLogger::DEBUG = true;
 
-    QS1R_server qs1r;
+    QS1RServer qs1r;
     QsSleep sleep;
 
-    qs1r.showStartupMsg();
-
-    int result = qs1r.initQS1RHardware(QS1R_IDX);
+    int result = qs1r.initQS1RHardware();
 
     _debug() << "PGA MODE IS: " << qs1r.pgaMode();
     _debug() << "RAND MODE IS: " << qs1r.randMode();
@@ -52,7 +50,7 @@ int main() {
 
     _debug() << "QS1R server shutting down...";
 
-    qs1r.exit();
+    qs1r.shutdown();
 
     sleep.msleep(500);
 

@@ -7,6 +7,7 @@ project(sdr_project VERSION 1.0)
 # Set the C++ standard
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
 # Get the current date in YYYYMMDD format
 string(TIMESTAMP CURRENT_DATE "%Y%m%d" UTC)
