@@ -1,4 +1,4 @@
-#include "/home/philc/qs1r_sdr_server/headers/speex/headers/resampler_helper.h"
+#include "/home/philc/qs1r_sdr_server/include/speex/headers/resampler_helper.h"
 
 #ifdef _USE_SSE_
 #include <emmintrin.h>

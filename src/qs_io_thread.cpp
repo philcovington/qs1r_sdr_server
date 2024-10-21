@@ -8,26 +8,17 @@
 
 QsIoThread::QsIoThread() : m_thread_go(false) {}
 
-void QsIoThread::startThread() {
-    start([this]() { this->run(); }, ThreadPriority::Normal);
-}
-
-void QsIoThread::stopThread() {
-    stop(); // Set m_thread_go to false and stop the base class thread
-    wait(); // Wait for the thread to finish
-}
-
 void QsIoThread::run() {
     std::vector<unsigned char> buffer(4, 0);
     int counter = 0;
 
-    if (QsGlobal::g_server->isHardwareInit())
+    if (QsGlobal::g_is_hardware_init)
         QsGlobal::g_io->sendInterrupt5Gate();
 
     m_thread_go = true;
 
     while (m_thread_go) {
-        if (QsGlobal::g_server->isHardwareInit()) {
+        if (QsGlobal::g_is_hardware_init) {
             if (QsGlobal::g_io->readEP1(buffer.data(), buffer.size(), 2000) == buffer.size()) {
                 decodeMessageId(buffer);
                 _debug() << "-------------------";

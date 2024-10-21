@@ -62,4 +62,5 @@ public:
 	static std::unique_ptr<QsFloatVectorCircularBuffer> g_float_rt_ring;
 	static std::unique_ptr<QsFloatVectorCircularBuffer> g_float_dac_ring;
 	static bool g_swap_iq;
+	static bool g_is_hardware_init;
 }; 

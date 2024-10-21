@@ -34,6 +34,7 @@ QS1RServer::QS1RServer()
       m_status_message_backing_register(0), m_prev_vol_val(0) {
 
     p_qsState->init();
+    QsGlobal::g_is_hardware_init = false;
 
     initQsMemory();
 
@@ -256,6 +257,7 @@ int QS1RServer::initQS1RHardware() {
 
     std::cout << "QS1R index [" << index << "] hardware was successfully initialized!" << std::endl;
     m_hardware_is_init = true;
+    QsGlobal::g_is_hardware_init = true;
     return 0;
 }
 

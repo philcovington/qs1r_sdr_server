@@ -7,11 +7,9 @@
 class QsIoThread : public Thread {
   public:
     explicit QsIoThread();
-
-    void startThread();
-    void stopThread();
+    
     void stop() override;  // Mark stop() as override
-    void run();
+    void run() override;
 
   private:
     bool m_thread_go;
