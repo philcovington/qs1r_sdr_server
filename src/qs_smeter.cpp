@@ -16,7 +16,8 @@ void QsSMeter ::process(qs_vect_cpx &src_dst) {
     }
     // m_sm_value = ( m_sm_value * 0.5 ) + ( ( 10.0 * log10( m_sm_tmp_val + 1e-200 ) ) * 0.5 );
     m_sm_value = 10.0 * log10(m_sm_tmp_val + 1e-200);
-    double corrected_sm = m_sm_value + QsGlobal::g_memory->getSMeterCorrection() + SMETERCORRECT;
+    //double corrected_sm = m_sm_value + QsGlobal::g_memory->getSMeterCorrection() + SMETERCORRECT;
+    double corrected_sm = m_sm_value + QsGlobal::g_memory->getSMeterCorrection();
     QsGlobal::g_memory->setSMeterCurrentValue(corrected_sm);
     QsGlobal::g_memory->setSMeterCurrentValueC((unsigned char)std::round(corrected_sm + QS_DEFAULT_SPEC_OFFSET));
 }

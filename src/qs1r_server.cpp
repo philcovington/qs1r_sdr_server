@@ -20,14 +20,15 @@
 #include "../include/qs_state.hpp"
 #include "../include/qs_stringclass.hpp"
 #include "../include/qs_uuid.hpp"
+#include "../include/qs_globals.hpp"
 #include <algorithm>
 #include <array>
 #include <cstdint>
 #include <sstream>
 
 QS1RServer::QS1RServer()
-    : p_dac_writer(new QsDacWriter()), p_rta(new QsAudio()), p_qsState(new QsState()), p_dsp_proc(new QsDspProcessor()),
-      p_io_thread(new QsIoThread()), m_is_fpga_loaded(false), m_is_io_setup(false), m_is_factory_init_enabled(false),
+    : p_dac_writer(std::make_unique<QsDacWriter>()), p_rta(std::make_unique<QsAudio>()), p_qsState(std::make_unique<QsState>()), p_dsp_proc(std::make_unique<QsDspProcessor>()),
+      p_io_thread(std::make_unique<QsIoThread>()), m_is_fpga_loaded(false), m_is_io_setup(false), m_is_factory_init_enabled(false),
       m_is_was_factory_init(false), m_is_rt_audio_bypass(false), m_gui_rx1_is_connected(false),
       m_gui_rx2_is_connected(false), m_driver_type("None"), m_local_rx_num_selector(1), m_freq_offset_rx1(0.0),
       m_freq_offset_rx2(0.0), m_proc_samplerate(50000.0), m_post_proc_samplerate(50000.0), m_step_size(500.0),
@@ -39,6 +40,7 @@ QS1RServer::QS1RServer()
     initQsMemory();
 
     // QsGlobal::g_server = std::unique_ptr<QS1RServer>(this);
+    QsGlobal::g_memory = std::make_unique<QsMemory>();
 
     // delay
     initialize();
@@ -84,7 +86,6 @@ void QS1RServer::shutdown() {
 void QS1RServer::initialize() {
     status_string.clear();
     error_string.clear();
-    setErrorText("Log initialized");
     error_flag = false;
     initSupportedSampleRatesList();
     showStartupMessage();
@@ -356,8 +357,7 @@ void QS1RServer::updateFPGARegisters() {
 void QS1RServer::loadFPGAFile(String filename) {
     m_is_fpga_loaded = false;
     if (QsGlobal::g_io->loadFpga(filename.toStdString()) == -1) {
-        setStatusText("Error: Could not load QS1R FPGA File");
-        setErrorText("Could not load QS1R FPGA File");
+        setStatusText("Error: Could not load QS1R FPGA File");        
         return;
     }
     // do a master reset of DDC in FPGA
@@ -376,23 +376,10 @@ void QS1RServer::setStatusText(String text) {
 }
 
 // ------------------------------------------------------------
-// Manages the error log
-// ------------------------------------------------------------
-void QS1RServer::setErrorText(String text) {
-    error_flag = true;
-    error_string.append(text);
-}
-
-// ------------------------------------------------------------
-// Clears the error log
-// ------------------------------------------------------------
-void QS1RServer::clearErrorText() { error_string.clear(); }
-
-// ------------------------------------------------------------
 // Displays the server startup message
 // ------------------------------------------------------------
 void QS1RServer::showStartupMessage() {
-    clearStatusText();
+    ;
     setStatusText("-------------------------------------------------------------------------");
     setStatusText("SRL-LLC SDRMAXV Ver " + String(SDRMAXV_VERSION));
     setStatusText("Copyright 2012 Software Radio Laboratory LLC");
@@ -403,7 +390,7 @@ void QS1RServer::showStartupMessage() {
 // Displays the server startup message with ready
 // ------------------------------------------------------------
 void QS1RServer::showStartupMessageWithReady() {
-    clearStatusText();
+    ;
     setStatusText("-------------------------------------------------------------------------");
     setStatusText("SRL-LLC SDRMAXV Ver " + String(SDRMAXV_VERSION));
     setStatusText("Copyright 2012 Software Radio Laboratory LLC");
@@ -621,8 +608,7 @@ void QS1RServer::startIo(bool iswav) {
     }
 
     if (!m_is_io_setup) {
-        setStatusText("Error: Error on io setup!");
-        setErrorText("Error on io setup!");
+        setStatusText("Error: Error on io setup!");        
         return;
     }
 
@@ -824,8 +810,7 @@ void QS1RServer::getSMeterCorrection(double &value) { value = QsGlobal::g_memory
 // ------------------------------------------------------------
 void QS1RServer::clearFpgaControlRegisters() {
     if (!m_is_hardware_init) {
-        setStatusText("Error: Please initialize QS1R Hardware first!");
-        setErrorText("Please initialize QS1R Hardware first!");
+        setStatusText("Error: Please initialize QS1R Hardware first!");       
         return;
     }
     QsGlobal::g_io->writeMultibusInt(MB_CONTRL0, 0);
@@ -838,7 +823,6 @@ void QS1RServer::clearFpgaControlRegisters() {
 int QS1RServer::setPgaMode(bool on) {
     if (!m_is_hardware_init) {
         setStatusText("Error: Please initialize QS1R Hardware first!");
-        setErrorText("Please initialize QS1R Hardware first!");
         return -1;
     }
     unsigned int result = QsGlobal::g_io->readMultibusInt(MB_CONTRL1);
@@ -867,8 +851,7 @@ bool QS1RServer::pgaMode() {
 // ------------------------------------------------------------
 int QS1RServer::setRandMode(bool on) {
     if (!m_is_hardware_init) {
-        setStatusText("Error: Please initialize QS1R Hardware first!");
-        setErrorText("Please initialize QS1R Hardware first!");
+        setStatusText("Error: Please initialize QS1R Hardware first!");        
         return -1;
     }
     unsigned int result = QsGlobal::g_io->readMultibusInt(MB_CONTRL1);
@@ -897,8 +880,7 @@ bool QS1RServer::randMode() {
 // ------------------------------------------------------------
 int QS1RServer::setDitherMode(bool on) {
     if (!m_is_hardware_init) {
-        setStatusText("Error: Please initialize QS1R Hardware first!");
-        setErrorText("Please initialize QS1R Hardware first!");
+        setStatusText("Error: Please initialize QS1R Hardware first!");        
         return -1;
     }
     unsigned int result = QsGlobal::g_io->readMultibusInt(MB_CONTRL1);
@@ -928,8 +910,7 @@ bool QS1RServer::ditherMode() {
 // ------------------------------------------------------------
 void QS1RServer::setDacOutputDisable(bool on) {
     if (!m_is_hardware_init) {
-        setStatusText("Error: Please initialize QS1R Hardware first!");
-        setErrorText("Please initialize QS1R Hardware first!");
+        setStatusText("Error: Please initialize QS1R Hardware first!");        
         return;
     }
     unsigned int result = QsGlobal::g_io->readMultibusInt(MB_CONTRL0);
@@ -943,8 +924,7 @@ void QS1RServer::setDacOutputDisable(bool on) {
 
 bool QS1RServer::getDacOutputDisable() {
     if (!m_is_hardware_init) {
-        setStatusText("Error: Please initialize QS1R Hardware first!");
-        setErrorText("Please initialize QS1R Hardware first!");
+        setStatusText("Error: Please initialize QS1R Hardware first!");        
         return false;
     }
     unsigned int result = QsGlobal::g_io->readMultibusInt(MB_CONTRL0);
@@ -956,8 +936,7 @@ bool QS1RServer::getDacOutputDisable() {
 // ------------------------------------------------------------
 void QS1RServer::setDacExtMuteEnable(bool on) {
     if (!m_is_hardware_init) {
-        setStatusText("Error: Please initialize QS1R Hardware first!");
-        setErrorText("Please initialize QS1R Hardware first!");
+        setStatusText("Error: Please initialize QS1R Hardware first!");        
         return;
     }
     unsigned int result = QsGlobal::g_io->readMultibusInt(MB_CONTRL0);
@@ -974,8 +953,7 @@ void QS1RServer::setDacExtMuteEnable(bool on) {
 // ------------------------------------------------------------
 void QS1RServer::setDdcMasterReset(bool on) {
     if (!m_is_hardware_init) {
-        setStatusText("Error: Please initialize QS1R Hardware first!");
-        setErrorText("Please initialize QS1R Hardware first!");
+        setStatusText("Error: Please initialize QS1R Hardware first!");        
         return;
     }
     unsigned int result = QsGlobal::g_io->readMultibusInt(MB_CONTRL0);
@@ -992,8 +970,7 @@ void QS1RServer::setDdcMasterReset(bool on) {
 // ------------------------------------------------------------
 void QS1RServer::setWideBandBypass(bool on) {
     if (!m_is_hardware_init) {
-        setStatusText("Error: Please initialize QS1R Hardware first!");
-        setErrorText("Please initialize QS1R Hardware first!");
+        setStatusText("Error: Please initialize QS1R Hardware first!");        
         return;
     }
     unsigned int result = QsGlobal::g_io->readMultibusInt(MB_CONTRL0);
@@ -1014,8 +991,7 @@ unsigned int QS1RServer::controlRegister1Value() { return QsGlobal::g_io->readMu
 // ------------------------------------------------------------
 void QS1RServer::setDDCSamplerate(int value) {
     if (!m_is_hardware_init) {
-        setStatusText("Error: Please initialize QS1R Hardware first!");
-        setErrorText("Please initialize QS1R Hardware first!");
+        setStatusText("Error: Please initialize QS1R Hardware first!");        
         return;
     }
     QsGlobal::g_io->writeMultibusInt(MB_SAMPLERATE, value);
@@ -1026,8 +1002,7 @@ void QS1RServer::setDDCSamplerate(int value) {
 // ------------------------------------------------------------
 void QS1RServer::setDacClock24kSelect(bool value) {
     if (!m_is_hardware_init) {
-        setStatusText("Error: Please initialize QS1R Hardware first!");
-        setErrorText("Please initialize QS1R Hardware first!");
+        setStatusText("Error: Please initialize QS1R Hardware first!");        
         return;
     }
     unsigned int result = QsGlobal::g_io->readMultibusInt(MB_CONTRL0);
@@ -1044,8 +1019,7 @@ void QS1RServer::setDacClock24kSelect(bool value) {
 // ------------------------------------------------------------
 void QS1RServer::setDacClock50kSelect(bool value) {
     if (!m_is_hardware_init) {
-        setStatusText("Error: Please initialize QS1R Hardware first!");
-        setErrorText("Please initialize QS1R Hardware first!");
+        setStatusText("Error: Please initialize QS1R Hardware first!");        
         return;
     }
     unsigned int result = QsGlobal::g_io->readMultibusInt(MB_CONTRL0);
@@ -1128,8 +1102,7 @@ UUID QS1RServer::readQS1RUuid() {
         DataStream in(buffer);
         in >> uuid;
     } else {
-        setStatusText("Failure reading serial number.");
-        setErrorText("Failure reading serial number.");
+        setStatusText("Failure reading serial number.");        
     }
     return uuid;
 }
@@ -1146,16 +1119,14 @@ bool QS1RServer::writeQS1RSN(String uuid) {
         setStatusText("Updated Serial Number");
         return true;
     } else {
-        setStatusText("Could not update serial number");
-        setErrorText("Could not update serial number");
+        setStatusText("Could not update serial number");        
         return false;
     }
 }
 
 void QS1RServer::unregisteredHardwareTimeout() {
     if (!hardware_is_registered) {
-        setStatusText("Server is shutting down...");
-        setErrorText("Server is shutting down...");
+        setStatusText("Server is shutting down...");        
         quit();
     }
 }
@@ -1183,8 +1154,7 @@ void QS1RServer::writeQS1REEPROM() {
     if (QsGlobal::g_io->writeEEPROM(QS1R_EEPROM_ADDR, 0, buf, 16)) {
         setStatusText("EEPROM updated successfully.");
     } else {
-        setStatusText("Failure updating EEPROM.");
-        setErrorText("Failure updating EEPROM.");
+        setStatusText("Failure updating EEPROM.");        
     }
 }
 
@@ -2479,7 +2449,7 @@ void QS1RServer::parseLocalCommand() {
         int result = QsGlobal::g_io->sendInterrupt5Gate();
         _debug() << "enable int5 result: " << String::number(result);
     } else if (resp == "clear") {
-        clearStatusText();
+        ;
         showStartupMessage();
     } else if (resp == "errorlog") {
         setStatusText(error_string);
@@ -2904,7 +2874,7 @@ void QS1RServer::parseLocalCommand() {
         initQS1RHardware();
         setStatusText("Reinitializing QS1R Hardware...");
     } else if (resp == "help") {
-        clearStatusText();
+        ;
         setStatusText("Server Commands:");
         setStatusText("");
         setStatusText("clear - clears the command window");
@@ -2921,7 +2891,7 @@ void QS1RServer::parseLocalCommand() {
     {
         m_is_factory_init_enabled = true;
         m_is_was_factory_init = true;
-        clearStatusText();
+        ;
         setStatusText(" WARNING! Entering Factory Mode ");
         setStatusText("");
         setStatusText(" 1 - find device ");
@@ -2978,7 +2948,7 @@ void QS1RServer::parseLocalCommand() {
             setStatusText(uuid.toString());
         } else if (resp == "m") // menu
         {
-            clearStatusText();
+            ;
             setStatusText(" WARNING! Entering Factory Mode ");
             setStatusText("");
             setStatusText(" 1 - find device ");
@@ -2994,7 +2964,7 @@ void QS1RServer::parseLocalCommand() {
         } else if (resp == "done") // exit factory mode
         {
             m_is_factory_init_enabled = false;
-            clearStatusText();
+            ;
             setStatusText(" Exiting Factory Mode... ");
         }
     }

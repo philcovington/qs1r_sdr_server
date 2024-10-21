@@ -2,8 +2,8 @@
 
 #include "../include/qs_defaults.hpp"
 #include "../include/qs_defines.hpp"
-#include "../include/qs_stringclass.hpp"
 #include "../include/qs_settingsclass.hpp"
+#include "../include/qs_stringclass.hpp"
 #include <memory>
 
 using namespace std;
@@ -40,11 +40,6 @@ class QsState {
     double m_clock_correction;
     double m_encode_clk_freq;
     double m_smeter_correction;
-    double m_ps_correction;
-    double m_post_ps_correction;
-    double m_wb_ps_correction;
-
-    String m_wav_record_path;
 
   public:
     QsState();
@@ -79,11 +74,6 @@ class QsState {
     double clockCorrection();
     double encodeClockFrequency();
     double smeterCorrection();
-    double powerSpecCorrection();
-    double postPsCorrection();
-    double wbPsCorrection();
-
-    String wavRecordPath();
 
     void readSettings();
     void setBlockSize(int blocksz);
@@ -104,14 +94,10 @@ class QsState {
     void setDITH(bool on);
     void setClockCorrection(double value);
     void setSMeterCorrection(double value);
-    void setPowerSpecCorrection(double value);
-    void setPostPsCorrection(double value);
-    void setWBPsCorrection(double value);
     void setMainFilterTapSize(int value);
     void setDacBypass(bool on);
     void setRtAudioBypass(bool on);
     void setRtAudioInDevId(int value);
     void setRtAudioOutDevId(int value);
     void setExtMuteEnable(bool on);
-    void setWavRecordPath(String value);
 };

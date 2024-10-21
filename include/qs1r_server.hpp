@@ -69,8 +69,7 @@ class QS1RServer {
     void parseLocalCommand();
     void quit();
 
-    void setStatusText(String text);
-    void clearStatusText();
+    void setStatusText(String text);    
     void setErrorText(String text);
     void clearErrorText();
 
@@ -172,6 +171,7 @@ class QS1RServer {
     void processHttpResponse(bool);
 
     Map<int, double> SMETERCORRECTMAP;
+    double SMETERCORRECT = 0.0;
 
   private:
     String status_string;

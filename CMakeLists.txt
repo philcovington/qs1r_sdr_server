@@ -16,7 +16,7 @@ string(TIMESTAMP CURRENT_DATE "%Y%m%d" UTC)
 configure_file(${CMAKE_SOURCE_DIR}/config/config.h.in ${CMAKE_SOURCE_DIR}/headers/config.h @ONLY)
 
 # Specify the directories where headers and source files are located
-include_directories(${PROJECT_SOURCE_DIR}/headers)
+include_directories(${PROJECT_SOURCE_DIR}/include)
 
 # Add source files
 file(GLOB_RECURSE SOURCES "${PROJECT_SOURCE_DIR}/src/*.cpp")
