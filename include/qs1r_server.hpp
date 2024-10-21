@@ -1,14 +1,14 @@
 #pragma once
 
+#include "../include/qs_bytearray.hpp"
+#include "../include/qs_cmdproc.hpp"
 #include "../include/qs_defines.hpp"
 #include "../include/qs_globals.hpp"
-#include "../include/qs_sleep.hpp"
-#include "../include/qs_cmdproc.hpp"
 #include "../include/qs_signalops.hpp"
+#include "../include/qs_sleep.hpp"
 #include "../include/qs_stringclass.hpp"
 #include "../include/qs_stringlistclass.hpp"
 #include "../include/qs_threading.hpp"
-#include "../include/qs_bytearray.hpp"
 #include "../include/qs_uuid.hpp"
 #include <memory>
 #include <vector>
@@ -57,13 +57,6 @@ class QS1RServer {
     std::unique_ptr<QsIoThread> p_io_thread;
     std::unique_ptr<QsWavWriter> p_wav_writer;
 
-    QextSerialPort *p_comport;
-
-    QHttp *p_http;
-
-    SdrMaxV *gui;
-    QsAudioSetupDialog *audio_setup_dialog;
-
     unsigned int controlRegister0Value();
     unsigned int controlRegister1Value();
 
@@ -73,15 +66,15 @@ class QS1RServer {
     bool randMode();
     bool ditherMode();
 
-    StringList getSupportedSampleRates();   
+    StringList getSupportedSampleRates();
 
     void shutdown();
 
     // QS1E Hardware
     bool checkForQS1E();
-    bool isHardwareInit();  
+    bool isHardwareInit();
 
-    void PttState(bool);  
+    void PttState(bool);
 
     void receiveAppMessage(String);
 
@@ -101,9 +94,9 @@ class QS1RServer {
     void boostTicks();
 
     void initQsAudio(double rate);
-    int initQS1RHardware();    
+    int initQS1RHardware();
     void initQsMemory();
-    void initSMeterCorrectionMap();    
+    void initSMeterCorrectionMap();
 
     void loadFPGAFile(String filename);
     void updateFPGARegisters();
@@ -152,9 +145,9 @@ class QS1RServer {
 
     void setModeDirect(int value);
     void setOpenAudioSetupDirect();
-    
+
     void setSampleRateDirect(int value);
-    void setTxPttDirect(bool value);    
+    void setTxPttDirect(bool value);
 
     // For Scripting
     double getRxFrequency();
@@ -164,7 +157,6 @@ class QS1RServer {
     void scriptDebugPrint(String msg);
 
   private:
-
     bool setFpgaForSampleRate(double samplerate);
 
     String doCommandProcessor(String value, int rx_num);
@@ -192,9 +184,8 @@ class QS1RServer {
     void sendHttpRequest();
 
     void processHttpResponse(bool);
-  
-  private:    
 
+  private:
     String status_string;
     String error_string;
 
@@ -202,11 +193,12 @@ class QS1RServer {
     bool m_is_hardware_init;
     bool m_is_io_setup;
     bool m_is_io_running;
-    
+
     bool m_is_factory_init_enabled;
     bool m_is_was_factory_init;
-    
+
     bool hardware_is_registered;
+    bool m_hardware_is_init;
     bool m_is_fpga_loaded;
     bool m_is_rt_audio_bypass;
     bool m_gui_rx1_is_connected;
@@ -226,13 +218,13 @@ class QS1RServer {
     StringList cmdList;
     StringList m_supported_samplerates;
 
-    QsSleep qssleep;    
+    QsSleep sleep;
 
-    CMD cmd;  
-    
+    CMD cmd;
+
     UUID readQS1RUuid();
     bool writeQS1RSN(String uuid);
-    
+
     String readQS1REEPROMData();
 
     int m_wb_bsize;

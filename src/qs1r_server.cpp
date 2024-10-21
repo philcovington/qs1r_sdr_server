@@ -1,5 +1,6 @@
 #include "../include/qs1r_server.hpp"
 #include "../include/qs_audio.hpp"
+#include "../include/qs_bitstream.hpp"
 #include "../include/qs_bytearray.hpp"
 #include "../include/qs_dac_writer.hpp"
 #include "../include/qs_datareader.hpp"
@@ -9,14 +10,20 @@
 #include "../include/qs_fft.hpp"
 #include "../include/qs_file.hpp"
 #include "../include/qs_filter.hpp"
+#include "../include/qs_firmware.hpp"
 #include "../include/qs_io_libusb.hpp"
 #include "../include/qs_io_thread.hpp"
 #include "../include/qs_listclass.hpp"
 #include "../include/qs_memory.hpp"
 #include "../include/qs_signalops.hpp"
+#include "../include/qs_sleep.hpp"
 #include "../include/qs_state.hpp"
 #include "../include/qs_stringclass.hpp"
 #include "../include/qs_uuid.hpp"
+#include <algorithm>
+#include <array>
+#include <cstdint>
+#include <sstream>
 
 QS1RServer::QS1RServer()
     : p_dac_writer(new QsDacWriter()), p_rta(new QsAudio()), p_qsState(new QsState()), p_dsp_proc(new QsDspProcessor()),
@@ -24,18 +31,13 @@ QS1RServer::QS1RServer()
       m_is_was_factory_init(false), m_is_rt_audio_bypass(false), m_gui_rx1_is_connected(false),
       m_gui_rx2_is_connected(false), m_driver_type("None"), m_local_rx_num_selector(1), m_freq_offset_rx1(0.0),
       m_freq_offset_rx2(0.0), m_proc_samplerate(50000.0), m_post_proc_samplerate(50000.0), m_step_size(500.0),
-      m_status_message_backing_register(0), m_prev_vol_val(0), gui(NULL), m_wb_bsize(WB_BLOCK_SIZE),
-      m_wb_bsizeX2(m_wb_bsize * 2), m_wb_bsizeDiv2(m_wb_bsize / 2), p_wb_fft(new QsFFT()) {
+      m_status_message_backing_register(0), m_prev_vol_val(0) {
 
     p_qsState->init();
 
     initQsMemory();
 
-    QsGlobal::g_server = this;
-
-    p_wb_fft->resize(m_wb_bsize);
-
-    p_comport = 0;
+    QsGlobal::g_server = std::unique_ptr<QS1RServer>(this);
 
     // delay
     initialize();
@@ -174,6 +176,7 @@ void QS1RServer::initQsMemory() {
 // Initialize the QS1R Hardware
 // ------------------------------------------------------------
 int QS1RServer::initQS1RHardware() {
+    unsigned int index = 0;
     m_driver_type = "None";
 
     if (m_is_hardware_init) {
@@ -182,123 +185,79 @@ int QS1RServer::initQS1RHardware() {
 
     m_is_hardware_init = false;
 
-    setStatusText("Trying the libusb driver...wait...");
+    std::cout << "Trying the libusb driver with index [" << index << "]... wait..." << std::endl;
 
-    List<QsDevice> dev_list;
-    dev_list.clear();
+    QsGlobal::g_device = QsGlobal::g_io->findQsDevice(QS1R_VID, QS1R_PID, index);
 
-    if (QsGlobal::g_io->findQsDevice(dev_list) == -1) // try to initialize board
-    {
-        setStatusText("Error: STAGE1: Could not find QS1R!");
-        setErrorText("STAGE1: Could not find QS1R!");
-        setStatusText("");
-        setStatusText("Type 'setup audio' to configure audio in/out, or");
-        setStatusText("Type 'gui' to start the GUI.");
-        QsGlobal::g_io->close();
+    if (QsGlobal::g_device == nullptr) {
+        std::cerr << "Could not find any QS1R devices!" << std::endl;
         return -1;
-    } else {
-        m_driver_type = "libUSB";
-        setStatusText("Using the libusb driver");
-        if (dev_list.size() < 1 || QsGlobal::g_io->open(dev_list[0].dev) == -1) {
-            setStatusText("Error: STAGE1: Could open QS1R device!");
-            setErrorText("STAGE1: Could open QS1R device!");
-            setStatusText("");
-            setStatusText("Type 'setup audio' to configure audio in/out, or");
-            setStatusText("Type 'gui' to start the GUI.");
+    }
+
+    int ret = QsGlobal::g_io->open(QsGlobal::g_device.get());
+
+    if (ret == 0) {
+        int fpga_id = 0;
+        int fw_id = 0;
+        std::cout << "Open success!" << std::endl;
+        std::cout << "FPGA ID returned: " << std::hex << (fpga_id = QsGlobal::g_io->readMultibusInt(MB_VERSION_REG))
+                  << std::dec << std::endl;
+        std::cout << "FW S/N: " << (fw_id = QsGlobal::g_io->readFwSn()) << std::endl;
+
+        if (fw_id != ID_FWWR) {
+            std::cout << "Attempting to load firmware..." << std::endl;
+            int result = QsGlobal::g_io->loadFirmware(firmware_hex);
+            if (result == 0) {
+                std::cout << "Firmware load success!" << std::endl;
+                QsGlobal::g_io->close();
+                sleep.msleep(5000);
+            }
+        } else {
+            std::cout << "Firmware is already loaded!" << std::endl;
+        }
+
+        QsGlobal::g_device = QsGlobal::g_io->findQsDevice(QS1R_VID, QS1R_PID, index);
+
+        if (QsGlobal::g_device == nullptr) {
+            std::cerr << "Could not find any QS1R devices!" << std::endl;
             return -1;
         }
-    }
 
-    setStatusText("Attempting to load firmware...wait...");
+        ret = QsGlobal::g_io->open(QsGlobal::g_device.get());
 
-    if (QsGlobal::g_io->loadFirmware(String(RESOURCE_FIRMWARE_FILENAME)) == -1) {
-        setStatusText("Error: STAGE1: Could not load QS1R Firmware");
-        setErrorText("STAGE1: Could not load QS1R Firmware");
-        setStatusText("");
-        setStatusText("Type 'setup audio' to configure audio in/out, or");
-        setStatusText("Type 'gui' to start the GUI.");
-        return -1;
-    } else {
-        setStatusText("QS1R Firmware loaded...");
-    }
-
-    QsGlobal::g_io->close();
-    qssleep.msleep(500);
-
-    int count = 0;
-
-    while (count < LOAD_DELAY_COUNT) {
-        dev_list.clear();
-        if (QsGlobal::g_io->findQsDevice(dev_list) == -1) // try to initialize board
-        {
-            count++;
-            qssleep.msleep(100);
-        } else {
-            if (dev_list.size() < 1 || QsGlobal::g_io->open(dev_list[0].dev) == -1) {
-                setStatusText("Error: STAGE2: Could not find QS1R!");
-                setErrorText("Stage2: Could not find QS1R!");
-                setStatusText("");
-                setStatusText("Type 'setup audio' to configure audio in/out, or");
-                setStatusText("Type 'gui' to start the GUI.");
-                return -1;
-            }
-            if (QsGlobal::g_io->writeMultibusInt(MB_CONTRL1, 0x0) == -1) // try write to multibus
-            {
-                count++;
-                qssleep.msleep(100);
-            } else {
-                break;
-            }
+        if (ret != 0) {
+            std::cerr << "Open Device Error: " << libusb_error_name(ret) << std::endl;
+            return -1;
         }
-    }
-    if (count >= LOAD_DELAY_COUNT) {
-        setStatusText("Error: STAGE3: Could not find QS1R!");
-        setErrorText("STAGE3: Could not find QS1R!");
-        setStatusText("");
-        setStatusText("Type 'setup audio' to configure audio in/out, or");
-        setStatusText("Type 'gui' to start the GUI.");
 
+        std::cout << "FW S/N: " << std::dec << (fw_id = QsGlobal::g_io->readFwSn()) << std::endl;
+
+        if (fpga_id != ID_1RXWR) {
+            std::cout << "Attempting to load FPGA bitstream..." << std::endl;
+            int result = QsGlobal::g_io->loadFpgaFromBitstream(fpga_bitstream, fpga_bitstream_size);
+            if (result == 0) {
+                std::cout << "FPGA load success!" << std::endl;
+                QsGlobal::g_io->close();
+                sleep.msleep(1000);
+            }
+        } else {
+            std::cout << "FPGA already loaded!" << std::endl;
+        }
+
+        QsGlobal::g_io->open(QsGlobal::g_device.get());
+
+        std::cout << "FPGA ID returned: " << std::hex << (fpga_id = QsGlobal::g_io->readMultibusInt(MB_VERSION_REG))
+                  << std::dec << std::endl;
+
+    } else {
+        std::cerr << "Error opening device!" << std::endl;
         return -1;
     }
-    m_is_hardware_init = true;
-    m_is_was_factory_init = false;
 
-    p_qsState->readSettings();
-
-    setFpgaForSampleRate(p_qsState->startupSampleRate());
-
-    // do a final check of version numbers
-
-    unsigned int id_fx2fw = 0;
-    unsigned int id_fpga = 0;
-
-    id_fx2fw = QsGlobal::g_io->readFwSn();
-    if (id_fx2fw != ID_FWWR) {
-        _debug() << "Incorrect Firmware ID!";
-        setStatusText("Incorrect Firmware ID!");
-    }
-
-    _debug() << "Firmware ID: " << String::number(id_fx2fw, 10);
-
-    id_fpga = QsGlobal::g_io->readMultibusInt(MB_VERSION_REG);
-    if (id_fpga != ID_1RXWR) {
-        _debug() << "Incorrect FPGA HDL ID!";
-        setStatusText("Incorrect FPGA HDL ID!");
-    }
-
-    _debug() << "FPGA ID: " << String::number(id_fpga, 16);
-
-#ifdef HARDWARE_SN_CHECK
-    hardwareSNCheck();
-#else
-    hardware_is_registered = true;
-#endif
-
-    setStatusText("QS1R Hardware: Ready");
+    std::cout << "QS1R index [" << index << "] hardware was successfully initialized!" << std::endl;
+    m_hardware_is_init = true;
     return 0;
 }
-
-bool QS1RServer::hardwareSNCheck() { return hardware_is_registered; }
 
 // ------------------------------------------------------------
 // CHECK FOR THE PRESENCE OF A QS1E BOARD
@@ -1158,58 +1117,6 @@ void QS1RServer::qs1rReadFailure() { _debug() << "Read failure!"; }
 // ------------------------------------------------------------
 // Manufacture and Test Functions
 // ------------------------------------------------------------
-void QS1RServer::findQS1RDevice() {
-    setStatusText("Looking for QS1R hardware on USB...");
-
-    setStatusText("Trying libusb driver...");
-
-    QsGlobal::g_io->close();
-
-    QList<QsDevice> dev_list;
-    dev_list.clear();
-
-    if (QsGlobal::g_io->findQsDevice(dev_list) == -1) // try to initialize board
-    {
-        setStatusText("Error: Could not find QS1R! Make sure QS1R driver is installed and QS1R is powered on");
-        setErrorText("Could not find QS1R! Make sure QS1R driver is installed and QS1R is powered on");
-        QsGlobal::g_io->close();
-        return;
-    } else {
-        if (QsGlobal::g_io->open(dev_list[0].dev) == -1) {
-            setStatusText("Could not open QS1R device.");
-            return;
-        } else {
-            setStatusText("Using libusb driver.");
-        }
-    }
-    setStatusText("Found QS1R on USB...");
-}
-
-void QS1RServer::loadQS1RFirmware() {
-    setStatusText("Attempting to load Firmware...");
-
-    if (QsGlobal::g_io->loadFirmware(String(RESOURCE_FIRMWARE_FILENAME)) == -1) {
-        setStatusText("Error: Could not load QS1R Firmware");
-        setErrorText("Could not load QS1R Firmware");
-        return;
-    }
-
-    setStatusText("QS1R Firmware loaded successfully.");
-}
-
-void QS1RServer::loadQS1RFPGA() {
-    setStatusText("Attempting to load FPGA...");
-
-    if (QsGlobal::g_io->loadFpga(String(RESOURCE_FPGA_MASTER)) == -1) {
-        setStatusText("Error: Could not load QS1R FPGA File");
-        setErrorText("Could not load QS1R FPGA File");
-        return;
-    }
-
-    m_is_fpga_loaded = true;
-
-    setStatusText("QS1R FPGA loaded successfully.");
-}
 
 UUID QS1RServer::readQS1RUuid() {
     UUID uuid;
@@ -1684,7 +1591,7 @@ String QS1RServer::doCommandProcessor(String value, int rx_num) {
         if (cmd.RW == CMD::cmd_write) {
             response = "OK";
             setStatusText("QS1RServer quitting...");
-            qssleep.msleep(500);
+            sleep.msleep(500);
             quit();
         } else if (cmd.RW == CMD::cmd_read) {
             response = "NAK";
@@ -1801,9 +1708,11 @@ String QS1RServer::doCommandProcessor(String value, int rx_num) {
     else if (cmd.cmd.compare("Filter") == 0) // filter value
     {
         if (cmd.RW == CMD::cmd_write) {
-            if (cmd.slist.count() == 2) {
-                int flo = cmd.slist[0].toInt();
-                int fhi = cmd.slist[1].toInt();
+            if (cmd.slist.size() == 2) {
+                String fl_str = cmd.slist[0];
+                String fh_str = cmd.slist[1];
+                int flo = fl_str.toInt();
+                int fhi = fh_str.toInt();
                 QsGlobal::g_memory->setFilterHi(fhi);
                 QsGlobal::g_memory->setFilterLo(flo);
                 response = "OK";
@@ -2407,7 +2316,7 @@ String QS1RServer::doCommandProcessor(String value, int rx_num) {
     else if (cmd.cmd.compare("Vol") == 0 || cmd.cmd.compare("v") == 0) // rx volume
     {
         if (cmd.RW == CMD::cmd_write) {
-            QsGlobal::g_memory->setVolume(std::qBound(-120.0, cmd.dvalue, 0.0));
+            QsGlobal::g_memory->setVolume(std::clamp(cmd.dvalue, -120.0, 0.0));
             response = "OK";
         } else if (cmd.RW == CMD::cmd_read) {
             double value = QsGlobal::g_memory->getVolume(rx_num - 1);
@@ -2446,12 +2355,13 @@ String QS1RServer::doCommandProcessor(String value, int rx_num) {
 // Parses and executes commands from the command entry box
 // ------------------------------------------------------------
 void QS1RServer::parseLocalCommand() {
-    String resp = ui.commandEntry->text().trimmed().toLower();
+    String resp = ";";
 
     if (resp == "quit" || resp == "exit") // quit
     {
         setStatusText("QS1RServer quitting...");
-        QTimer::singleShot(1500, this, SLOT(quit()));
+        sleep.msleep(1500);
+        quit();
     } else if (resp == "pdac_reset") {
         unsigned char buf = 0x6;
 
@@ -2529,112 +2439,43 @@ void QS1RServer::parseLocalCommand() {
         bool ok = false;
         int ivalue = str.toInt(&ok);
         if (ok) {
-            int freq = qRound((double)ivalue / 125.0e6 * (double)pow(2.0, 32.0));
+            int freq = static_cast<int>(std::round(static_cast<double>(ivalue) / 125.0e6 * std::pow(2.0, 32.0)));
             int result = QsGlobal::g_io->writeMultibusInt(MB_TX_FREQ, freq);
             setStatusText("result is " + String::number(result));
         } else {
             double dvalue = str.toDouble(&ok);
             if (ok) {
-                int freq = qRound((double)dvalue / 125.0e6 * (double)pow(2.0, 32.0));
+                int freq = static_cast<int>(std::round(static_cast<double>(ivalue) / 125.0e6 * std::pow(2.0, 32.0)));
                 int result = QsGlobal::g_io->writeMultibusInt(MB_TX_FREQ, freq);
                 setStatusText("result is " + String::number(result));
             } else {
                 setStatusText("Not a valid input");
             }
         }
-    } else if (resp == "ptt_on" || resp == "tx") // transmit
-    {
-        QsTx::g_tx_ptt = true;
-    } else if (resp == "ptt_off" || resp == "rx") // receive
-    {
-        QsTx::g_tx_ptt = false;
-    } else if (resp.contains("set_tx_lo ")) // tx low filter
-    {
-        String str = resp.remove("set_tx_lo ");
-        bool ok = false;
-        int ivalue = str.toInt(&ok);
-        if (ok) {
-            QsGlobal::g_memory->setTxFilterLo(ivalue);
-        } else {
-            setStatusText("Not a valid input");
-        }
-    } else if (resp.contains("set_tx_hi ")) // tx high filter
-    {
-        String str = resp.remove("set_tx_hi ");
-        bool ok = false;
-        int ivalue = str.toInt(&ok);
-        if (ok) {
-            QsGlobal::g_memory->setTxFilterHi(ivalue);
-        } else {
-            setStatusText("Not a valid input");
-        }
-    } else if (resp.contains("set_tx_carrier ")) // tx carrier level
-    {
-        String str = resp.remove("set_tx_carrier ");
-        bool ok = false;
-        double dvalue = str.toDouble(&ok);
-        if (ok) {
-            QsGlobal::g_memory->setTxCarrierLevel(dvalue);
-        } else {
-            setStatusText("Not a valid input");
-        }
     } else if (resp.contains("echo_ep0_ep1")) {
-        int sz = 64;
-        char buf[64];
-        char buf1[64];
-        QsSpl::Fill(buf, 22, sz);
-        QsSpl::Fill(buf1, 99, sz);
-        int result = QsGlobal::g_io->sendControlMessage(VRT_VENDOR_OUT, VRQ_ECHO_TO_EP1IN, 0, 0, buf, sz, 10000);
+        constexpr std::size_t sz = 64;
+        std::vector<std::byte> buf(sz, std::byte{22});
+        std::vector<std::byte> buf1(sz, std::byte{99});
+
+        int result = QsGlobal::g_io->sendControlMessage(VRT_VENDOR_OUT, VRQ_ECHO_TO_EP1IN, 0, 0, buf.data(), sz, 10000);
         _debug() << "echo result control message was " << result;
-        result = QsGlobal::g_io->readEP1((unsigned char *)buf1, sz);
+        result = QsGlobal::g_io->readEP1(reinterpret_cast<unsigned char *>(buf1.data()), sz);
         _debug() << "echo read ep1 was " << result;
         for (int i = 0; i < result; i++) {
-            _debug() << " buf1[" << i << "] : " << String::number(buf1[1]);
+            unsigned char value = static_cast<unsigned char>(buf1[i]);
+            _debug() << " buf1[" << i << "] : " << String::number(value);
         }
     } else if (resp.contains("read_ep1")) {
-        char buf[4];
-        QsSpl::Zero(buf, 4);
-        int result = QsGlobal::g_io->readEP1((unsigned char *)buf, 4);
-        _debug() << "ep1 read result: " << String::number(result);
-        _debug() << "read : " << String::number(buf[0]);
-        _debug() << "read : " << String::number(buf[1]);
-        _debug() << "read : " << String::number(buf[2]);
-        _debug() << "read : " << String::number(buf[3]);
+        std::vector<std::byte> buf(4, std::byte{0});
+        int result = QsGlobal::g_io->readEP1(reinterpret_cast<unsigned char *>(buf.data()), 4);
+        // Loop through buf and convert each std::byte to a number
+        for (size_t i = 0; i < buf.size(); ++i) {
+            unsigned char value = static_cast<unsigned char>(buf[i]); // Cast std::byte to unsigned char
+            _debug() << "read [" << i << "] : " << String::number(value);
+        }
     } else if (resp.contains("enable_int5")) {
         int result = QsGlobal::g_io->sendInterrupt5Gate();
         _debug() << "enable int5 result: " << String::number(result);
-    } else if (resp == "gui dark") // show the dark gui
-    {
-        QsStyle::use_classic_style = false;
-        if (gui != NULL) {
-            gui->close();
-            delete gui;
-            gui = NULL;
-            qssleep.msleep(500);
-        }
-        gui = new SdrMaxV();
-        gui->setInProcessServerPointer();
-        gui->show();
-    } else if (resp == "gui" || resp == "show gui" || resp == "gui classic") // show the gui
-    {
-        QsStyle::use_classic_style = true;
-        if (gui != NULL) {
-            gui->close();
-            delete gui;
-            gui = NULL;
-            qssleep.msleep(500);
-        }
-        gui = new SdrMaxV();
-        gui->setInProcessServerPointer();
-        gui->show();
-    } else if (resp == "hide gui") // hide the gui
-    {
-        if (gui)
-            gui->close();
-    } else if (resp == "hide") // hide the server window
-    {
-        setStatusText("hiding window...");
-        QTimer::singleShot(1000, this, SLOT(hideWindow()));
     } else if (resp == "clear") {
         clearStatusText();
         showStartupMessage();
@@ -2741,16 +2582,25 @@ void QS1RServer::parseLocalCommand() {
         getRxFrequency(value, 1);
         setStatusText("Current frequency: " + String::number(value / 1000000.0) + " MHz");
     } else if (resp.contains("set notch ")) {
-        String str = resp.remove("set notch ");
-        StringList sl = str.split(",");
-        if (sl.count() == 4) {
-            int num = sl[0].toInt();
-            float f0 = sl[1].toFloat();
-            float hz = sl[2].toFloat();
-            bool en = sl[3].toInt();
+        std::string str =
+            resp.toStdString().substr(resp.toStdString().find("set notch ") + 11); // 11 is the length of "set notch "
+        // Split the string by comma
+        std::vector<std::string> sl;
+        std::stringstream ss(str);
+        std::string item;
+        while (std::getline(ss, item, ',')) {
+            sl.push_back(item);
+        }
+
+        if (sl.size() == 4) {
+            int num = std::stoi(sl[0]);      // Convert first element to int
+            float f0 = std::stof(sl[1]);     // Convert second element to float
+            float hz = std::stof(sl[2]);     // Convert third element to float
+            bool en = std::stoi(sl[3]) != 0; // Convert fourth element to bool
+
             QsGlobal::g_memory->setNotchFrequency(num, f0);
             QsGlobal::g_memory->setNotchBandwidth(num, hz);
-            QsGlobal::g_memory->setNotchEnabled(num, (bool)en);
+            QsGlobal::g_memory->setNotchEnabled(num, en);
         }
     } else if (resp == "reinit hardware") {
         setStatusText("Trying to initialize QS1R Hardware...wait...");
@@ -2764,14 +2614,12 @@ void QS1RServer::parseLocalCommand() {
         if (m_is_io_running)
             stopIo();
         setupIo();
-    } else if (resp == "get qtver") {
-        setStatusText("Qt Version: " + String(qVersion()));
     } else if (resp == "get outdevices") {
         setStatusText("\nAudio Output Devices:");
 
         StringList list = p_rta->getOutputDevices();
 
-        for (int i = 0; i < list.count(); i++) {
+        for (int i = 0; i < list.size(); i++) {
             setStatusText(String(list.at(i)));
         }
     } else if (resp == "get indevices") {
@@ -2779,23 +2627,35 @@ void QS1RServer::parseLocalCommand() {
 
         StringList list = p_rta->getInputDevices();
 
-        for (int i = 0; i < list.count(); i++) {
+        for (int i = 0; i < list.size(); i++) {
             setStatusText(String(list.at(i)));
         }
-    } else if (resp.contains("set indevice ")) {
-        String str = resp.remove("set indevice ").trimmed().toLatin1();
-        String devname;
-        bool ok = false;
-        int devid = str.toInt(&ok);
-        if (ok) {
-            if (p_rta->isInputDeviceValid(devid, devname)) {
-                setStatusText("\nSetting input device id to: " + String::number(devid));
-                p_qsState->setRtAudioInDevId(devid);
+    } else if (resp.toStdString().find("set indevice ") != std::string::npos) {
+        std::string str = resp.toStdString();
+        std::size_t str_find = str.find("set indevice "); // Get the position of the substring
+
+        if (str_find != std::string::npos) {                 // Check if the substring was found
+            std::string str_sub = str.substr(str_find + 14); // Extract substring after "set indevice "
+
+            // Trim whitespace from str_sub
+            str_sub.erase(0, str_sub.find_first_not_of(" \t")); // Trim left
+            str_sub.erase(str_sub.find_last_not_of(" \t") + 1); // Trim right.
+
+            String devname;
+            bool ok = false;
+            int devid = std::stoi(str_sub, nullptr); // Convert to int; use nullptr for error checking
+
+            // Check if the conversion was successful
+            if (devid >= 0) {
+                if (p_rta->isInputDeviceValid(devid, devname)) {
+                    setStatusText("\nSetting input device id to: " + std::to_string(devid));
+                    p_qsState->setRtAudioInDevId(devid);
+                } else {
+                    setStatusText("Device id: " + std::to_string(devid) + " is invalid.");
+                }
             } else {
-                setStatusText("Device id: " + String::number(devid) + " is invalid.");
+                setStatusText("The device id you entered is invalid.");
             }
-        } else {
-            setStatusText("The device id you entered is invalid.");
         }
     } else if (resp == "get indevice") {
         int id = p_qsState->rtAudioInDevId();
@@ -2805,19 +2665,31 @@ void QS1RServer::parseLocalCommand() {
         p_rta->isInputDeviceValid(id, devname);
         setStatusText("Input device name is: " + devname);
     } else if (resp.contains("set outdevice ")) {
-        String str = resp.remove("set outdevice ").trimmed().toLatin1();
-        String devname;
-        bool ok = false;
-        int devid = str.toInt(&ok);
-        if (ok) {
-            if (p_rta->isOutputDeviceValid(devid, devname)) {
-                setStatusText("\nSetting output device id to: " + String::number(devid));
-                p_qsState->setRtAudioOutDevId(devid);
+        std::string str = resp.toStdString();
+        std::size_t str_find = str.find("set outdevice "); // Get the position of the substring
+
+        if (str_find != std::string::npos) {                 // Check if the substring was found
+            std::string str_sub = str.substr(str_find + 15); // Extract substring after "set outdevice "
+
+            // Trim whitespace from str_sub
+            str_sub.erase(0, str_sub.find_first_not_of(" \t")); // Trim left
+            str_sub.erase(str_sub.find_last_not_of(" \t") + 1); // Trim right.
+
+            String devname;
+            bool ok = false;
+            int devid = std::stoi(str_sub); // Convert to int; use std::stoi directly
+
+            // Check if the conversion is valid
+            if (devid >= 0) {
+                if (p_rta->isOutputDeviceValid(devid, devname)) {
+                    setStatusText("\nSetting output device id to: " + String::number(devid));
+                    p_qsState->setRtAudioOutDevId(devid);
+                } else {
+                    setStatusText("Device id: " + String::number(devid) + " is invalid.");
+                }
             } else {
-                setStatusText("Device id: " + String::number(devid) + " is invalid.");
+                setStatusText("The device id you entered is invalid.");
             }
-        } else {
-            setStatusText("The device id you entered is invalid.");
         }
     } else if (resp == "get outdevice") {
         int id = p_qsState->rtAudioOutDevId();
@@ -2835,8 +2707,6 @@ void QS1RServer::parseLocalCommand() {
         } else {
             setStatusText("Sample rate is invalid.");
         }
-    } else if (resp.contains("setup audio")) {
-        audio_setup_dialog->show();
     } else if (resp == "get startup_samplerate") {
         setStatusText("Startup sample rate is: " + String::number(p_qsState->startupSampleRate()));
     } else if (resp.contains("set startup_frequency ")) {
@@ -2944,7 +2814,7 @@ void QS1RServer::parseLocalCommand() {
         int value = str.toInt(&ok);
         if (ok) {
             p_qsState->setStartupAGCDecaySpeed((double)value);
-            setStatusText("Setting startup agc mode to: " + str.trimmed().toUpper());
+            setStatusText("Setting startup agc mode to: " + str.toUpper());
         } else {
             setStatusText("Value is invalid.");
         }
@@ -2965,10 +2835,10 @@ void QS1RServer::parseLocalCommand() {
         setStatusText("Startup agc threshold is: " + String::number(p_qsState->startupAGCThreshold()));
     } else if (resp.contains("set startup_mode ")) {
         String str = resp.remove("set startup_mode ");
-        int value = modeStringToInt(str.trimmed().toUpper());
+        int value = modeStringToInt(str.toStdString());
         if (value != -1) {
             p_qsState->setStartupMode((QSDEMODMODE)value);
-            setStatusText("Setting startup mode to: " + str.trimmed().toUpper());
+            setStatusText("Setting startup mode to: " + str.toUpper());
         } else {
             setStatusText("Value is invalid.");
         }
@@ -3025,121 +2895,12 @@ void QS1RServer::parseLocalCommand() {
         }
     } else if (resp.contains("reset device")) {
         stopIo();
-        qssleep.msleep(200);
+        sleep.msleep(200);
         setStatusText("Resetting QS1R USB interface...");
         QsGlobal::g_io->resetDevice();
-        qssleep.msleep(2000);
+        sleep.msleep(2000);
         initQS1RHardware();
         setStatusText("Reinitializing QS1R Hardware...");
-    }
-#ifdef Q_OS_WIN
-    else if (resp == "install libusb") {
-        typedef BOOL(WINAPI * IW64PFP)(HANDLE, BOOL *);
-
-        BOOL res = FALSE;
-        IW64PFP iw64p = (IW64PFP)GetProcAddress(GetModuleHandle(L"kernel32"), "IsWow64Process");
-
-        if (iw64p != NULL) {
-            iw64p(GetCurrentProcess(), &res);
-        }
-        if (res != FALSE) // 64 bit
-        {
-            if (!QProcess::startDetached("./QS1R-libusb/dpinst64.exe")) {
-                setStatusText("Could not locate dpinst64.exe");
-            }
-        } else // 32 bit
-        {
-            if (!QProcess::startDetached("./QS1R-libusb/dpinst32.exe", StringList("/LM"))) {
-                setStatusText("Could not locate dpinst32.exe");
-            }
-        }
-    }
-#endif
-    else if (resp == "list serial ports") {
-        StringList ser_list;
-
-#ifdef Q_OS_WIN
-        QsSerialDeviceLister dl;
-        StringList list = dl.getSerialDevices(); // check registry first (only on windows)
-        StringListIterator i(list);
-        while (i.hasNext()) {
-            String sdev = i.next().toUpper().trimmed();
-            if (!ser_list.contains(sdev)) {
-                ser_list.append(sdev);
-            }
-        }
-#endif
-        QextSerialEnumerator se;
-        QList<QextPortInfo> se_list = se.getPorts(); // now check with setupapi
-        QListIterator<QextPortInfo> li(se_list);
-        while (li.hasNext()) {
-            QextPortInfo pi = li.next();
-            String spi = pi.portName.toUpper().trimmed();
-            if (!ser_list.contains(spi)) {
-                ser_list.append(spi);
-            }
-        }
-        StringListIterator k(ser_list);
-        setStatusText("----------------");
-        setStatusText("serial ports:");
-        while (k.hasNext()) {
-            setStatusText(k.next());
-        }
-        setStatusText("----------------");
-    } else if (resp == "dump info") {
-        String dump_file = QDir::homePath() + "/qs1r_dump.qsi";
-        QFile f(dump_file);
-        QTextStream out(&f);
-
-        if (f.open(QIODevice::WriteOnly)) {
-            setStatusText("Generating file...please wait...");
-            update();
-
-            QDir dir;
-            dir.cd(QDir::currentPath());
-            dir.setFilter(QDir::Files | QDir::Dirs | QDir::Hidden | QDir::NoSymLinks);
-            dir.setSorting(QDir::DirsFirst | QDir::Name);
-            QFileInfoList list = dir.entryInfoList();
-
-            out << QDateTime::currentDateTime().toString() << "\n"
-                << "Qt Ver: {" << String(qVersion()) << "}\n"
-                << "Driver: {" << m_driver_type << "}\n"
-                << "Home Path: {" << QDir::homePath() << "}\n"
-                << "App Path: {" << QDir::currentPath() << "}\n"
-                << "QS1R UUID: " << readQS1RUuid().toString() << "\n"
-                << "QS1R EEPROM: " << readQS1REEPROMData() << "\n"
-                << "----QS1R Folder Files----" << "\n\n";
-
-            for (int i = 0; i < list.size(); ++i) {
-                QFileInfo fileInfo = list.at(i);
-                out << fileInfo.fileName() << " Size: " << String::number(fileInfo.size()) << "\n";
-            }
-
-            out << "------Done------" << "\n\n";
-
-            dir.cd(QDir::homePath());
-            dir.setFilter(QDir::Files | QDir::Dirs | QDir::Hidden | QDir::NoSymLinks);
-            dir.setSorting(QDir::DirsFirst | QDir::Name);
-            StringList filters;
-            filters << "*.qsi" << "*.db" << "SDRMAXIV Recordings";
-            dir.setNameFilters(filters);
-            list = dir.entryInfoList();
-
-            out << "----Home Folder Files----" << "\n";
-
-            for (int i = 0; i < list.size(); ++i) {
-                QFileInfo fileInfo = list.at(i);
-                out << fileInfo.fileName() << " Size: " << String::number(fileInfo.size()) << "\n";
-            }
-
-            out << "------Done------" << "\n";
-
-            f.flush();
-            setStatusText("Successfully created dump file in: " + dump_file);
-        } else {
-            setStatusText("Could not create dump file");
-        }
-        f.close();
     } else if (resp == "help") {
         clearStatusText();
         setStatusText("Server Commands:");
@@ -3159,7 +2920,6 @@ void QS1RServer::parseLocalCommand() {
         m_is_factory_init_enabled = true;
         m_is_was_factory_init = true;
         clearStatusText();
-        update();
         setStatusText(" WARNING! Entering Factory Mode ");
         setStatusText("");
         setStatusText(" 1 - find device ");
@@ -3174,9 +2934,7 @@ void QS1RServer::parseLocalCommand() {
         setStatusText("");
     } else if (!m_is_factory_init_enabled) // try to run through official command parser
     {
-        QUdpSocket s;
-
-        String cmd_resp = doCommandProcessor(resp, m_local_rx_num_selector, &s);
+        String cmd_resp = doCommandProcessor(resp, m_local_rx_num_selector);
 
         if (cmd_resp == "?")
             setStatusText("'" + resp + "'" + " : invalid command");
@@ -3203,25 +2961,22 @@ void QS1RServer::parseLocalCommand() {
         } else if (resp == "6") // write hardware sn
         {
             bool ok = false;
-            String uuid_str = QInputDialog::getText(this, "Program S/N", "Enter UUID", QLineEdit::Normal,
-                                                    "{0653f1ae-8d4d-4fe3-9e71-42df3be734cf}", &ok);
-            if (ok && !uuid_str.isEmpty()) {
-                QUuid uuid(uuid_str.simplified());
-                if (!uuid.isNull() && validateQS1RSN(uuid)) {
-                    writeQS1RSN(uuid);
-                    setStatusText("UUID Written Successfully");
-                } else {
-                    setStatusText("Not a valid UUID");
-                }
+            std::cout << "Program S/N: Enter UUID" << std::endl;
+            std::string str_in;
+            std::cin >> str_in;            
+
+            if (str_in != "") {
+                UUID uuid(str_in);
+                writeQS1RSN(String::fromStdString(uuid.toString()));
+                setStatusText("UUID Written Successfully");                
             }
         } else if (resp == "7") // read s/n
         {
-            QUuid uuid = readQS1RUuid();
+            UUID uuid = readQS1RUuid();
             setStatusText(uuid.toString());
         } else if (resp == "m") // menu
         {
             clearStatusText();
-            update();
             setStatusText(" WARNING! Entering Factory Mode ");
             setStatusText("");
             setStatusText(" 1 - find device ");
@@ -3238,128 +2993,7 @@ void QS1RServer::parseLocalCommand() {
         {
             m_is_factory_init_enabled = false;
             clearStatusText();
-            update();
             setStatusText(" Exiting Factory Mode... ");
-            QTimer::singleShot(600, this, SLOT(clearStatusText()));
-            QTimer::singleShot(650, this, SLOT(showStartupMessageWithReady()));
         }
     }
-
-    ui.commandEntry->clear();
-    ui.commandEntry->setFocus();
-}
-
-// DIRECT COMMANDS
-// These functions are able to be called by the gui directly
-
-void QS1RServer::setTxPttDirect(bool value) {
-    QsTx::g_tx_ptt = value;
-    if (value) {
-        m_status_message_backing_register |= TX_PTT;
-        QsGlobal::g_io->writeMultibusInt(MB_STATUS_MSG, m_status_message_backing_register);
-    } else {
-        m_status_message_backing_register &= ~TX_PTT;
-        QsGlobal::g_io->writeMultibusInt(MB_STATUS_MSG, m_status_message_backing_register);
-    }
-    emit PttState(value);
-}
-
-void QS1RServer::setCwSidetoneFreqDirect(double freq) {
-    if (m_is_hardware_init)
-        QsGlobal::g_io->writeMultibusInt(MB_CW_SIDETONE_FREQ, frequencyToPhaseIncrement(freq));
-    QsGlobal::g_memory->setCwSidetoneFreq(freq);
-}
-
-void QS1RServer::setCwSidetoneFreqDirect(int freq) {
-    if (m_is_hardware_init)
-        QsGlobal::g_io->writeMultibusInt(MB_CW_SIDETONE_FREQ, frequencyToPhaseIncrement((double)freq));
-    QsGlobal::g_memory->setCwSidetoneFreq((double)freq);
-}
-
-void QS1RServer::setCwSidetoneVolumeDirect(double vol) {
-    unsigned char volume = (unsigned char)qBound((double)0.0, (double)qRound(127.0 * vol), (double)255.0);
-    if (m_is_hardware_init) {
-        int result = QsGlobal::g_io->readMultibusInt(MB_CW_SETTINGS_REG);
-        int val = (result & 0xffffff00) + volume;
-        QsGlobal::g_io->writeMultibusInt(MB_CW_SETTINGS_REG, val);
-    }
-    QsGlobal::g_memory->setCwSidetoneVolume(vol);
-}
-
-void QS1RServer::setCwSidetoneVolumeDirect(int vol) {
-    unsigned char volume =
-        (unsigned char)qBound((double)0.0, (double)qRound(127.0 * (double)vol / 100.0), (double)255.0);
-    if (m_is_hardware_init) {
-        int result = QsGlobal::g_io->readMultibusInt(MB_CW_SETTINGS_REG);
-        int val = (result & 0xffffff00) + volume;
-        QsGlobal::g_io->writeMultibusInt(MB_CW_SETTINGS_REG, val);
-    }
-    QsGlobal::g_memory->setCwSidetoneVolume(volume);
-}
-
-void QS1RServer::setCwSpeedDirect(int wpm) {
-    unsigned char speed = qBound((unsigned char)1, (unsigned char)wpm, (unsigned char)99);
-    QsGlobal::g_memory->setCwSpeed(wpm);
-    if (m_is_hardware_init) {
-        int result = QsGlobal::g_io->readMultibusInt(MB_CW_SETTINGS_REG);
-        int val = (result & 0xffff00ff) + (speed << 8);
-        QsGlobal::g_io->writeMultibusInt(MB_CW_SETTINGS_REG, val);
-    }
-}
-
-void QS1RServer::setCwModeDirect(bool modeb) {
-    unsigned char mode = 0;
-    if (modeb) {
-        mode = 255;
-    } else {
-        mode = 0;
-    }
-    if (m_is_hardware_init) {
-        int result = QsGlobal::g_io->readMultibusInt(MB_CW_SETTINGS_REG);
-        int val = (result & 0xff00ffff) + (mode << 16);
-        QsGlobal::g_io->writeMultibusInt(MB_CW_SETTINGS_REG, val);
-    }
-}
-
-void QS1RServer::setCwStraightKeyDirect(bool straightkey) {
-    unsigned char mode = 0;
-    if (straightkey) {
-        mode = 255;
-    } else {
-        mode = 0;
-    }
-    if (m_is_hardware_init) {
-        int result = QsGlobal::g_io->readMultibusInt(MB_CW_SETTINGS_REG);
-        int val = (result & 0x00ffffff) + (mode << 24);
-        QsGlobal::g_io->writeMultibusInt(MB_CW_SETTINGS_REG, val);
-    }
-}
-
-void QS1RServer::setOpenAudioSetupDirect() { audio_setup_dialog->show(); }
-
-void QS1RServer::setModeDirect(int value) {
-    QsGlobal::g_memory->setDemodMode((QSDEMODMODE)value);
-    if (value == dmCW) {
-        m_status_message_backing_register |= CW_ENABLE;
-        QsGlobal::g_io->writeMultibusInt(MB_STATUS_MSG, m_status_message_backing_register);
-    } else {
-        m_status_message_backing_register &= ~CW_ENABLE;
-        QsGlobal::g_io->writeMultibusInt(MB_STATUS_MSG, m_status_message_backing_register);
-    }
-}
-
-void QS1RServer::setWavInLoopDirect(int value) {
-    QsGlobal::g_data_reader->p_wavreader->setLooping((bool)value);
-    QsGlobal::g_memory->setWavInLooping((bool)value);
-}
-
-void QS1RServer::setSampleRateDirect(int value) { setFpgaForSampleRate(value); }
-
-// DIRECT CALLS
-// These functions are able to be called by the gui directly
-
-bool QS1RServer::getSpectrumDBMValuesDirect(std::vector<float> &vect, int size) { return p_ps->doMainPs(vect, size); }
-
-bool QS1RServer::getPostSpectrumDBMValuesDirect(std::vector<float> &vect, int size) {
-    return p_ps->doPostPs(vect, size);
 }

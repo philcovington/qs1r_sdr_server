@@ -4,13 +4,13 @@
 #include <vector>
 
 #include "../include/qs_bytearray.hpp"
-#include "../include/qs_file.hpp"
-#include "../include/qs_textstream.hpp"
 #include "../include/qs_debugloggerclass.hpp"
+#include "../include/qs_file.hpp"
 #include "../include/qs_io_libusb.hpp"
+#include "../include/qs_textstream.hpp"
 #include <libusb-1.0/libusb.h>
 
-std::string QsIOLib_LibUSB ::printVectorInHex(const std::vector<uint8_t> &ba) {
+std::string QsIOLib_LibUSB::printVectorInHex(const std::vector<uint8_t> &ba) {
     std::stringstream ss;
     for (const auto &byte : ba) {
         ss << std::setw(2) << std::setfill('0') << std::hex << static_cast<int>(byte) << " ";
@@ -18,7 +18,7 @@ std::string QsIOLib_LibUSB ::printVectorInHex(const std::vector<uint8_t> &ba) {
     return ss.str();
 }
 
-unsigned int QsIOLib_LibUSB ::hexStringToByte(const std::string &hex) {
+unsigned int QsIOLib_LibUSB::hexStringToByte(const std::string &hex) {
     unsigned int byte;
     std::stringstream ss;
     ss << std::hex << hex;
@@ -26,7 +26,7 @@ unsigned int QsIOLib_LibUSB ::hexStringToByte(const std::string &hex) {
     return byte;
 }
 
-uint8_t QsIOLib_LibUSB ::calculateChecksum(const std::string &hexLine) {
+uint8_t QsIOLib_LibUSB::calculateChecksum(const std::string &hexLine) {
     if (hexLine[0] != ':') {
         throw std::invalid_argument("Line does not start with a colon");
     }
@@ -44,7 +44,7 @@ uint8_t QsIOLib_LibUSB ::calculateChecksum(const std::string &hexLine) {
     return checksum;
 }
 
-QsIOLib_LibUSB ::QsIOLib_LibUSB() {
+QsIOLib_LibUSB::QsIOLib_LibUSB() {
     hdev = nullptr;
     dev_was_found = false;
     usb_dev_count = 0;
@@ -56,15 +56,15 @@ QsIOLib_LibUSB ::QsIOLib_LibUSB() {
     }
 }
 
-QsIOLib_LibUSB ::~QsIOLib_LibUSB() {}
+QsIOLib_LibUSB::~QsIOLib_LibUSB() {}
 
-int QsIOLib_LibUSB ::clearHalt(libusb_device_handle *hdev, int ep) {
+int QsIOLib_LibUSB::clearHalt(libusb_device_handle *hdev, int ep) {
     if (hdev != nullptr)
         return libusb_clear_halt(hdev, ep);
     return -1;
 }
 
-int QsIOLib_LibUSB ::open(libusb_device *dev) {
+int QsIOLib_LibUSB::open(libusb_device *dev) {
     close();
 
     if (!dev) {
@@ -72,7 +72,7 @@ int QsIOLib_LibUSB ::open(libusb_device *dev) {
         return -1;
     }
 
-    QsIOLib_LibUSB ::hdev = nullptr;
+    QsIOLib_LibUSB::hdev = nullptr;
 
     int result = libusb_open(dev, &hdev);
 
@@ -122,7 +122,7 @@ int QsIOLib_LibUSB ::open(libusb_device *dev) {
     return 0;
 }
 
-void QsIOLib_LibUSB ::close() {
+void QsIOLib_LibUSB::close() {
     if (hdev != nullptr) {
         libusb_clear_halt(hdev, FX2_EP1_OUT);
         libusb_clear_halt(hdev, FX2_EP1_IN);
@@ -133,12 +133,12 @@ void QsIOLib_LibUSB ::close() {
         libusb_release_interface(hdev, 0);
         libusb_close(hdev);
     }
-    QsIOLib_LibUSB ::hdev = nullptr;
+    QsIOLib_LibUSB::hdev = nullptr;
 }
 
-void QsIOLib_LibUSB ::exit() { libusb_exit(context); }
+void QsIOLib_LibUSB::exit() { libusb_exit(context); }
 
-std::string QsIOLib_LibUSB ::get_string_descriptor(libusb_device_handle *device_handle, uint8_t index) {
+std::string QsIOLib_LibUSB::get_string_descriptor(libusb_device_handle *device_handle, uint8_t index) {
     unsigned char buffer[256]; // Buffer to hold the string
     int result = libusb_get_string_descriptor_ascii(device_handle, index, buffer, sizeof(buffer));
 
@@ -149,7 +149,7 @@ std::string QsIOLib_LibUSB ::get_string_descriptor(libusb_device_handle *device_
     return std::string(reinterpret_cast<char *>(buffer), result);
 }
 
-int QsIOLib_LibUSB ::findDevices(bool detailed) {
+int QsIOLib_LibUSB::findDevices(bool detailed) {
     libusb_device **list;
     libusb_device *found = NULL;
     libusb_device_descriptor desc;
@@ -178,8 +178,7 @@ int QsIOLib_LibUSB ::findDevices(bool detailed) {
                 if (desc.iManufacturer > 0) {
                     int ret = libusb_get_string_descriptor_ascii(handle, desc.iManufacturer, buffer, sizeof(buffer));
                     if (ret < 0) {
-                        _debug() << "    Unable to retrieve manufacturer string: " << ret << libusb_error_name(ret)
-                                 ;
+                        _debug() << "    Unable to retrieve manufacturer string: " << ret << libusb_error_name(ret);
                     }
                 } else {
                     const char *unknown = "No manufacturer data...";
@@ -192,8 +191,7 @@ int QsIOLib_LibUSB ::findDevices(bool detailed) {
                 if (desc.iProduct > 0) {
                     int ret = libusb_get_string_descriptor_ascii(handle, desc.iProduct, buffer, sizeof(buffer));
                     if (ret < 0) {
-                        _debug() << "    Unable to retrieve product string: " << ret << libusb_error_name(ret)
-                                 ;
+                        _debug() << "    Unable to retrieve product string: " << ret << libusb_error_name(ret);
                     }
                 } else {
                     const char *unknown = "No product string...";
@@ -206,8 +204,7 @@ int QsIOLib_LibUSB ::findDevices(bool detailed) {
                 if (desc.iSerialNumber > 0) {
                     int ret = libusb_get_string_descriptor_ascii(handle, desc.iSerialNumber, buffer, sizeof(buffer));
                     if (ret < 0) {
-                        _debug() << "    Unable to retrieve serial string: " << ret << libusb_error_name(ret)
-                                 ;
+                        _debug() << "    Unable to retrieve serial string: " << ret << libusb_error_name(ret);
                     }
                 } else {
                     const char *unknown = "No serial string...";
@@ -223,21 +220,21 @@ int QsIOLib_LibUSB ::findDevices(bool detailed) {
 
             if (detailed) {
                 _debug() << "Device " << i + 1 << ": "
-                          << "Vendor ID: " << std::hex << desc.idVendor << ", Product ID: " << desc.idProduct
-                          << ", Class: " << getDeviceClassString(desc.bDeviceClass)
-                          << ", Subclass: " << getDeviceSubClassString(desc.bDeviceClass, desc.bDeviceSubClass)
-                          << ", Protocol: "
-                          << getDeviceProtocolString(desc.bDeviceClass, desc.bDeviceSubClass, desc.bDeviceProtocol)
-                          << ", Max Packet Size: " << static_cast<int>(desc.bMaxPacketSize0)
-                          << ", Configurations: " << static_cast<int>(desc.bNumConfigurations)
-                          << ", USB Ver: " << static_cast<int>(desc.bcdUSB)
-                          << ", Release Number: " << static_cast<int>(desc.bcdDevice)
-                          << ", Manufacturer: " << manufacturer_str << ", Product: " << product_str
-                          << ", Serial: " << serial_str << std::dec;
+                         << "Vendor ID: " << std::hex << desc.idVendor << ", Product ID: " << desc.idProduct
+                         << ", Class: " << getDeviceClassString(desc.bDeviceClass)
+                         << ", Subclass: " << getDeviceSubClassString(desc.bDeviceClass, desc.bDeviceSubClass)
+                         << ", Protocol: "
+                         << getDeviceProtocolString(desc.bDeviceClass, desc.bDeviceSubClass, desc.bDeviceProtocol)
+                         << ", Max Packet Size: " << static_cast<int>(desc.bMaxPacketSize0)
+                         << ", Configurations: " << static_cast<int>(desc.bNumConfigurations)
+                         << ", USB Ver: " << static_cast<int>(desc.bcdUSB)
+                         << ", Release Number: " << static_cast<int>(desc.bcdDevice)
+                         << ", Manufacturer: " << manufacturer_str << ", Product: " << product_str
+                         << ", Serial: " << serial_str << std::dec;
             } else {
                 _debug() << "Device " << i + 1 << ": "
-                          << "Vendor ID: " << std::hex << desc.idVendor << ", Product ID: " << desc.idProduct
-                          << ", Class: " << getDeviceClassString(desc.bDeviceClass) << std::dec;
+                         << "Vendor ID: " << std::hex << desc.idVendor << ", Product ID: " << desc.idProduct
+                         << ", Class: " << getDeviceClassString(desc.bDeviceClass) << std::dec;
             }
 
         } else {
@@ -248,21 +245,23 @@ int QsIOLib_LibUSB ::findDevices(bool detailed) {
     return 0;
 }
 
-libusb_device *QsIOLib_LibUSB ::findQsDevice(uint16_t idVendor, uint16_t idProduct, unsigned int index) {
+std::unique_ptr<libusb_device, void(*)(libusb_device*)> QsIOLib_LibUSB::findQsDevice(uint16_t idVendor, uint16_t idProduct, unsigned int index) {
 
-    libusb_device **list;
-    libusb_device *found = NULL;
+    libusb_device **list = nullptr;
+    libusb_device *found_device = nullptr;
     libusb_device_descriptor desc;
 
     ssize_t cnt = libusb_get_device_list(context, &list);
 
     if (cnt < 0) {
         _debug() << "Error finding usb devices!";
-        return NULL;
+        // Return nullptr with custom deleter
+        return std::unique_ptr<libusb_device, void(*)(libusb_device*)>(nullptr, [](libusb_device* device) {
+            // No-op since device is nullptr
+        });
     }
 
-    unsigned int qs1r_device_count = 0;
-    std::vector<libusb_device *> device_list_qs1r; // Vector for dynamic storage
+    std::vector<libusb_device*> device_list_qs1r; // Store raw pointers temporarily
 
     for (ssize_t i = 0; i < cnt; i++) {
         libusb_device *device = list[i];
@@ -270,33 +269,40 @@ libusb_device *QsIOLib_LibUSB ::findQsDevice(uint16_t idVendor, uint16_t idProdu
             if ((desc.idVendor == QS1R_VID && desc.idProduct == QS1R_PID) ||
                 (desc.idVendor == QS1R_MISSING_EEPROM_VID && desc.idProduct == QS1R_MISSING_EEPROM_PID)) {
                 _debug() << "Found VID: " << std::hex << desc.idVendor << ", PID: " << std::hex << desc.idProduct
-                             << std::dec;
+                         << std::dec;
                 device_list_qs1r.push_back(device);
             }
         }
-        QsIOLib_LibUSB ::usb_dev_count++;
+        QsIOLib_LibUSB::usb_dev_count++;
     }
 
+    bool dev_was_found = false;
     if (device_list_qs1r.size() > 0 && index < device_list_qs1r.size()) {
-        dev = device_list_qs1r[index];
+        found_device = device_list_qs1r[index]; // Select the device
         dev_was_found = true;
     }
 
-    libusb_free_device_list(list, 1);
+    libusb_free_device_list(list, 1); // Free the device list
 
     if (dev_was_found) {
-        QsIOLib_LibUSB ::qs1r_device_count = device_list_qs1r.size();
-        return dev;
+        QsIOLib_LibUSB::qs1r_device_count = device_list_qs1r.size();
+        // Return the selected device wrapped in a std::unique_ptr with a custom deleter
+        return std::unique_ptr<libusb_device, void(*)(libusb_device*)>(found_device, [](libusb_device *device) {
+            libusb_unref_device(device); // Properly unref the device
+        });
     } else {
-        return nullptr;
+        // Return nullptr with the same custom deleter
+        return std::unique_ptr<libusb_device, void(*)(libusb_device*)>(nullptr, [](libusb_device* device) {
+            // No-op since device is nullptr
+        });
     }
 }
 
-int QsIOLib_LibUSB ::deviceCount() { return QsIOLib_LibUSB ::usb_dev_count; }
+int QsIOLib_LibUSB::deviceCount() { return QsIOLib_LibUSB::usb_dev_count; }
 
-int QsIOLib_LibUSB ::qs1rDeviceCount() { return QsIOLib_LibUSB ::qs1r_device_count; }
+int QsIOLib_LibUSB::qs1rDeviceCount() { return QsIOLib_LibUSB::qs1r_device_count; }
 
-int QsIOLib_LibUSB ::loadFirmware(std::string filename) {
+int QsIOLib_LibUSB::loadFirmware(std::string filename) {
     if (!dev_was_found) {
         _debug() << "Need to call findDevice first.";
         return -1;
@@ -371,7 +377,7 @@ int QsIOLib_LibUSB ::loadFirmware(std::string filename) {
     return 0;
 }
 
-int QsIOLib_LibUSB ::loadFirmware(const char *firmware) {
+int QsIOLib_LibUSB::loadFirmware(const char *firmware) {
     if (!dev_was_found) {
         _debug() << "Need to call findDevice first.";
         return -1;
@@ -417,8 +423,7 @@ int QsIOLib_LibUSB ::loadFirmware(const char *firmware) {
             _debug() << "faddr: 0x" << std::hex << faddr;
             _debug() << "type: 0x" << std::hex << type;
             _debug() << "checksum: 0x" << std::hex << checksum;
-            _debug() << "Calculated checksum: 0x" << std::hex << std::uppercase << static_cast<int>(checksum_calc)
-                        ;
+            _debug() << "Calculated checksum: 0x" << std::hex << std::uppercase << static_cast<int>(checksum_calc);
 
             if (checksum != checksum_calc) {
                 _debug() << "Checksum does not match!";
@@ -472,7 +477,7 @@ int QsIOLib_LibUSB ::loadFirmware(const char *firmware) {
     return 0; // Success
 }
 
-int QsIOLib_LibUSB ::cpuResetControl(bool reset) {
+int QsIOLib_LibUSB::cpuResetControl(bool reset) {
 
     u_int8_t data = reset ? 0x01 : 0x00;
 
@@ -496,7 +501,7 @@ int QsIOLib_LibUSB ::cpuResetControl(bool reset) {
     return 0;
 }
 
-int QsIOLib_LibUSB ::loadFpga(std::string filename) {
+int QsIOLib_LibUSB::loadFpga(std::string filename) {
     if (!dev_was_found) {
         _debug() << "Need to call findDevice first.";
         return -1;
@@ -549,7 +554,7 @@ int QsIOLib_LibUSB ::loadFpga(std::string filename) {
     return 0;
 }
 
-int QsIOLib_LibUSB ::loadFpgaFromBitstream(const unsigned char *bitstream, unsigned int bitstream_size) {
+int QsIOLib_LibUSB::loadFpgaFromBitstream(const unsigned char *bitstream, unsigned int bitstream_size) {
     if (!dev_was_found) {
         _debug() << "Need to call findDevice first.";
         return -1;
@@ -603,12 +608,17 @@ int QsIOLib_LibUSB ::loadFpgaFromBitstream(const unsigned char *bitstream, unsig
     return 0;
 }
 
-int QsIOLib_LibUSB ::sendControlMessage(uint8_t request_type, uint8_t request, uint16_t value, uint16_t index,
-                                        u_char *buf, uint16_t size, unsigned int timeout) {
-    return libusb_control_transfer(hdev, request_type, request, value, index, buf, size, timeout);
+int QsIOLib_LibUSB::sendControlMessage(uint8_t request_type, uint8_t request, uint16_t value, uint16_t index,
+                                        std::byte* data, uint16_t size, unsigned int timeout) {
+    return libusb_control_transfer(hdev, request_type, request, value, index, reinterpret_cast<unsigned char*>(data), size, timeout);
 }
 
-int QsIOLib_LibUSB ::readFwSn() {
+int QsIOLib_LibUSB::sendControlMessage(uint8_t request_type, uint8_t request, uint16_t value, uint16_t index, u_char *buf,
+                           uint16_t size, unsigned int timeout = USB_TIMEOUT_CONTROL) {
+    return libusb_control_transfer(hdev, request_type, request, value, index, reinterpret_cast<unsigned char*>(buf), size, timeout);                           
+}
+
+int QsIOLib_LibUSB::readFwSn() {
     if (!dev_was_found) {
         _debug() << "Need to call findDevice first.";
         return -1;
@@ -634,7 +644,7 @@ int QsIOLib_LibUSB ::readFwSn() {
     return (int)((u_char)buf[0] + ((u_char)buf[1] << 8) + ((u_char)buf[2] << 16) + ((u_char)buf[3] << 24));
 }
 
-int QsIOLib_LibUSB ::read(unsigned int ep, unsigned char *buffer, unsigned int length, unsigned int timeout) {
+int QsIOLib_LibUSB::read(unsigned int ep, unsigned char *buffer, unsigned int length, unsigned int timeout) {
     if (!dev_was_found) {
         _debug() << "Need to call findDevice first.";
         return -1;
@@ -662,7 +672,7 @@ int QsIOLib_LibUSB ::read(unsigned int ep, unsigned char *buffer, unsigned int l
     return transfered;
 }
 
-int QsIOLib_LibUSB ::write(unsigned int ep, unsigned char *buffer, unsigned int length, unsigned int timeout) {
+int QsIOLib_LibUSB::write(unsigned int ep, unsigned char *buffer, unsigned int length, unsigned int timeout) {
     if (!dev_was_found) {
         _debug() << "Need to call findDevice first.";
         return -1;
@@ -691,7 +701,7 @@ int QsIOLib_LibUSB ::write(unsigned int ep, unsigned char *buffer, unsigned int 
     return transfered;
 }
 
-int QsIOLib_LibUSB ::readEP1(unsigned char *buffer, unsigned int length, unsigned int timeout) {
+int QsIOLib_LibUSB::readEP1(unsigned char *buffer, unsigned int length, unsigned int timeout) {
     if (!buffer || !dev_was_found)
         return -1;
 
@@ -708,7 +718,7 @@ int QsIOLib_LibUSB ::readEP1(unsigned char *buffer, unsigned int length, unsigne
     return transfered;
 }
 
-int QsIOLib_LibUSB ::writeEP1(unsigned char *buffer, unsigned int length, unsigned int timeout) {
+int QsIOLib_LibUSB::writeEP1(unsigned char *buffer, unsigned int length, unsigned int timeout) {
     if (!buffer || !dev_was_found)
         return -1;
 
@@ -725,7 +735,7 @@ int QsIOLib_LibUSB ::writeEP1(unsigned char *buffer, unsigned int length, unsign
     return transfered;
 }
 
-int QsIOLib_LibUSB ::writeEP2(unsigned char *buffer, unsigned int length, unsigned int timeout) {
+int QsIOLib_LibUSB::writeEP2(unsigned char *buffer, unsigned int length, unsigned int timeout) {
     if (!buffer || !dev_was_found)
         return -1;
 
@@ -742,7 +752,7 @@ int QsIOLib_LibUSB ::writeEP2(unsigned char *buffer, unsigned int length, unsign
     return transfered;
 }
 
-int QsIOLib_LibUSB ::writeEP4(unsigned char *buffer, unsigned int length, unsigned int timeout) {
+int QsIOLib_LibUSB::writeEP4(unsigned char *buffer, unsigned int length, unsigned int timeout) {
     if (!buffer || !dev_was_found)
         return -1;
 
@@ -759,7 +769,7 @@ int QsIOLib_LibUSB ::writeEP4(unsigned char *buffer, unsigned int length, unsign
     return transfered;
 }
 
-int QsIOLib_LibUSB ::readEP6(unsigned char *buffer, unsigned int length, unsigned int timeout) {
+int QsIOLib_LibUSB::readEP6(unsigned char *buffer, unsigned int length, unsigned int timeout) {
     if (!buffer || !dev_was_found)
         return -1;
 
@@ -777,7 +787,7 @@ int QsIOLib_LibUSB ::readEP6(unsigned char *buffer, unsigned int length, unsigne
     return transfered;
 }
 
-int QsIOLib_LibUSB ::readEP8(unsigned char *buffer, unsigned int length, unsigned int timeout) {
+int QsIOLib_LibUSB::readEP8(unsigned char *buffer, unsigned int length, unsigned int timeout) {
     if (!buffer || !dev_was_found)
         return -1;
 
@@ -795,7 +805,7 @@ int QsIOLib_LibUSB ::readEP8(unsigned char *buffer, unsigned int length, unsigne
     return transfered;
 }
 
-int QsIOLib_LibUSB ::readEEPROM(unsigned address, unsigned offset, unsigned char *buffer, unsigned int length) {
+int QsIOLib_LibUSB::readEEPROM(unsigned address, unsigned offset, unsigned char *buffer, unsigned int length) {
     if (!dev_was_found) {
         _debug() << "Need to call findDevice first.";
         return -1;
@@ -826,7 +836,7 @@ int QsIOLib_LibUSB ::readEEPROM(unsigned address, unsigned offset, unsigned char
     return length;
 }
 
-int QsIOLib_LibUSB ::writeEEPROM(unsigned int address, unsigned int offset, unsigned char *buffer,
+int QsIOLib_LibUSB::writeEEPROM(unsigned int address, unsigned int offset, unsigned char *buffer,
                                  unsigned int length) {
     if (!dev_was_found) {
         _debug() << "Need to call findDevice first.";
@@ -857,7 +867,7 @@ int QsIOLib_LibUSB ::writeEEPROM(unsigned int address, unsigned int offset, unsi
     return length;
 }
 
-int QsIOLib_LibUSB ::readI2C(unsigned int address, unsigned char *buffer, unsigned int length) {
+int QsIOLib_LibUSB::readI2C(unsigned int address, unsigned char *buffer, unsigned int length) {
     if (!dev_was_found) {
         _debug() << "Need to call findDevice first.";
         return -1;
@@ -876,7 +886,7 @@ int QsIOLib_LibUSB ::readI2C(unsigned int address, unsigned char *buffer, unsign
     return count;
 }
 
-int QsIOLib_LibUSB ::writeI2C(unsigned int address, unsigned char *buffer, unsigned int length) {
+int QsIOLib_LibUSB::writeI2C(unsigned int address, unsigned char *buffer, unsigned int length) {
     if (!dev_was_found) {
         _debug() << "Need to call findDevice first.";
         return -1;
@@ -895,7 +905,7 @@ int QsIOLib_LibUSB ::writeI2C(unsigned int address, unsigned char *buffer, unsig
     return count;
 }
 
-int QsIOLib_LibUSB ::readMultibusInt(u_int16_t index) {
+int QsIOLib_LibUSB::readMultibusInt(u_int16_t index) {
     if (!dev_was_found) {
         _debug() << "Need to call findDevice first.";
         return -1;
@@ -921,7 +931,7 @@ int QsIOLib_LibUSB ::readMultibusInt(u_int16_t index) {
     return (int)((u_char)buf[0] + ((u_char)buf[1] << 8) + ((u_char)buf[2] << 16) + ((u_char)buf[3] << 24));
 }
 
-int QsIOLib_LibUSB ::readMultibusBuf(unsigned index, unsigned char *buffer, unsigned length) {
+int QsIOLib_LibUSB::readMultibusBuf(unsigned index, unsigned char *buffer, unsigned length) {
     if (!dev_was_found) {
         _debug() << "Need to call findDevice first.";
         return -1;
@@ -946,7 +956,7 @@ int QsIOLib_LibUSB ::readMultibusBuf(unsigned index, unsigned char *buffer, unsi
     return nsize;
 }
 
-int QsIOLib_LibUSB ::writeMultibusInt(unsigned int index, unsigned int value) {
+int QsIOLib_LibUSB::writeMultibusInt(unsigned int index, unsigned int value) {
     if (!dev_was_found) {
         _debug() << "Need to call findDevice first.";
         return -1;
@@ -972,7 +982,7 @@ int QsIOLib_LibUSB ::writeMultibusInt(unsigned int index, unsigned int value) {
     return count;
 }
 
-int QsIOLib_LibUSB ::writeMultibusBuf(unsigned index, unsigned char *buffer, unsigned length) {
+int QsIOLib_LibUSB::writeMultibusBuf(unsigned index, unsigned char *buffer, unsigned length) {
     if (!dev_was_found) {
         _debug() << "Need to call findDevice first.";
         return -1;
@@ -997,7 +1007,7 @@ int QsIOLib_LibUSB ::writeMultibusBuf(unsigned index, unsigned char *buffer, uns
     return nsize;
 }
 
-int QsIOLib_LibUSB ::sendInterrupt5Gate() {
+int QsIOLib_LibUSB::sendInterrupt5Gate() {
     if (hdev == 0)
         return -1;
     unsigned long count = 0;
@@ -1005,7 +1015,7 @@ int QsIOLib_LibUSB ::sendInterrupt5Gate() {
     return count;
 }
 
-int QsIOLib_LibUSB ::resetDevice() {
+int QsIOLib_LibUSB::resetDevice() {
     if (!hdev)
         return -1;
     int count = libusb_control_transfer(hdev, VRT_VENDOR_OUT, VRQ_EP_RESET, 0, 0, 0, 0, USB_TIMEOUT_CONTROL);
@@ -1017,14 +1027,14 @@ int QsIOLib_LibUSB ::resetDevice() {
     return count;
 }
 
-int QsIOLib_LibUSB ::deviceWasFound() {
-    if (QsIOLib_LibUSB ::dev_was_found)
+int QsIOLib_LibUSB::deviceWasFound() {
+    if (QsIOLib_LibUSB::dev_was_found)
         return 1;
     else
         return 0;
 }
 
-int QsIOLib_LibUSB ::write_cpu_ram(u_int16_t startaddr, u_char *buffer, u_int16_t length) {
+int QsIOLib_LibUSB::write_cpu_ram(u_int16_t startaddr, u_char *buffer, u_int16_t length) {
     u_int pkt_size = MAX_EP0_PACKET_SIZE;
     u_int16_t addr = 0;
     int nsize = 0;
@@ -1046,7 +1056,7 @@ int QsIOLib_LibUSB ::write_cpu_ram(u_int16_t startaddr, u_char *buffer, u_int16_
     return count;
 }
 
-std::string QsIOLib_LibUSB ::getDeviceClassString(uint8_t deviceClass) {
+std::string QsIOLib_LibUSB::getDeviceClassString(uint8_t deviceClass) {
     switch (deviceClass) {
     case 0x00:
         return "Defined by the USB Specification";
@@ -1086,7 +1096,7 @@ std::string QsIOLib_LibUSB ::getDeviceClassString(uint8_t deviceClass) {
     }
 }
 
-std::string QsIOLib_LibUSB ::getDeviceSubClassString(uint8_t deviceClass, uint8_t deviceSubClass) {
+std::string QsIOLib_LibUSB::getDeviceSubClassString(uint8_t deviceClass, uint8_t deviceSubClass) {
     if (deviceClass == 0x01) { // Audio
         switch (deviceSubClass) {
         case 0x01:
@@ -1136,7 +1146,7 @@ std::string QsIOLib_LibUSB ::getDeviceSubClassString(uint8_t deviceClass, uint8_
     return "Unknown Subclass";
 }
 
-std::string QsIOLib_LibUSB ::getDeviceProtocolString(uint8_t deviceClass, uint8_t deviceSubClass,
+std::string QsIOLib_LibUSB::getDeviceProtocolString(uint8_t deviceClass, uint8_t deviceSubClass,
                                                      uint8_t deviceProtocol) {
     if (deviceClass == 0x01) { // Audio
         switch (deviceSubClass) {

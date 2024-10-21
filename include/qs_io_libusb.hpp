@@ -176,8 +176,8 @@ class QsIOLib_LibUSB {
 
     int open(libusb_device *dev);
     void close();
-    void exit();
-    libusb_device *findQsDevice(uint16_t idVendor, uint16_t idProduct, unsigned int index = 0);
+    void exit();    
+    std::unique_ptr<libusb_device, void (*)(libusb_device *)>findQsDevice(uint16_t idVendor, uint16_t idProduct, unsigned int index);
     int findDevices(bool detailed = false);
     int deviceCount();
     int qs1rDeviceCount();

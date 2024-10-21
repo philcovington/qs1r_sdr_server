@@ -1,6 +1,7 @@
 #include "../include/qs_memory.hpp"
 #include "../include/qs_debugloggerclass.hpp"
 #include "../include/qs_signalops.hpp"
+#include <algorithm>
 #include <iostream>
 
 QsMemory::QsMemory() {
@@ -196,7 +197,7 @@ unsigned int QsMemory::getTxFilterHi() { return m_tx_filter_high; }
 //***************************************************//
 
 void QsMemory::setTxPdacLevel(unsigned int value) {
-    m_tx_pdac_level = QsSignalOps::qBound(static_cast<unsigned int>(0), value, static_cast<unsigned int>(100));
+    m_tx_pdac_level = std::clamp(value, static_cast<unsigned int>(0), static_cast<unsigned int>(100));
 }
 
 unsigned int QsMemory::getTxPdacLevel() { return m_tx_pdac_level; }

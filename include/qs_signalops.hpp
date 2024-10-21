@@ -15,7 +15,7 @@
  *
  * Usage:
  * - Use the `Add()` methods to apply values to signal arrays.
- * - `qBound()` and `Bound()` can be used to constrain values within specified limits.
+ * - `std::clamp()` can be used to constrain values within specified limits.
  * - `Round()` provides an efficient method for rounding float values.
  *
  * Notes:
@@ -61,16 +61,8 @@ class QsSignalOps {
         if (a < b)
             return a;
         return b;
-    }
-
-    template <typename T> inline static const T qBound(const T &min, const T &val, const T &max) {
-        return (val < min) ? min : (val > max) ? max : val;
-    }
-
-    template <typename T> inline static const T &Bound(const T &min, const T &val, const T &max) {
-        return Max(min, Min(max, val));
-    }
-
+    }    
+    
     template <typename T> inline static T Abs(const T &t) { return t >= 0 ? t : -t; }
 
     inline static int Round(float f) { return f >= 0.0 ? int(f + 0.5) : int(f - int(f - 1) + 0.5) + int(f - 1); }
@@ -176,8 +168,8 @@ class QsSignalOps {
 
     inline static void Clip(Cpx *src_dst, float clip_level, uint32_t length) {
         for (uint32_t i = 0; i < length; i++) {
-            src_dst[i].real(Bound(-clip_level, src_dst[i].real(), clip_level));
-            src_dst[i].imag(Bound(-clip_level, src_dst[i].real(), clip_level));
+            src_dst[i].real(std::clamp(src_dst[i].real(), -clip_level, clip_level));
+            src_dst[i].imag(std::clamp(src_dst[i].imag(), -clip_level, clip_level));            
         }
     }
 

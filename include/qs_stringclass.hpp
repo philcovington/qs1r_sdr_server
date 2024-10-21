@@ -98,6 +98,8 @@ class String {
         return String(out.str());
     }
 
+    bool operator==(const char *rhs) const { return data == std::string(rhs); }
+
     int toInt(bool *ok = nullptr) const {
         if (ok) {
             *ok = false; // Assume failure by default
@@ -299,6 +301,34 @@ class String {
         std::string thisLower = toLower(data);
         std::string otherLower = toLower(other.data);
         return std::strcmp(thisLower.c_str(), otherLower.c_str());
+    }
+
+    // Convert the string to uppercase
+    String toUpper() const {
+        std::string upperStr = data;
+        std::transform(upperStr.begin(), upperStr.end(), upperStr.begin(),
+                       [](unsigned char c) { return std::toupper(c); });
+        return String(upperStr);
+    }
+
+    // Convert the string to lowercase
+    String toLower() const {
+        std::string lowerStr = data;
+        std::transform(lowerStr.begin(), lowerStr.end(), lowerStr.begin(),
+                       [](unsigned char c) { return std::tolower(c); });
+        return String(lowerStr);
+    }
+
+    // Method to remove the first occurrence of a specified substring
+    String remove(const std::string &substr) const {
+        size_t pos = data.find(substr);
+        if (pos != std::string::npos) {
+            // Create a new string without the specified substring
+            std::string newData = data;
+            newData.erase(pos, substr.length());
+            return String(newData);
+        }
+        return *this; // Return the original string if the substring is not found
     }
 
   private:
