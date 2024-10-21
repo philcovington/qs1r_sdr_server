@@ -32,7 +32,6 @@
 #include "../include/qs_datareader.hpp"
 #include "../include/qs_float_vector_cb.hpp"
 #include "../include/qs_io_libusb.hpp"
-#include "../include/qs_mapclass.hpp"
 #include "../include/qs_memory.hpp"
 #include "../include/qs_wait_condition.hpp"
 #include <libusb-1.0/libusb.h>
@@ -41,12 +40,6 @@
 
 const double ONE_PI = 3.1415926535897932384626433832795;
 const double TWO_PI = 6.283185307179586476925286766559;
-
-WaitCondition WC_NEED_MORE_DATA;
-WaitCondition WC_FILE_FIFO_WRITE;
-
-Map<int, double> SMETERCORRECTMAP;
-double SMETERCORRECT = 0.0;
 
 class QsGlobal {
 public:

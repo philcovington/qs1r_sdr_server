@@ -20,8 +20,6 @@ void QsBlockFifo::enqueue(int *buffer) {
     fifo_.push(eq_fifo_block_);
 
     mutex.unlock();
-
-    WC_FILE_FIFO_WRITE.wakeAll();
 }
 
 bool QsBlockFifo::dequeue(int *buffer) {
@@ -49,8 +47,7 @@ void QsBlockFifo::enqueue(Cpx *buffer) {
     cpx_fifo_.push(cpx_eq_fifo_block_);
 
     mutex.unlock();
-
-    WC_FILE_FIFO_WRITE.wakeAll();
+    
 }
 
 bool QsBlockFifo::dequeue(Cpx *buffer) {

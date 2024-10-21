@@ -85,7 +85,6 @@ void QsDataReader::run() {
 
 void QsDataReader::stop() {
     m_thread_go = false;
-    WC_NEED_MORE_DATA.wakeAll(); // Notify the condition variable in case of waiting threads
     Thread::stop();              // Stop the base class thread
 }
 

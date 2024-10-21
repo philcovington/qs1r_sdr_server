@@ -10,12 +10,12 @@
 #include "../include/qs_stringlistclass.hpp"
 #include "../include/qs_threading.hpp"
 #include "../include/qs_uuid.hpp"
+#include "../include/qs_mapclass.hpp"
 #include <memory>
 #include <vector>
 
 #include <syslog.h>
 #include <unistd.h>
-
 
 class QsDspProcessor;
 class QsDataProcessor;
@@ -39,9 +39,9 @@ class QS1RServer {
 
     std::unique_ptr<QsDacWriter> p_dac_writer;
     std::unique_ptr<QsAudio> p_rta;
-    std::unique_ptr<QsState> p_qsState;    
+    std::unique_ptr<QsState> p_qsState;
     std::unique_ptr<QsDspProcessor> p_dsp_proc;
-    std::unique_ptr<QsIoThread> p_io_thread;    
+    std::unique_ptr<QsIoThread> p_io_thread;
 
     unsigned int controlRegister0Value();
     unsigned int controlRegister1Value();
@@ -170,6 +170,8 @@ class QS1RServer {
     void sendHttpRequest();
 
     void processHttpResponse(bool);
+
+    Map<int, double> SMETERCORRECTMAP;
 
   private:
     String status_string;
