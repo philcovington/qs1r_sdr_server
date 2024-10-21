@@ -176,8 +176,9 @@ class QsIOLib_LibUSB {
 
     int open(libusb_device *dev);
     void close();
-    void exit();    
-    std::unique_ptr<libusb_device, void (*)(libusb_device *)>findQsDevice(uint16_t idVendor, uint16_t idProduct, unsigned int index);
+    void exit();
+    std::unique_ptr<libusb_device, void (*)(libusb_device *)> findQsDevice(uint16_t idVendor, uint16_t idProduct,
+                                                                           unsigned int index);
     int findDevices(bool detailed = false);
     int deviceCount();
     int qs1rDeviceCount();
@@ -211,6 +212,9 @@ class QsIOLib_LibUSB {
 
     int sendControlMessage(uint8_t request_type, uint8_t request, uint16_t value, uint16_t index, u_char *buf,
                            uint16_t size, unsigned int timeout = USB_TIMEOUT_CONTROL);
+
+    int sendControlMessage(uint8_t request_type, uint8_t request, uint16_t value, uint16_t index,
+                                            std::byte *data, uint16_t size, unsigned int timeout = USB_TIMEOUT_CONTROL);
 
   private:
     std::string printVectorInHex(const std::vector<uint8_t> &ba);

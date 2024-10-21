@@ -42,6 +42,7 @@
 #include "../include/qs_stringlistclass.hpp"
 #include <algorithm>
 #include <cctype>
+#include <cstring>
 #include <iostream>
 #include <limits>
 #include <sstream>

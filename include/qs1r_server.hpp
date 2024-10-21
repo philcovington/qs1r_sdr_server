@@ -16,31 +16,20 @@
 #include <syslog.h>
 #include <unistd.h>
 
-class QUdpSocket;
-class QTcpServer;
-class QTcpSocket;
+
 class QsDspProcessor;
 class QsDataProcessor;
 class QsDataPostProcessor;
 class QsDataReader;
-class QsWavWriter;
 class QsDacWriter;
-class SpectrumServer;
-class WBDataServer;
 class QsIOLib_LibUSB;
 class QsSleep;
 class QsState;
 class QsAudio;
-class QHostAddress;
 class SdrMaxV;
-class QsPowerSpectrum;
 class QsFilter;
 class QsFFT;
-class QsTxThread;
 class QsIoThread;
-class QsAudioSetupDialog;
-class QHttp;
-class QextSerialPort;
 
 class QS1RServer {
 
@@ -50,12 +39,9 @@ class QS1RServer {
 
     std::unique_ptr<QsDacWriter> p_dac_writer;
     std::unique_ptr<QsAudio> p_rta;
-    std::unique_ptr<QsState> p_qsState;
-    std::unique_ptr<QsPowerSpectrum> p_ps;
-    std::unique_ptr<QsTxThread> p_tx_thread;
+    std::unique_ptr<QsState> p_qsState;    
     std::unique_ptr<QsDspProcessor> p_dsp_proc;
-    std::unique_ptr<QsIoThread> p_io_thread;
-    std::unique_ptr<QsWavWriter> p_wav_writer;
+    std::unique_ptr<QsIoThread> p_io_thread;    
 
     unsigned int controlRegister0Value();
     unsigned int controlRegister1Value();

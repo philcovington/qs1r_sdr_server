@@ -1,6 +1,6 @@
 #include "../include/qs_audio.hpp"
 #include "../include/qs_debugloggerclass.hpp"
-#include "../include/qs1r_server.h"
+#include "../include/qs1r_server.hpp"
 #include "../include/qs_signalops.hpp"
 #include "../include/qs_globals.hpp"
 
@@ -120,7 +120,8 @@ StringList QsAudio ::getOutputDevices() {
             info = p_rta->getDeviceInfo(i);
             if (info.outputChannels > 1) {
                 rtaOutputDeviceMap[i] = String::fromStdString(info.name);
-                list.append("id: " + String::number(i) + " -> " + String::fromStdString(info.name));
+                String str = "id: " + String::number(i) + " -> " + String::fromStdString(info.name); 
+                list.append(str.toStdString());
             }
         }
     }
@@ -142,7 +143,8 @@ StringList QsAudio ::getInputDevices() {
             info = p_rta->getDeviceInfo(i);
             if (info.inputChannels > 1) {
                 rtaInputDeviceMap[i] = String::fromStdString(info.name);
-                list.append("id: " + String::number(i) + " -> " + String::fromStdString(info.name));
+                String str = "id: " + String::number(i) + " -> " + String::fromStdString(info.name);
+                list.append(str.toStdString());
             }
         }
     }

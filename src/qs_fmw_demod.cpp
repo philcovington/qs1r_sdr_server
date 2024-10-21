@@ -1,4 +1,4 @@
-#include "../include/qs_fmwdemod.hpp"
+#include "../include/qs_fmw_demod.hpp"
 
 QsFMWDemodulator ::QsFMWDemodulator()
     : m_fmw_bw(0), m_fmw_limit(0), m_fmw_zeta(0), m_fmw_norm(0), m_fmw_cos(0), m_fmw_sin(0), m_fmw_ncoPhase(0),

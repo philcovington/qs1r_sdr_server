@@ -25,7 +25,7 @@ class Settings {
     template <typename T> T value(const std::string &key, const T &defaultValue = T()) const {
         auto it = m_settings.find(key);
         if (it != m_settings.end()) {
-            return it->second.get<T>(); // Return the value if found
+            return it.value().get<T>();
         }
         return defaultValue; // Return default value if key not found
     }

@@ -37,7 +37,7 @@ QS1RServer::QS1RServer()
 
     initQsMemory();
 
-    QsGlobal::g_server = std::unique_ptr<QS1RServer>(this);
+    // QsGlobal::g_server = std::unique_ptr<QS1RServer>(this);
 
     // delay
     initialize();
@@ -95,15 +95,15 @@ void QS1RServer::initialize() {
 void QS1RServer::initSupportedSampleRatesList() {
 
     m_supported_samplerates.clear();
-    m_supported_samplerates.append(String("25000"));
-    m_supported_samplerates.append(String("50000"));
-    m_supported_samplerates.append(String("125000"));
-    m_supported_samplerates.append(String("250000"));
-    m_supported_samplerates.append(String("500000"));
-    m_supported_samplerates.append(String("625000"));
-    m_supported_samplerates.append(String("1250000"));
-    m_supported_samplerates.append(String("1562500"));
-    m_supported_samplerates.append(String("2500000"));
+    m_supported_samplerates.append(String("25000").toStdString());
+    m_supported_samplerates.append(String("50000").toStdString());
+    m_supported_samplerates.append(String("125000").toStdString());
+    m_supported_samplerates.append(String("250000").toStdString());
+    m_supported_samplerates.append(String("500000").toStdString());
+    m_supported_samplerates.append(String("625000").toStdString());
+    m_supported_samplerates.append(String("1250000").toStdString());
+    m_supported_samplerates.append(String("1562500").toStdString());
+    m_supported_samplerates.append(String("2500000").toStdString());
 }
 
 void QS1RServer::clearAllBuffers() {
@@ -630,7 +630,7 @@ void QS1RServer::startIo(bool iswav) {
 
     // start the dsp processor thread
     if (!p_dsp_proc->isRunning())
-        p_dsp_proc->start(Thread::ThreadPriority::TimeCritical);
+        p_dsp_proc->start(Thread::ThreadPriority::TimeCritical);        
 
     if (!QsGlobal::g_data_reader->isRunning())
         QsGlobal::g_data_reader->start(Thread::ThreadPriority::TimeCritical);
@@ -837,7 +837,7 @@ int QS1RServer::setPgaMode(bool on) {
     if (!m_is_hardware_init) {
         setStatusText("Error: Please initialize QS1R Hardware first!");
         setErrorText("Please initialize QS1R Hardware first!");
-        return;
+        return -1;
     }
     unsigned int result = QsGlobal::g_io->readMultibusInt(MB_CONTRL1);
     if (on) {
@@ -867,7 +867,7 @@ int QS1RServer::setRandMode(bool on) {
     if (!m_is_hardware_init) {
         setStatusText("Error: Please initialize QS1R Hardware first!");
         setErrorText("Please initialize QS1R Hardware first!");
-        return;
+        return -1;
     }
     unsigned int result = QsGlobal::g_io->readMultibusInt(MB_CONTRL1);
     if (on) {
@@ -897,7 +897,7 @@ int QS1RServer::setDitherMode(bool on) {
     if (!m_is_hardware_init) {
         setStatusText("Error: Please initialize QS1R Hardware first!");
         setErrorText("Please initialize QS1R Hardware first!");
-        return;
+        return -1;
     }
     unsigned int result = QsGlobal::g_io->readMultibusInt(MB_CONTRL1);
     if (on) {
@@ -1568,7 +1568,7 @@ String QS1RServer::doCommandProcessor(String value, int rx_num) {
     {
         if (cmd.RW == CMD::cmd_write) {
             QsGlobal::g_memory->setDisplayFreqOffset(cmd.dvalue, 0);
-            QsGlobal::g_server->setRxFrequency(QsGlobal::g_memory->getRxLOFrequency(), 1, true);
+            setRxFrequency(QsGlobal::g_memory->getRxLOFrequency(), 1, true);
             response = "OK";
         } else if (cmd.RW == CMD::cmd_read) {
             double value = QsGlobal::g_memory->getDisplayFreqOffset(rx_num - 1);

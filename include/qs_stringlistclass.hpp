@@ -43,7 +43,7 @@
 
 #pragma once
 
-#include "../include/qs_stringclass.hpp" // Include your String class
+// #include "../include/qs_stringclass.hpp" // Include your String class
 #include <algorithm>
 #include <iostream>
 #include <sstream>
@@ -60,14 +60,14 @@ class StringList {
     // Add a string to the list
     void append(const std::string &str) { list.push_back(str); }
 
-    // Add a String object to the list
-    void append(const String &str) {
-        list.push_back(str.toStdString()); // Convert String to std::string
-    }
+    // // Add a String object to the list
+    // void append(const String &str) {
+    //     list.push_back(str.toStdString()); // Convert String to std::string
+    // }
 
     // Add another list of String objects to this list
     void append(const StringList &other) {
-        for (const String &s : other.getStrings()) { // Use the new method to get the strings
+        for (const std::string &s : other.getStrings()) { // Use the new method to get the strings
             append(s);                               // Call the String append method
         }
     }

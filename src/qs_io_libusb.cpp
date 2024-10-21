@@ -614,7 +614,7 @@ int QsIOLib_LibUSB::sendControlMessage(uint8_t request_type, uint8_t request, ui
 }
 
 int QsIOLib_LibUSB::sendControlMessage(uint8_t request_type, uint8_t request, uint16_t value, uint16_t index, u_char *buf,
-                           uint16_t size, unsigned int timeout = USB_TIMEOUT_CONTROL) {
+                           uint16_t size, unsigned int timeout) {
     return libusb_control_transfer(hdev, request_type, request, value, index, reinterpret_cast<unsigned char*>(buf), size, timeout);                           
 }
 
