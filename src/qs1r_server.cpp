@@ -41,7 +41,8 @@ QS1RServer::QS1RServer()
 
     initQsMemory();
 
-    // delay
+    sleep.msleep(500);
+
     initialize();
 }
 
@@ -82,13 +83,17 @@ void QS1RServer::shutdown() {
 // ************************************************************
 // ------------------------------------------------------------
 
-void QS1RServer::initialize() { 
+void QS1RServer::initialize() {
     error_flag = false;
     initSupportedSampleRatesList();
     showStartupMessage();
     m_is_rt_audio_bypass = QsGlobal::g_memory->getRtAudioBypass();
     initSMeterCorrectionMap();
-    initQS1RHardware();
+    int ret = initQS1RHardware();
+    if (ret != 0) {
+        std::cerr << "QS1R Hardware failed to initialize!" << std::endl;
+        shutdown();
+    }
 }
 
 void QS1RServer::initSupportedSampleRatesList() {
@@ -202,7 +207,7 @@ int QS1RServer::initQS1RHardware() {
     if (ret == 0) {
         int fpga_id = 0;
         int fw_id = 0;
-        std::cout << "Open success!" << std::endl;        
+        std::cout << "Open success!" << std::endl;
         std::cout << "FW S/N: " << (fw_id = QsGlobal::g_io->readFwSn()) << std::endl;
 
         if (fw_id != ID_FWWR) {
@@ -226,7 +231,7 @@ int QS1RServer::initQS1RHardware() {
             }
         } else {
             std::cout << "Firmware is already loaded!" << std::endl;
-        }        
+        }
 
         std::cout << "FW S/N: " << std::dec << (fw_id = QsGlobal::g_io->readFwSn()) << std::endl;
 
@@ -237,12 +242,12 @@ int QS1RServer::initQS1RHardware() {
             std::cout << "Attempting to load FPGA bitstream..." << std::endl;
             int result = QsGlobal::g_io->loadFpgaFromBitstream(fpga_bitstream, fpga_bitstream_size);
             if (result == 0) {
-                std::cout << "FPGA load success!" << std::endl;                
+                std::cout << "FPGA load success!" << std::endl;
                 sleep.msleep(2000);
             }
         } else {
             std::cout << "FPGA already loaded!" << std::endl;
-        }        
+        }
 
         std::cout << "FPGA ID returned: " << std::hex << (fpga_id = QsGlobal::g_io->readMultibusInt(MB_VERSION_REG))
                   << std::dec << std::endl;
@@ -366,22 +371,16 @@ void QS1RServer::loadFPGAFile(String filename) {
 // Manages the status window and keeps focus to the command
 // entry box.
 // ------------------------------------------------------------
-void QS1RServer::setStatusText(String text) {
-    _debug() << text;
-}
+void QS1RServer::setStatusText(String text) { _debug() << text; }
 
 // ------------------------------------------------------------
 // Displays the server startup message
 // ------------------------------------------------------------
-void QS1RServer::showStartupMessage() {
-    std::cout << "Server is starting..." << std::endl;    
-}
+void QS1RServer::showStartupMessage() { std::cout << "Server is starting..." << std::endl; }
 // ------------------------------------------------------------
 // Displays the server startup message with ready
 // ------------------------------------------------------------
-void QS1RServer::showStartupMessageWithReady() {
-    std::cout << "Server is starting..." << std::endl;    
-}
+void QS1RServer::showStartupMessageWithReady() { std::cout << "Server is starting..." << std::endl; }
 
 // ------------------------------------------------------------
 // Quits the server application
@@ -2433,7 +2432,7 @@ void QS1RServer::parseLocalCommand() {
         _debug() << "enable int5 result: " << String::number(result);
     } else if (resp == "clear") {
         ;
-        showStartupMessage();    
+        showStartupMessage();
     } else if (resp == "start") {
         startIo();
         String str = String("Started at sample rate: ") + String::number(m_proc_samplerate);
