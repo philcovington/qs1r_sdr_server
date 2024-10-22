@@ -10,6 +10,10 @@
 #include "../include/qs_textstream.hpp"
 #include <libusb-1.0/libusb.h>
 
+#include <mutex>
+
+std::mutex io_mutex;
+
 std::string QsIOLib_LibUSB::printVectorInHex(const std::vector<uint8_t> &ba) {
     std::stringstream ss;
     for (const auto &byte : ba) {
@@ -66,6 +70,7 @@ int QsIOLib_LibUSB::clearHalt(libusb_device_handle *hdev, int ep) {
 }
 
 int QsIOLib_LibUSB::open() {
+    std::lock_guard<std::mutex> lock(io_mutex);  // Lock access to open
     close();
 
     if (!dev) {
@@ -78,42 +83,43 @@ int QsIOLib_LibUSB::open() {
     int result = libusb_open(dev, &hdev);
 
     if (hdev) {
-        if (result = libusb_set_configuration(hdev, 1);
-            result != LIBUSB_SUCCESS && result != LIBUSB_TRANSFER_COMPLETED) {
+        result = libusb_set_configuration(hdev, 1);
+        if (result != LIBUSB_SUCCESS && result != LIBUSB_TRANSFER_COMPLETED) {
             _debug() << "Could not set configuration 1: " << libusb_error_name(result);
             return -1;
         }
-        if (result = libusb_claim_interface(hdev, 0); result != LIBUSB_SUCCESS && result != LIBUSB_TRANSFER_COMPLETED) {
+        result = libusb_claim_interface(hdev, 0);
+        if (result != LIBUSB_SUCCESS && result != LIBUSB_TRANSFER_COMPLETED) {
             _debug() << "Could not claim interface 0: " << libusb_error_name(result);
             return -1;
         }
-        if (result = libusb_set_interface_alt_setting(hdev, 0, 0);
-            result != LIBUSB_SUCCESS && result != LIBUSB_TRANSFER_COMPLETED) {
+        result = libusb_set_interface_alt_setting(hdev, 0, 0);
+        if (result != LIBUSB_SUCCESS && result != LIBUSB_TRANSFER_COMPLETED) {
             _debug() << "Could not set alt interface 0: " << libusb_error_name(result);
             return -1;
         }
-        if (result = libusb_clear_halt(hdev, FX2_EP1_IN);
-            result != LIBUSB_SUCCESS && result != LIBUSB_TRANSFER_COMPLETED) {
+        result = libusb_clear_halt(hdev, FX2_EP1_IN);
+        if (result != LIBUSB_SUCCESS && result != LIBUSB_TRANSFER_COMPLETED) {
             _debug() << "Could not clear halt on EP1_IN: " << libusb_error_name(result);
         }
-        if (result = libusb_clear_halt(hdev, FX2_EP1_OUT);
-            result != LIBUSB_SUCCESS && result != LIBUSB_TRANSFER_COMPLETED) {
+        result = libusb_clear_halt(hdev, FX2_EP1_OUT);
+        if (result != LIBUSB_SUCCESS && result != LIBUSB_TRANSFER_COMPLETED) {
             _debug() << "Could not clear halt on EP1_OUT: " << libusb_error_name(result);
         }
-        if (result = libusb_clear_halt(hdev, FX2_EP2);
-            result != LIBUSB_SUCCESS && result != LIBUSB_TRANSFER_COMPLETED) {
+        result = libusb_clear_halt(hdev, FX2_EP2);
+        if (result != LIBUSB_SUCCESS && result != LIBUSB_TRANSFER_COMPLETED) {
             _debug() << "Could not clear halt on EP2: " << libusb_error_name(result);
         }
-        if (result = libusb_clear_halt(hdev, FX2_EP4);
-            result != LIBUSB_SUCCESS && result != LIBUSB_TRANSFER_COMPLETED) {
+        result = libusb_clear_halt(hdev, FX2_EP4);
+        if (result != LIBUSB_SUCCESS && result != LIBUSB_TRANSFER_COMPLETED) {
             _debug() << "Could not clear halt on EP4: " << libusb_error_name(result);
         }
-        if (result = libusb_clear_halt(hdev, FX2_EP6);
-            result != LIBUSB_SUCCESS && result != LIBUSB_TRANSFER_COMPLETED) {
+        result = libusb_clear_halt(hdev, FX2_EP6);
+        if (result != LIBUSB_SUCCESS && result != LIBUSB_TRANSFER_COMPLETED) {
             _debug() << "Could not clear halt on EP6: " << libusb_error_name(result);
         }
-        if (result = libusb_clear_halt(hdev, FX2_EP8);
-            result != LIBUSB_SUCCESS && result != LIBUSB_TRANSFER_COMPLETED) {
+        result = libusb_clear_halt(hdev, FX2_EP8);
+        if (result != LIBUSB_SUCCESS && result != LIBUSB_TRANSFER_COMPLETED) {
             _debug() << "Could not clear halt on EP8: " << libusb_error_name(result);
         }
     } else {
@@ -124,6 +130,7 @@ int QsIOLib_LibUSB::open() {
 }
 
 void QsIOLib_LibUSB::close() {
+    std::lock_guard<std::mutex> lock(io_mutex);  // Lock access to close
     if (hdev != nullptr) {
         libusb_clear_halt(hdev, FX2_EP1_OUT);
         libusb_clear_halt(hdev, FX2_EP1_IN);
@@ -131,9 +138,13 @@ void QsIOLib_LibUSB::close() {
         libusb_clear_halt(hdev, FX2_EP4);
         libusb_clear_halt(hdev, FX2_EP6);
         libusb_clear_halt(hdev, FX2_EP8);
-        libusb_release_interface(hdev, 0);
+        int result = libusb_release_interface(hdev, 0);
+        if (result != LIBUSB_SUCCESS) {
+            _debug() << "Failed to release interface: " << libusb_error_name(result);
+        }
         libusb_close(hdev);
-    }    
+        hdev = nullptr; // Ensure handle is cleared
+    }
 }
 
 void QsIOLib_LibUSB::exit() { libusb_exit(context); }
@@ -258,7 +269,7 @@ int QsIOLib_LibUSB::findQsDevice(uint16_t idVendor, uint16_t idProduct, unsigned
         return -1;
     }
 
-    std::vector<libusb_device*> device_list_qs1r; // Store raw pointers temporarily
+    std::vector<libusb_device *> device_list_qs1r; // Store raw pointers temporarily
 
     for (ssize_t i = 0; i < cnt; i++) {
         libusb_device *device = list[i];
@@ -285,7 +296,7 @@ int QsIOLib_LibUSB::findQsDevice(uint16_t idVendor, uint16_t idProduct, unsigned
         QsIOLib_LibUSB::qs1r_device_count = device_list_qs1r.size();
         // Return the selected device wrapped in a std::unique_ptr with a custom deleter
         return 0;
-    } else {        
+    } else {
         return -1;
     }
 }
@@ -601,13 +612,15 @@ int QsIOLib_LibUSB::loadFpgaFromBitstream(const unsigned char *bitstream, unsign
 }
 
 int QsIOLib_LibUSB::sendControlMessage(uint8_t request_type, uint8_t request, uint16_t value, uint16_t index,
-                                        std::byte* data, uint16_t size, unsigned int timeout) {
-    return libusb_control_transfer(hdev, request_type, request, value, index, reinterpret_cast<unsigned char*>(data), size, timeout);
+                                       std::byte *data, uint16_t size, unsigned int timeout) {
+    return libusb_control_transfer(hdev, request_type, request, value, index, reinterpret_cast<unsigned char *>(data),
+                                   size, timeout);
 }
 
-int QsIOLib_LibUSB::sendControlMessage(uint8_t request_type, uint8_t request, uint16_t value, uint16_t index, u_char *buf,
-                           uint16_t size, unsigned int timeout) {
-    return libusb_control_transfer(hdev, request_type, request, value, index, reinterpret_cast<unsigned char*>(buf), size, timeout);                           
+int QsIOLib_LibUSB::sendControlMessage(uint8_t request_type, uint8_t request, uint16_t value, uint16_t index,
+                                       u_char *buf, uint16_t size, unsigned int timeout) {
+    return libusb_control_transfer(hdev, request_type, request, value, index, reinterpret_cast<unsigned char *>(buf),
+                                   size, timeout);
 }
 
 int QsIOLib_LibUSB::readFwSn() {
@@ -828,8 +841,7 @@ int QsIOLib_LibUSB::readEEPROM(unsigned address, unsigned offset, unsigned char 
     return length;
 }
 
-int QsIOLib_LibUSB::writeEEPROM(unsigned int address, unsigned int offset, unsigned char *buffer,
-                                 unsigned int length) {
+int QsIOLib_LibUSB::writeEEPROM(unsigned int address, unsigned int offset, unsigned char *buffer, unsigned int length) {
     if (!dev_was_found) {
         _debug() << "Need to call findDevice first.";
         return -1;
@@ -1139,7 +1151,7 @@ std::string QsIOLib_LibUSB::getDeviceSubClassString(uint8_t deviceClass, uint8_t
 }
 
 std::string QsIOLib_LibUSB::getDeviceProtocolString(uint8_t deviceClass, uint8_t deviceSubClass,
-                                                     uint8_t deviceProtocol) {
+                                                    uint8_t deviceProtocol) {
     if (deviceClass == 0x01) { // Audio
         switch (deviceSubClass) {
         case 0x01: // Audio Control

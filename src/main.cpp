@@ -18,6 +18,11 @@ int main() {
 
     int result = qs1r.initQS1RHardware();
 
+    if (qs1r.isHardwareInit() == true) 
+    {
+        std::cout << "Hardware was initialized" << std::endl;
+    }
+
     _debug() << "PGA MODE IS: " << qs1r.pgaMode();
     _debug() << "RAND MODE IS: " << qs1r.randMode();
     _debug() << "DITHER MODE IS: " << qs1r.ditherMode();

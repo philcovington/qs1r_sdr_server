@@ -88,12 +88,7 @@ void QS1RServer::initialize() {
     initSupportedSampleRatesList();
     showStartupMessage();
     m_is_rt_audio_bypass = QsGlobal::g_memory->getRtAudioBypass();
-    initSMeterCorrectionMap();
-    int ret = initQS1RHardware();
-    if (ret != 0) {
-        std::cerr << "QS1R Hardware failed to initialize!" << std::endl;
-        shutdown();
-    }
+    initSMeterCorrectionMap();    
 }
 
 void QS1RServer::initSupportedSampleRatesList() {
