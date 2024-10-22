@@ -4,7 +4,7 @@
  *
  * This class is responsible for initializing, managing, and processing digital signals
  * through various audio processing components, including noise blankers, filters, and demodulators.
- * It utilizes Speex resampling for audio signal conversion and handles buffer management
+ * It utilizes libresamplerate resampling for audio signal conversion and handles buffer management
  * for efficient signal processing.
  *
  * Features:
@@ -52,7 +52,7 @@
 #include "../include/qs_threading.hpp"
 #include "../include/qs_tone_gen.hpp"
 #include "../include/qs_volume.hpp"
-#include "../include/speex/headers/speex_resampler.h"
+#include "../include/qs_resampler.hpp"
 #include <memory>
 
 class QsDspProcessor : public Thread {
@@ -123,7 +123,7 @@ class QsDspProcessor : public Thread {
     QsSleep sleep;
 
     // RESAMPLER
-    SpeexResamplerState *resampler;
+    std::unique_ptr<Resampler> resampler;
     double m_rs_output_rate;
     double m_rs_input_rate;
     int m_rs_quality;

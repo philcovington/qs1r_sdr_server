@@ -1,13 +1,12 @@
 #include "../include/qs_dsp_proc.hpp"
-#include "../include/qs_debugloggerclass.hpp"
-#include "../include/qs_sleep.hpp"
 #include "../include/qs_agc.hpp"
 #include "../include/qs_am_demod.hpp"
 #include "../include/qs_auto_notch_filter.hpp"
 #include "../include/qs_avg_nb.hpp"
 #include "../include/qs_blk_nb.hpp"
 #include "../include/qs_cpx_vector_cb.hpp"
-#include "../include/qs_signalops.hpp"
+#include "../include/qs_debugloggerclass.hpp"
+#include "../include/qs_downcnv.hpp"
 #include "../include/qs_fmn_demod.hpp"
 #include "../include/qs_fmw_demod.hpp"
 #include "../include/qs_iir_filter.hpp"
@@ -16,30 +15,31 @@
 #include "../include/qs_nr_filter.hpp"
 #include "../include/qs_post_rx_filter.hpp"
 #include "../include/qs_sam_demod.hpp"
+#include "../include/qs_signalops.hpp"
+#include "../include/qs_sleep.hpp"
 #include "../include/qs_smeter.hpp"
 #include "../include/qs_squelch.hpp"
 #include "../include/qs_state.hpp"
 #include "../include/qs_tone_gen.hpp"
 #include "../include/qs_volume.hpp"
-#include "../include/qs_downcnv.hpp"
 #include <cmath>
 
 QsDspProcessor::QsDspProcessor()
     : m_rx_num(0), m_bsize(0), m_bsizeX2(0), m_sd_buffer_size(0), m_ps_size(0), m_req_outframes(0), m_outframesX2(0),
       m_thread_go(false), m_is_running(false), m_dac_bypass(false), m_rt_audio_bypass(false), m_processing_rate(0),
-      m_post_processing_rate(0), m_rs_rate(0), m_rs_quality(4), p_tg0(new QsToneGenerator()),
-      p_anb(new QsAveragingNoiseBlanker()), p_bnb(new QsBlockNoiseBlanker()), p_downconv(new QsDownConvertor()),
-      p_tg1(new QsToneGenerator()), p_agc(new QsAgc()), p_main_filter(new QsMainRxFilter()),
-      p_post_filter(new QsPostRxFilter()), p_am(new QsAMDemodulator()), p_sam(new QsSAMDemodulator()),
-      p_fmn(new QsFMNDemodulator()), p_fmw(new QsFMWDemodulator()), p_nr(new QsNoiseReductionFilter()),
-      p_anf(new QsAutoNotchFilter()), p_sm(new QsSMeter()), p_sq(new QsSquelch()), p_vol(new QsVolume()),
-      p_iir0(new QS_IIR()), p_iir1(new QS_IIR()), p_iir2(new QS_IIR()), p_iir3(new QS_IIR()), p_iir4(new QS_IIR()),
-      p_iir5(new QS_IIR()), p_iir6(new QS_IIR()), p_iir7(new QS_IIR()), resampler(NULL), m_rs_output_rate(0),
-      m_rs_input_rate(0) { QsSleep sleep; }
+      m_post_processing_rate(0), m_rs_rate(0), m_rs_quality(4), p_tg0(std::make_unique<QsToneGenerator>()),
+      p_anb(std::make_unique<QsAveragingNoiseBlanker>()), p_bnb(std::make_unique<QsBlockNoiseBlanker>()), p_downconv(std::make_unique<QsDownConvertor>()),
+      p_tg1(std::make_unique<QsToneGenerator>()), p_agc(std::make_unique<QsAgc>()), p_main_filter(std::make_unique<QsMainRxFilter>()),
+      p_post_filter(std::make_unique<QsPostRxFilter>()), p_am(std::make_unique<QsAMDemodulator>()), p_sam(std::make_unique<QsSAMDemodulator>()),
+      p_fmn(std::make_unique<QsFMNDemodulator>()), p_fmw(std::make_unique<QsFMWDemodulator>()), p_nr(std::make_unique<QsNoiseReductionFilter>()),
+      p_anf(std::make_unique<QsAutoNotchFilter>()), p_sm(std::make_unique<QsSMeter>()), p_sq(std::make_unique<QsSquelch>()), p_vol(std::make_unique<QsVolume>()),
+      p_iir0(std::make_unique<QS_IIR>()), p_iir1(std::make_unique<QS_IIR>()), p_iir2(std::make_unique<QS_IIR>()), p_iir3(std::make_unique<QS_IIR>()), p_iir4(std::make_unique<QS_IIR>()),
+      p_iir5(std::make_unique<QS_IIR>()), p_iir6(std::make_unique<QS_IIR>()), p_iir7(std::make_unique<QS_IIR>()), resampler(nullptr), m_rs_output_rate(0),
+      m_rs_input_rate(0) {
+    QsSleep sleep;
+}
 
-QsDspProcessor::~QsDspProcessor() {
-    if (resampler != NULL)
-        speex_resampler_destroy(resampler);
+QsDspProcessor::~QsDspProcessor() {    
 }
 
 void QsDspProcessor::init(int rx_num) {
@@ -79,7 +79,7 @@ void QsDspProcessor::init(int rx_num) {
 
     QsGlobal::g_float_rt_ring->init(m_outframesX2 * RT_RING_SZ_MULT);
     QsGlobal::g_float_dac_ring->init(m_outframesX2 * DAC_RING_SZ_MULT);
-    QsGlobal::g_cpx_ps2_ring->init(m_bsize * 2);
+    QsGlobal::g_cpx_ps2_ring->init(m_bsize * 2);    
 
     // ANB
     p_anb->init();
@@ -140,8 +140,8 @@ void QsDspProcessor::init(int rx_num) {
 void QsDspProcessor::reinit() { init(m_rx_num); }
 
 void QsDspProcessor::run() {
-    unsigned int sz = 0;
-    unsigned int outframes = 0;
+    size_t sz = 0;
+    size_t outframes = 0;
 
     m_sd_buffer_size = m_bsize * SD_RING_SZ_MULT;
     m_ps_size = m_bsize;
@@ -187,7 +187,7 @@ void QsDspProcessor::run() {
             // ======== <BLOCK NOISE BLANKER> ===========
             p_bnb->process(in_cpx);
             // ======== </BLOCK NOISE BLANKER> ===========
-            
+
             // apply LO
             // ======== <TONE GENERATOR> ===========
             p_tg0->process(in_cpx);
@@ -287,7 +287,7 @@ void QsDspProcessor::run() {
             // ======== <RESAMPLER> ==========
             sz = m_bsize;
             outframes = m_req_outframes;
-            speex_resampler_process_interleaved_float(resampler, &rs_in_interleaved[0], &sz, &rs_out_interleaved[0],
+            resampler->process(&rs_in_interleaved[0], sz, &rs_out_interleaved[0],
                                                       &outframes);
             m_outframesX2 = outframes * 2;
 
@@ -331,13 +331,5 @@ void QsDspProcessor::clearBuffers() {
 void QsDspProcessor::initResampler(int size) {
     rs_in_interleaved.resize(size * 8);
     rs_out_interleaved.resize(size * 8);
-
-    if (resampler != 0)
-        speex_resampler_destroy(resampler);
-    resampler = 0;
-    int err = 0;
-    resampler = speex_resampler_init(2, std::round(m_rs_input_rate), std::round(m_rs_output_rate), 3, &err);
-    speex_resampler_skip_zeros(resampler);
-    speex_resampler_set_input_stride(resampler, 2);
-    speex_resampler_set_output_stride(resampler, 2);
+    resampler = std::make_unique<Resampler>(std::round(m_rs_input_rate), std::round(m_rs_output_rate));       
 }
