@@ -1,9 +1,8 @@
 #include "qs_globals.hpp"
 
 // Custom deleter for libusb_device
-void libusb_device_deleter(libusb_device* dev) {
-    // Insert your cleanup logic here if necessary.
-    // For example: libusb_unref_device(dev);
+void libusb_device_deleter(libusb_device* dev) {    
+    libusb_unref_device(dev);
 }
 
 // Define the static members

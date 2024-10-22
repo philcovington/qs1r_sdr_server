@@ -174,11 +174,10 @@ class QsIOLib_LibUSB {
     std::string getDeviceProtocolString(uint8_t deviceClass, uint8_t deviceSubClass, uint8_t deviceProtocol);
     std::string get_string_descriptor(libusb_device_handle *device_handle, uint8_t index);
 
-    int open(libusb_device *dev);
+    int open();
     void close();
     void exit();
-    std::unique_ptr<libusb_device, void (*)(libusb_device *)> findQsDevice(uint16_t idVendor, uint16_t idProduct,
-                                                                           unsigned int index);
+    int findQsDevice(uint16_t idVendor, uint16_t idProduct, unsigned int index);
     int findDevices(bool detailed = false);
     int deviceCount();
     int qs1rDeviceCount();

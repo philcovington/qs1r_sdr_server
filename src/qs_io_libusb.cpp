@@ -46,6 +46,7 @@ uint8_t QsIOLib_LibUSB::calculateChecksum(const std::string &hexLine) {
 
 QsIOLib_LibUSB::QsIOLib_LibUSB() {
     hdev = nullptr;
+    dev = nullptr;
     dev_was_found = false;
     usb_dev_count = 0;
     qs1r_device_count = 0;
@@ -56,7 +57,7 @@ QsIOLib_LibUSB::QsIOLib_LibUSB() {
     }
 }
 
-QsIOLib_LibUSB::~QsIOLib_LibUSB() {}
+QsIOLib_LibUSB::~QsIOLib_LibUSB() { exit(); }
 
 int QsIOLib_LibUSB::clearHalt(libusb_device_handle *hdev, int ep) {
     if (hdev != nullptr)
@@ -64,7 +65,7 @@ int QsIOLib_LibUSB::clearHalt(libusb_device_handle *hdev, int ep) {
     return -1;
 }
 
-int QsIOLib_LibUSB::open(libusb_device *dev) {
+int QsIOLib_LibUSB::open() {
     close();
 
     if (!dev) {
@@ -72,7 +73,7 @@ int QsIOLib_LibUSB::open(libusb_device *dev) {
         return -1;
     }
 
-    QsIOLib_LibUSB::hdev = nullptr;
+    hdev = nullptr;
 
     int result = libusb_open(dev, &hdev);
 
@@ -132,8 +133,7 @@ void QsIOLib_LibUSB::close() {
         libusb_clear_halt(hdev, FX2_EP8);
         libusb_release_interface(hdev, 0);
         libusb_close(hdev);
-    }
-    QsIOLib_LibUSB::hdev = nullptr;
+    }    
 }
 
 void QsIOLib_LibUSB::exit() { libusb_exit(context); }
@@ -245,7 +245,7 @@ int QsIOLib_LibUSB::findDevices(bool detailed) {
     return 0;
 }
 
-std::unique_ptr<libusb_device, void(*)(libusb_device*)> QsIOLib_LibUSB::findQsDevice(uint16_t idVendor, uint16_t idProduct, unsigned int index) {
+int QsIOLib_LibUSB::findQsDevice(uint16_t idVendor, uint16_t idProduct, unsigned int index) {
     dev_was_found = false;
     libusb_device **list = nullptr;
     libusb_device *found_device = nullptr;
@@ -255,10 +255,7 @@ std::unique_ptr<libusb_device, void(*)(libusb_device*)> QsIOLib_LibUSB::findQsDe
 
     if (cnt < 0) {
         _debug() << "Error finding usb devices!";
-        // Return nullptr with custom deleter
-        return std::unique_ptr<libusb_device, void(*)(libusb_device*)>(nullptr, [](libusb_device* device) {
-            // No-op since device is nullptr
-        });
+        return -1;
     }
 
     std::vector<libusb_device*> device_list_qs1r; // Store raw pointers temporarily
@@ -275,9 +272,10 @@ std::unique_ptr<libusb_device, void(*)(libusb_device*)> QsIOLib_LibUSB::findQsDe
         }
         QsIOLib_LibUSB::usb_dev_count++;
     }
-    
+
     if (device_list_qs1r.size() > 0 && index < device_list_qs1r.size()) {
         found_device = device_list_qs1r[index]; // Select the device
+        dev = found_device;
         dev_was_found = true;
     }
 
@@ -286,14 +284,9 @@ std::unique_ptr<libusb_device, void(*)(libusb_device*)> QsIOLib_LibUSB::findQsDe
     if (dev_was_found) {
         QsIOLib_LibUSB::qs1r_device_count = device_list_qs1r.size();
         // Return the selected device wrapped in a std::unique_ptr with a custom deleter
-        return std::unique_ptr<libusb_device, void(*)(libusb_device*)>(found_device, [](libusb_device *device) {
-            libusb_unref_device(device); // Properly unref the device
-        });
-    } else {
-        // Return nullptr with the same custom deleter
-        return std::unique_ptr<libusb_device, void(*)(libusb_device*)>(nullptr, [](libusb_device* device) {
-            // No-op since device is nullptr
-        });
+        return 0;
+    } else {        
+        return -1;
     }
 }
 

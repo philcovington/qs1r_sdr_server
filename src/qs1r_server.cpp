@@ -181,6 +181,7 @@ void QS1RServer::initQsMemory() {
 int QS1RServer::initQS1RHardware() {
     unsigned int index = 0;
     m_driver_type = "None";
+    int ret = -1;
 
     if (m_is_hardware_init) {
         QsGlobal::g_io->close();
@@ -190,14 +191,14 @@ int QS1RServer::initQS1RHardware() {
 
     std::cout << "Trying the libusb driver with index [" << index << "]... wait..." << std::endl;
 
-    QsGlobal::g_device = QsGlobal::g_io->findQsDevice(QS1R_VID, QS1R_PID, index);
+    ret = QsGlobal::g_io->findQsDevice(QS1R_VID, QS1R_PID, index);
 
-    if (QsGlobal::g_device == nullptr) {
+    if (ret != 0) {
         std::cerr << "Could not find any QS1R devices!" << std::endl;
         return -1;
     }
 
-    int ret = QsGlobal::g_io->open(QsGlobal::g_device.get());
+    ret = QsGlobal::g_io->open();
 
     if (ret == 0) {
         int fpga_id = 0;
@@ -214,24 +215,21 @@ int QS1RServer::initQS1RHardware() {
                 std::cout << "Firmware load success!" << std::endl;
                 QsGlobal::g_io->close();
                 sleep.msleep(5000);
+                ret = QsGlobal::g_io->findQsDevice(QS1R_VID, QS1R_PID, index);
+                if (ret != 0) {
+                    std::cerr << "Could not find any QS1R devices!" << std::endl;
+                    return -1;
+                } else {
+                    ret = QsGlobal::g_io->open();
+                    if (ret != 0) {
+                        std::cerr << "Open Device Error: " << libusb_error_name(ret) << std::endl;
+                        return -1;
+                    }
+                }
             }
         } else {
             std::cout << "Firmware is already loaded!" << std::endl;
-        }
-
-        QsGlobal::g_device = QsGlobal::g_io->findQsDevice(QS1R_VID, QS1R_PID, index);
-
-        if (QsGlobal::g_device == nullptr) {
-            std::cerr << "Could not find any QS1R devices!" << std::endl;
-            return -1;
-        }
-
-        ret = QsGlobal::g_io->open(QsGlobal::g_device.get());
-
-        if (ret != 0) {
-            std::cerr << "Open Device Error: " << libusb_error_name(ret) << std::endl;
-            return -1;
-        }
+        }        
 
         std::cout << "FW S/N: " << std::dec << (fw_id = QsGlobal::g_io->readFwSn()) << std::endl;
 
@@ -239,15 +237,12 @@ int QS1RServer::initQS1RHardware() {
             std::cout << "Attempting to load FPGA bitstream..." << std::endl;
             int result = QsGlobal::g_io->loadFpgaFromBitstream(fpga_bitstream, fpga_bitstream_size);
             if (result == 0) {
-                std::cout << "FPGA load success!" << std::endl;
-                QsGlobal::g_io->close();
-                sleep.msleep(1000);
+                std::cout << "FPGA load success!" << std::endl;                
+                sleep.msleep(2000);
             }
         } else {
             std::cout << "FPGA already loaded!" << std::endl;
-        }
-
-        QsGlobal::g_io->open(QsGlobal::g_device.get());
+        }        
 
         std::cout << "FPGA ID returned: " << std::hex << (fpga_id = QsGlobal::g_io->readMultibusInt(MB_VERSION_REG))
                   << std::dec << std::endl;
