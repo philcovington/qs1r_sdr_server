@@ -13,13 +13,17 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 string(TIMESTAMP CURRENT_DATE "%Y%m%d" UTC)
 
 # Configure the config.h file from the template in the config folder
-configure_file(${CMAKE_SOURCE_DIR}/config/config.h.in ${CMAKE_SOURCE_DIR}/headers/config.h @ONLY)
+configure_file(${CMAKE_SOURCE_DIR}/config/config.h.in ${CMAKE_SOURCE_DIR}/include/config.h @ONLY)
 
 # Specify the directories where headers and source files are located
 include_directories(${PROJECT_SOURCE_DIR}/include)
+include_directories(${PROJECT_SOURCE_DIR}/include/speex/headers)
 
 # Add source files
-file(GLOB_RECURSE SOURCES "${PROJECT_SOURCE_DIR}/src/*.cpp")
+file(GLOB_RECURSE SOURCES
+    "${PROJECT_SOURCE_DIR}/src/*.cpp"
+    "${PROJECT_SOURCE_DIR}/src/speex/src/*.cpp"
+)
 
 # Add executable
 add_executable(qs1r_server ${SOURCES})

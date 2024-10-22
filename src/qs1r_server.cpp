@@ -2915,7 +2915,7 @@ void QS1RServer::parseLocalCommand() {
     if (m_is_factory_init_enabled) {
         if (resp == "1") // find device
         {
-            findQS1RDevice();
+            // findQS1RDevice();
         } else if (resp == "2") // load firmware
         {
             loadQS1RFirmware();
