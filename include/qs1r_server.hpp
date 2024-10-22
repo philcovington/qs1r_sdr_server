@@ -171,9 +171,6 @@ class QS1RServer {
     double SMETERCORRECT = 0.0;
 
   private:
-    String status_string;
-    String error_string;
-
     bool error_flag;
     bool m_is_hardware_init;
     bool m_is_io_setup;
@@ -183,7 +180,6 @@ class QS1RServer {
     bool m_is_was_factory_init;
 
     bool hardware_is_registered;
-    bool m_hardware_is_init;
     bool m_is_fpga_loaded;
     bool m_is_rt_audio_bypass;
     bool m_gui_rx1_is_connected;

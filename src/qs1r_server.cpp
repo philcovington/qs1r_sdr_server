@@ -36,6 +36,7 @@ QS1RServer::QS1RServer()
       m_step_size(500.0), m_status_message_backing_register(0), m_prev_vol_val(0) {
 
     p_qsState->init();
+    m_is_hardware_init = false;
     QsGlobal::g_is_hardware_init = false;
 
     initQsMemory();
@@ -81,9 +82,7 @@ void QS1RServer::shutdown() {
 // ************************************************************
 // ------------------------------------------------------------
 
-void QS1RServer::initialize() {
-    status_string.clear();
-    error_string.clear();
+void QS1RServer::initialize() { 
     error_flag = false;
     initSupportedSampleRatesList();
     showStartupMessage();
@@ -203,9 +202,7 @@ int QS1RServer::initQS1RHardware() {
     if (ret == 0) {
         int fpga_id = 0;
         int fw_id = 0;
-        std::cout << "Open success!" << std::endl;
-        std::cout << "FPGA ID returned: " << std::hex << (fpga_id = QsGlobal::g_io->readMultibusInt(MB_VERSION_REG))
-                  << std::dec << std::endl;
+        std::cout << "Open success!" << std::endl;        
         std::cout << "FW S/N: " << (fw_id = QsGlobal::g_io->readFwSn()) << std::endl;
 
         if (fw_id != ID_FWWR) {
@@ -233,6 +230,9 @@ int QS1RServer::initQS1RHardware() {
 
         std::cout << "FW S/N: " << std::dec << (fw_id = QsGlobal::g_io->readFwSn()) << std::endl;
 
+        std::cout << "FPGA ID returned: " << std::hex << (fpga_id = QsGlobal::g_io->readMultibusInt(MB_VERSION_REG))
+                  << std::dec << std::endl;
+
         if (fpga_id != ID_1RXWR) {
             std::cout << "Attempting to load FPGA bitstream..." << std::endl;
             int result = QsGlobal::g_io->loadFpgaFromBitstream(fpga_bitstream, fpga_bitstream_size);
@@ -253,7 +253,7 @@ int QS1RServer::initQS1RHardware() {
     }
 
     std::cout << "QS1R index [" << index << "] hardware was successfully initialized!" << std::endl;
-    m_hardware_is_init = true;
+    m_is_hardware_init = true;
     QsGlobal::g_is_hardware_init = true;
     return 0;
 }
@@ -367,31 +367,20 @@ void QS1RServer::loadFPGAFile(String filename) {
 // entry box.
 // ------------------------------------------------------------
 void QS1RServer::setStatusText(String text) {
-    status_string.append(text);
-    _debug() << status_string;
+    _debug() << text;
 }
 
 // ------------------------------------------------------------
 // Displays the server startup message
 // ------------------------------------------------------------
 void QS1RServer::showStartupMessage() {
-    ;
-    setStatusText("-------------------------------------------------------------------------");
-    setStatusText("SRL-LLC SDRMAXV Ver " + String(SDRMAXV_VERSION));
-    setStatusText("Copyright 2012 Software Radio Laboratory LLC");
-    setStatusText("-------------------------------------------------------------------------");
+    std::cout << "Server is starting..." << std::endl;    
 }
-
 // ------------------------------------------------------------
 // Displays the server startup message with ready
 // ------------------------------------------------------------
 void QS1RServer::showStartupMessageWithReady() {
-    ;
-    setStatusText("-------------------------------------------------------------------------");
-    setStatusText("SRL-LLC SDRMAXV Ver " + String(SDRMAXV_VERSION));
-    setStatusText("Copyright 2012 Software Radio Laboratory LLC");
-    setStatusText("-------------------------------------------------------------------------");
-    setStatusText("QS1R Ready");
+    std::cout << "Server is starting..." << std::endl;    
 }
 
 // ------------------------------------------------------------
@@ -2444,9 +2433,7 @@ void QS1RServer::parseLocalCommand() {
         _debug() << "enable int5 result: " << String::number(result);
     } else if (resp == "clear") {
         ;
-        showStartupMessage();
-    } else if (resp == "errorlog") {
-        setStatusText(error_string);
+        showStartupMessage();    
     } else if (resp == "start") {
         startIo();
         String str = String("Started at sample rate: ") + String::number(m_proc_samplerate);
