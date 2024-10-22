@@ -64,14 +64,12 @@ class QS1RServer {
 
     void receiveAppMessage(String);
 
-    void showStartupMessage();
-    void showStartupMessageWithReady();
+    void showStartupMessage(); 
+    void showStartupMessageWithReady();  
     void parseLocalCommand();
     void quit();
 
-    void setStatusText(String text);    
-    void setErrorText(String text);
-    void clearErrorText();
+    void setStatusText(String text);
 
     void hideWindow();
     void showWindow();

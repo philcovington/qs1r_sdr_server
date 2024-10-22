@@ -1802,8 +1802,7 @@ String QS1RServer::doCommandProcessor(String value, int rx_num) {
     //
     else if (cmd.cmd.compare("Mode") == 0) // get demod mode
     {
-        if (cmd.RW == CMD::cmd_write) {
-            setModeDirect(cmd.ivalue);
+        if (cmd.RW == CMD::cmd_write) {            
             response = "OK";
         } else if (cmd.RW == CMD::cmd_read) {
             QSDEMODMODE value = QsGlobal::g_memory->getDemodMode(rx_num - 1);
@@ -1819,8 +1818,7 @@ String QS1RServer::doCommandProcessor(String value, int rx_num) {
     {
         if (cmd.RW == CMD::cmd_write) {
 
-            int value = (int)modeStringToMode(cmd.svalue);
-            setModeDirect(value);
+            int value = (int)modeStringToMode(cmd.svalue);            
             response = "OK";
         } else if (cmd.RW == CMD::cmd_read) {
             QSDEMODMODE value = QsGlobal::g_memory->getDemodMode(rx_num - 1);
@@ -2969,3 +2967,6 @@ void QS1RServer::parseLocalCommand() {
         }
     }
 }
+
+void QS1RServer::loadQS1RFirmware() {};
+void QS1RServer::loadQS1RFPGA() {};
