@@ -126,7 +126,6 @@ class QS1RServer {
     void writeQS1REEPROM();
     void readQS1REEPROM();
 
-    void setModeDirect(int value);
     void setOpenAudioSetupDirect();
 
     void setSampleRateDirect(int value);
