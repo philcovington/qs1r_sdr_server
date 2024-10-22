@@ -10,10 +10,6 @@
 #include "../include/qs_textstream.hpp"
 #include <libusb-1.0/libusb.h>
 
-#include <mutex>
-
-std::mutex io_mutex;
-
 std::string QsIOLib_LibUSB::printVectorInHex(const std::vector<uint8_t> &ba) {
     std::stringstream ss;
     for (const auto &byte : ba) {
@@ -70,7 +66,6 @@ int QsIOLib_LibUSB::clearHalt(libusb_device_handle *hdev, int ep) {
 }
 
 int QsIOLib_LibUSB::open() {
-    std::lock_guard<std::mutex> lock(io_mutex);  // Lock access to open
     close();
 
     if (!dev) {
@@ -130,7 +125,6 @@ int QsIOLib_LibUSB::open() {
 }
 
 void QsIOLib_LibUSB::close() {
-    std::lock_guard<std::mutex> lock(io_mutex);  // Lock access to close
     if (hdev != nullptr) {
         libusb_clear_halt(hdev, FX2_EP1_OUT);
         libusb_clear_halt(hdev, FX2_EP1_IN);
