@@ -9,15 +9,6 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-# Find libsamplerate package
-find_library(LIBSAMPLERATE NAMES samplerate)
-
-if (LIBSAMPLERATE)
-    message(STATUS "Found libsamplerate: ${LIBSAMPLERATE}")
-else()
-    message(FATAL_ERROR "libsamplerate not found")
-endif()
-
 # Get the current date in YYYYMMDD format
 string(TIMESTAMP CURRENT_DATE "%Y%m%d" UTC)
 
@@ -28,9 +19,7 @@ configure_file(${CMAKE_SOURCE_DIR}/config/config.h.in ${CMAKE_SOURCE_DIR}/includ
 include_directories(${PROJECT_SOURCE_DIR}/include)
 
 # Add source files
-file(GLOB_RECURSE SOURCES
-    "${PROJECT_SOURCE_DIR}/src/*.cpp"    
-)
+file(GLOB_RECURSE SOURCES "${PROJECT_SOURCE_DIR}/src/*.cpp")
 
 # Add executable
 add_executable(qs1r_server ${SOURCES})
@@ -40,11 +29,24 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/build)
 
 set(CMAKE_BUILD_TYPE Debug)
 
+# Find required packages
 find_package(PkgConfig REQUIRED)
+
+# Check for libusb
 pkg_check_modules(LIBUSB REQUIRED libusb-1.0)
 
-link_directories(${LIBUSB_LIBRARY_DIRS})
+# Check for libsamplerate
+pkg_check_modules(LIBSAMPLERATE REQUIRED samplerate)
 
-target_link_libraries(qs1r_server ${LIBUSB_LIBRARIES})
-target_link_libraries(qs1r_server ${LIBSAMPLERATE})
+# Link libraries
+link_directories(${LIBUSB_LIBRARY_DIRS})
+target_link_libraries(qs1r_server ${LIBUSB_LIBRARIES} ${LIBSAMPLERATE_LIBRARIES})
+
+# Include directories for the found packages
+include_directories(${LIBUSB_INCLUDE_DIRS} ${LIBSAMPLERATE_INCLUDE_DIRS})
+
+# Add messages for debugging purposes
+message(STATUS "Found libusb: ${LIBUSB_LIBRARIES}")
+message(STATUS "Found libsamplerate: ${LIBSAMPLERATE_LIBRARIES}")
+
 
