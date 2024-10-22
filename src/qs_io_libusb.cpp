@@ -246,7 +246,7 @@ int QsIOLib_LibUSB::findDevices(bool detailed) {
 }
 
 std::unique_ptr<libusb_device, void(*)(libusb_device*)> QsIOLib_LibUSB::findQsDevice(uint16_t idVendor, uint16_t idProduct, unsigned int index) {
-
+    dev_was_found = false;
     libusb_device **list = nullptr;
     libusb_device *found_device = nullptr;
     libusb_device_descriptor desc;
@@ -275,8 +275,7 @@ std::unique_ptr<libusb_device, void(*)(libusb_device*)> QsIOLib_LibUSB::findQsDe
         }
         QsIOLib_LibUSB::usb_dev_count++;
     }
-
-    bool dev_was_found = false;
+    
     if (device_list_qs1r.size() > 0 && index < device_list_qs1r.size()) {
         found_device = device_list_qs1r[index]; // Select the device
         dev_was_found = true;

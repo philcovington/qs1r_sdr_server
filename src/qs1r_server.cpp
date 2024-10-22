@@ -11,6 +11,7 @@
 #include "../include/qs_file.hpp"
 #include "../include/qs_filter.hpp"
 #include "../include/qs_firmware.hpp"
+#include "../include/qs_globals.hpp"
 #include "../include/qs_io_libusb.hpp"
 #include "../include/qs_io_thread.hpp"
 #include "../include/qs_listclass.hpp"
@@ -20,25 +21,22 @@
 #include "../include/qs_state.hpp"
 #include "../include/qs_stringclass.hpp"
 #include "../include/qs_uuid.hpp"
-#include "../include/qs_globals.hpp"
 #include <algorithm>
 #include <array>
 #include <cstdint>
 #include <sstream>
 
 QS1RServer::QS1RServer()
-    : p_dac_writer(std::make_unique<QsDacWriter>()), p_rta(std::make_unique<QsAudio>()), p_qsState(std::make_unique<QsState>()), p_dsp_proc(std::make_unique<QsDspProcessor>()),
-      p_io_thread(std::make_unique<QsIoThread>()), m_is_fpga_loaded(false), m_is_io_setup(false), m_is_factory_init_enabled(false),
-      m_is_was_factory_init(false), m_is_rt_audio_bypass(false), m_gui_rx1_is_connected(false),
-      m_gui_rx2_is_connected(false), m_driver_type("None"), m_local_rx_num_selector(1), m_freq_offset_rx1(0.0),
-      m_freq_offset_rx2(0.0), m_proc_samplerate(50000.0), m_post_proc_samplerate(50000.0), m_step_size(500.0),
-      m_status_message_backing_register(0), m_prev_vol_val(0) {
+    : p_dac_writer(std::make_unique<QsDacWriter>()), p_rta(std::make_unique<QsAudio>()),
+      p_qsState(std::make_unique<QsState>()), p_dsp_proc(std::make_unique<QsDspProcessor>()),
+      p_io_thread(std::make_unique<QsIoThread>()), m_is_fpga_loaded(false), m_is_io_setup(false),
+      m_is_factory_init_enabled(false), m_is_was_factory_init(false), m_is_rt_audio_bypass(false),
+      m_gui_rx1_is_connected(false), m_gui_rx2_is_connected(false), m_driver_type("None"), m_local_rx_num_selector(1),
+      m_freq_offset_rx1(0.0), m_freq_offset_rx2(0.0), m_proc_samplerate(50000.0), m_post_proc_samplerate(50000.0),
+      m_step_size(500.0), m_status_message_backing_register(0), m_prev_vol_val(0) {
 
     p_qsState->init();
-    QsGlobal::g_is_hardware_init = false;    
-
-    // QsGlobal::g_server = std::unique_ptr<QS1RServer>(this);
-    // QsGlobal::g_memory = std::make_unique<QsMemory>();
+    QsGlobal::g_is_hardware_init = false;
 
     initQsMemory();
 
@@ -360,7 +358,7 @@ void QS1RServer::updateFPGARegisters() {
 void QS1RServer::loadFPGAFile(String filename) {
     m_is_fpga_loaded = false;
     if (QsGlobal::g_io->loadFpga(filename.toStdString()) == -1) {
-        setStatusText("Error: Could not load QS1R FPGA File");        
+        setStatusText("Error: Could not load QS1R FPGA File");
         return;
     }
     // do a master reset of DDC in FPGA
@@ -611,7 +609,7 @@ void QS1RServer::startIo(bool iswav) {
     }
 
     if (!m_is_io_setup) {
-        setStatusText("Error: Error on io setup!");        
+        setStatusText("Error: Error on io setup!");
         return;
     }
 
@@ -621,7 +619,7 @@ void QS1RServer::startIo(bool iswav) {
 
     // start the dsp processor thread
     if (!p_dsp_proc->isRunning())
-        p_dsp_proc->start(Thread::ThreadPriority::TimeCritical);        
+        p_dsp_proc->start(Thread::ThreadPriority::TimeCritical);
 
     if (!QsGlobal::g_data_reader->isRunning())
         QsGlobal::g_data_reader->start(Thread::ThreadPriority::TimeCritical);
@@ -813,7 +811,7 @@ void QS1RServer::getSMeterCorrection(double &value) { value = QsGlobal::g_memory
 // ------------------------------------------------------------
 void QS1RServer::clearFpgaControlRegisters() {
     if (!m_is_hardware_init) {
-        setStatusText("Error: Please initialize QS1R Hardware first!");       
+        setStatusText("Error: Please initialize QS1R Hardware first!");
         return;
     }
     QsGlobal::g_io->writeMultibusInt(MB_CONTRL0, 0);
@@ -854,7 +852,7 @@ bool QS1RServer::pgaMode() {
 // ------------------------------------------------------------
 int QS1RServer::setRandMode(bool on) {
     if (!m_is_hardware_init) {
-        setStatusText("Error: Please initialize QS1R Hardware first!");        
+        setStatusText("Error: Please initialize QS1R Hardware first!");
         return -1;
     }
     unsigned int result = QsGlobal::g_io->readMultibusInt(MB_CONTRL1);
@@ -883,7 +881,7 @@ bool QS1RServer::randMode() {
 // ------------------------------------------------------------
 int QS1RServer::setDitherMode(bool on) {
     if (!m_is_hardware_init) {
-        setStatusText("Error: Please initialize QS1R Hardware first!");        
+        setStatusText("Error: Please initialize QS1R Hardware first!");
         return -1;
     }
     unsigned int result = QsGlobal::g_io->readMultibusInt(MB_CONTRL1);
@@ -913,7 +911,7 @@ bool QS1RServer::ditherMode() {
 // ------------------------------------------------------------
 void QS1RServer::setDacOutputDisable(bool on) {
     if (!m_is_hardware_init) {
-        setStatusText("Error: Please initialize QS1R Hardware first!");        
+        setStatusText("Error: Please initialize QS1R Hardware first!");
         return;
     }
     unsigned int result = QsGlobal::g_io->readMultibusInt(MB_CONTRL0);
@@ -927,7 +925,7 @@ void QS1RServer::setDacOutputDisable(bool on) {
 
 bool QS1RServer::getDacOutputDisable() {
     if (!m_is_hardware_init) {
-        setStatusText("Error: Please initialize QS1R Hardware first!");        
+        setStatusText("Error: Please initialize QS1R Hardware first!");
         return false;
     }
     unsigned int result = QsGlobal::g_io->readMultibusInt(MB_CONTRL0);
@@ -939,7 +937,7 @@ bool QS1RServer::getDacOutputDisable() {
 // ------------------------------------------------------------
 void QS1RServer::setDacExtMuteEnable(bool on) {
     if (!m_is_hardware_init) {
-        setStatusText("Error: Please initialize QS1R Hardware first!");        
+        setStatusText("Error: Please initialize QS1R Hardware first!");
         return;
     }
     unsigned int result = QsGlobal::g_io->readMultibusInt(MB_CONTRL0);
@@ -956,7 +954,7 @@ void QS1RServer::setDacExtMuteEnable(bool on) {
 // ------------------------------------------------------------
 void QS1RServer::setDdcMasterReset(bool on) {
     if (!m_is_hardware_init) {
-        setStatusText("Error: Please initialize QS1R Hardware first!");        
+        setStatusText("Error: Please initialize QS1R Hardware first!");
         return;
     }
     unsigned int result = QsGlobal::g_io->readMultibusInt(MB_CONTRL0);
@@ -973,7 +971,7 @@ void QS1RServer::setDdcMasterReset(bool on) {
 // ------------------------------------------------------------
 void QS1RServer::setWideBandBypass(bool on) {
     if (!m_is_hardware_init) {
-        setStatusText("Error: Please initialize QS1R Hardware first!");        
+        setStatusText("Error: Please initialize QS1R Hardware first!");
         return;
     }
     unsigned int result = QsGlobal::g_io->readMultibusInt(MB_CONTRL0);
@@ -994,7 +992,7 @@ unsigned int QS1RServer::controlRegister1Value() { return QsGlobal::g_io->readMu
 // ------------------------------------------------------------
 void QS1RServer::setDDCSamplerate(int value) {
     if (!m_is_hardware_init) {
-        setStatusText("Error: Please initialize QS1R Hardware first!");        
+        setStatusText("Error: Please initialize QS1R Hardware first!");
         return;
     }
     QsGlobal::g_io->writeMultibusInt(MB_SAMPLERATE, value);
@@ -1005,7 +1003,7 @@ void QS1RServer::setDDCSamplerate(int value) {
 // ------------------------------------------------------------
 void QS1RServer::setDacClock24kSelect(bool value) {
     if (!m_is_hardware_init) {
-        setStatusText("Error: Please initialize QS1R Hardware first!");        
+        setStatusText("Error: Please initialize QS1R Hardware first!");
         return;
     }
     unsigned int result = QsGlobal::g_io->readMultibusInt(MB_CONTRL0);
@@ -1022,7 +1020,7 @@ void QS1RServer::setDacClock24kSelect(bool value) {
 // ------------------------------------------------------------
 void QS1RServer::setDacClock50kSelect(bool value) {
     if (!m_is_hardware_init) {
-        setStatusText("Error: Please initialize QS1R Hardware first!");        
+        setStatusText("Error: Please initialize QS1R Hardware first!");
         return;
     }
     unsigned int result = QsGlobal::g_io->readMultibusInt(MB_CONTRL0);
@@ -1105,7 +1103,7 @@ UUID QS1RServer::readQS1RUuid() {
         DataStream in(buffer);
         in >> uuid;
     } else {
-        setStatusText("Failure reading serial number.");        
+        setStatusText("Failure reading serial number.");
     }
     return uuid;
 }
@@ -1122,14 +1120,14 @@ bool QS1RServer::writeQS1RSN(String uuid) {
         setStatusText("Updated Serial Number");
         return true;
     } else {
-        setStatusText("Could not update serial number");        
+        setStatusText("Could not update serial number");
         return false;
     }
 }
 
 void QS1RServer::unregisteredHardwareTimeout() {
     if (!hardware_is_registered) {
-        setStatusText("Server is shutting down...");        
+        setStatusText("Server is shutting down...");
         quit();
     }
 }
@@ -1157,7 +1155,7 @@ void QS1RServer::writeQS1REEPROM() {
     if (QsGlobal::g_io->writeEEPROM(QS1R_EEPROM_ADDR, 0, buf, 16)) {
         setStatusText("EEPROM updated successfully.");
     } else {
-        setStatusText("Failure updating EEPROM.");        
+        setStatusText("Failure updating EEPROM.");
     }
 }
 
@@ -1805,7 +1803,7 @@ String QS1RServer::doCommandProcessor(String value, int rx_num) {
     //
     else if (cmd.cmd.compare("Mode") == 0) // get demod mode
     {
-        if (cmd.RW == CMD::cmd_write) {            
+        if (cmd.RW == CMD::cmd_write) {
             response = "OK";
         } else if (cmd.RW == CMD::cmd_read) {
             QSDEMODMODE value = QsGlobal::g_memory->getDemodMode(rx_num - 1);
@@ -1821,7 +1819,7 @@ String QS1RServer::doCommandProcessor(String value, int rx_num) {
     {
         if (cmd.RW == CMD::cmd_write) {
 
-            int value = (int)modeStringToMode(cmd.svalue);            
+            int value = (int)modeStringToMode(cmd.svalue);
             response = "OK";
         } else if (cmd.RW == CMD::cmd_read) {
             QSDEMODMODE value = QsGlobal::g_memory->getDemodMode(rx_num - 1);
@@ -2936,12 +2934,12 @@ void QS1RServer::parseLocalCommand() {
             bool ok = false;
             std::cout << "Program S/N: Enter UUID" << std::endl;
             std::string str_in;
-            std::cin >> str_in;            
+            std::cin >> str_in;
 
             if (str_in != "") {
                 UUID uuid(str_in);
                 writeQS1RSN(String::fromStdString(uuid.toString()));
-                setStatusText("UUID Written Successfully");                
+                setStatusText("UUID Written Successfully");
             }
         } else if (resp == "7") // read s/n
         {
