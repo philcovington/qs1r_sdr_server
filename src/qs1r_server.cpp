@@ -35,12 +35,12 @@ QS1RServer::QS1RServer()
       m_status_message_backing_register(0), m_prev_vol_val(0) {
 
     p_qsState->init();
-    QsGlobal::g_is_hardware_init = false;
-
-    initQsMemory();
+    QsGlobal::g_is_hardware_init = false;    
 
     // QsGlobal::g_server = std::unique_ptr<QS1RServer>(this);
-    QsGlobal::g_memory = std::make_unique<QsMemory>();
+    // QsGlobal::g_memory = std::make_unique<QsMemory>();
+
+    initQsMemory();
 
     // delay
     initialize();
@@ -150,6 +150,9 @@ void QS1RServer::initQsAudio(double rate) {
 // Initializes Rx Persistance with qsStateSettings
 // ------------------------------------------------------------
 void QS1RServer::initQsMemory() {
+    if (QsGlobal::g_memory == nullptr) {
+        std::cerr << "You need to make an instance of QsMemory first!" << std::endl;
+    }
     QsGlobal::g_memory->setRxLOFrequency(p_qsState->startupFrequency());
     QsGlobal::g_memory->setFilterLo(p_qsState->startupFilterLow());
     QsGlobal::g_memory->setFilterHi(p_qsState->startupFilterHigh());
