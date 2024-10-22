@@ -24,6 +24,12 @@ file(GLOB_RECURSE SOURCES "${PROJECT_SOURCE_DIR}/src/*.cpp")
 # Add executable
 add_executable(qs1r_server ${SOURCES})
 
+# Define __LINUX_ALSA__ for the target
+target_compile_definitions(qs1r_server PRIVATE __LINUX_ALSA__)
+
+# Undefine __RTAUDIO_DUMMY__ using compiler flags
+target_compile_options(qs1r_server PRIVATE -U__RTAUDIO_DUMMY__)
+
 # Specify the build output directory
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/build)
 
@@ -38,15 +44,18 @@ pkg_check_modules(LIBUSB REQUIRED libusb-1.0)
 # Check for libsamplerate
 pkg_check_modules(LIBSAMPLERATE REQUIRED samplerate)
 
-# Link libraries
-link_directories(${LIBUSB_LIBRARY_DIRS})
-target_link_libraries(qs1r_server ${LIBUSB_LIBRARIES} ${LIBSAMPLERATE_LIBRARIES})
+# Check for ALSA
+pkg_check_modules(ALSA REQUIRED alsa)
 
 # Include directories for the found packages
-include_directories(${LIBUSB_INCLUDE_DIRS} ${LIBSAMPLERATE_INCLUDE_DIRS})
+include_directories(${LIBUSB_INCLUDE_DIRS} ${LIBSAMPLERATE_INCLUDE_DIRS} ${ALSA_INCLUDE_DIRS})
+
+# Link libraries
+link_directories(${LIBUSB_LIBRARY_DIRS})
+target_link_libraries(qs1r_server ${LIBUSB_LIBRARIES} ${LIBSAMPLERATE_LIBRARIES} ${ALSA_LIBRARIES})
 
 # Add messages for debugging purposes
 message(STATUS "Found libusb: ${LIBUSB_LIBRARIES}")
 message(STATUS "Found libsamplerate: ${LIBSAMPLERATE_LIBRARIES}")
-
+message(STATUS "Found ALSA: ${ALSA_LIBRARIES}")
 
