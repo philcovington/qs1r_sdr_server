@@ -9,6 +9,9 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+# Set specific compiler flags for the Debug build type
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -g3")
+
 # Get the current date in YYYYMMDD format
 string(TIMESTAMP CURRENT_DATE "%Y%m%d" UTC)
 
@@ -58,4 +61,3 @@ target_link_libraries(qs1r_server ${LIBUSB_LIBRARIES} ${LIBSAMPLERATE_LIBRARIES}
 message(STATUS "Found libusb: ${LIBUSB_LIBRARIES}")
 message(STATUS "Found libsamplerate: ${LIBSAMPLERATE_LIBRARIES}")
 message(STATUS "Found ALSA: ${ALSA_LIBRARIES}")
-
