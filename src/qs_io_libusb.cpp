@@ -125,14 +125,33 @@ int QsIOLib_LibUSB::open() {
 }
 
 void QsIOLib_LibUSB::close() {
+    int result = -1;
     if (hdev != nullptr) {
-        libusb_clear_halt(hdev, FX2_EP1_OUT);
-        libusb_clear_halt(hdev, FX2_EP1_IN);
-        libusb_clear_halt(hdev, FX2_EP2);
-        libusb_clear_halt(hdev, FX2_EP4);
-        libusb_clear_halt(hdev, FX2_EP6);
-        libusb_clear_halt(hdev, FX2_EP8);
-        int result = libusb_release_interface(hdev, 0);
+        result = libusb_clear_halt(hdev, FX2_EP1_OUT);
+        if (result != LIBUSB_SUCCESS) {
+            _debug() << "Failed to clear halt on FX2_EP1_OUT: " << libusb_error_name(result);
+        }
+        result = libusb_clear_halt(hdev, FX2_EP1_IN);
+        if (result != LIBUSB_SUCCESS) {
+            _debug() << "Failed to clear halt on FX2_EP1_IN: " << libusb_error_name(result);
+        }
+        result = libusb_clear_halt(hdev, FX2_EP2);
+        if (result != LIBUSB_SUCCESS) {
+            _debug() << "Failed to clear halt on FX2_EP2: " << libusb_error_name(result);
+        }
+        result = libusb_clear_halt(hdev, FX2_EP4);
+        if (result != LIBUSB_SUCCESS) {
+            _debug() << "Failed to clear halt on FX2_EP4: " << libusb_error_name(result);
+        }
+        result = libusb_clear_halt(hdev, FX2_EP6);
+        if (result != LIBUSB_SUCCESS) {
+            _debug() << "Failed to clear halt on FX2_EP6: " << libusb_error_name(result);
+        }
+        result = libusb_clear_halt(hdev, FX2_EP8);
+        if (result != LIBUSB_SUCCESS) {
+            _debug() << "Failed to clear halt on FX2_EP8: " << libusb_error_name(result);
+        }
+        result = libusb_release_interface(hdev, 0);
         if (result != LIBUSB_SUCCESS) {
             _debug() << "Failed to release interface: " << libusb_error_name(result);
         }

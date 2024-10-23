@@ -1,5 +1,5 @@
 /**
- * @file qs_tone_generator.hpp
+ * @file qs_tone_gen.hpp
  * @brief This file contains the definition of the QsToneGenerator class, which generates
  *        sine waves at specified frequencies for frequency translation applications.
  *

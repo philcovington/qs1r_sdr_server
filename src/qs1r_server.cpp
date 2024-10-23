@@ -35,6 +35,8 @@ QS1RServer::QS1RServer()
       m_freq_offset_rx1(0.0), m_freq_offset_rx2(0.0), m_proc_samplerate(50000.0), m_post_proc_samplerate(50000.0),
       m_step_size(500.0), m_status_message_backing_register(0), m_prev_vol_val(0) {
 
+    QsGlobal::g_server = this;
+
     p_qsState->init();
     m_is_hardware_init = false;
     QsGlobal::g_is_hardware_init = false;
@@ -46,7 +48,7 @@ QS1RServer::QS1RServer()
     initialize();
 }
 
-QS1RServer::~QS1RServer() {}
+QS1RServer::~QS1RServer() { QsGlobal::g_server = nullptr; }
 
 void QS1RServer::shutdown() {
 
@@ -88,7 +90,7 @@ void QS1RServer::initialize() {
     initSupportedSampleRatesList();
     showStartupMessage();
     m_is_rt_audio_bypass = QsGlobal::g_memory->getRtAudioBypass();
-    initSMeterCorrectionMap();    
+    initSMeterCorrectionMap();
 }
 
 void QS1RServer::initSupportedSampleRatesList() {
@@ -148,7 +150,7 @@ void QS1RServer::initQsAudio(double rate) {
 // ------------------------------------------------------------
 void QS1RServer::initQsMemory() {
     if (QsGlobal::g_memory == nullptr) {
-        std::cerr << "You need to make an instance of QsMemory first!" << std::endl;
+        std::cerr << "You need to make an instance of QsMemory first!";
     }
     QsGlobal::g_memory->setRxLOFrequency(p_qsState->startupFrequency());
     QsGlobal::g_memory->setFilterLo(p_qsState->startupFilterLow());
@@ -188,12 +190,12 @@ int QS1RServer::initQS1RHardware() {
 
     m_is_hardware_init = false;
 
-    std::cout << "Trying the libusb driver with index [" << index << "]... wait..." << std::endl;
+    _debug() << "Trying the libusb driver with index [" << index << "]... wait...";
 
     ret = QsGlobal::g_io->findQsDevice(QS1R_VID, QS1R_PID, index);
 
     if (ret != 0) {
-        std::cerr << "Could not find any QS1R devices!" << std::endl;
+        _debug() << "Could not find any QS1R devices!";
         return -1;
     }
 
@@ -202,57 +204,57 @@ int QS1RServer::initQS1RHardware() {
     if (ret == 0) {
         int fpga_id = 0;
         int fw_id = 0;
-        std::cout << "Open success!" << std::endl;
-        std::cout << "FW S/N: " << (fw_id = QsGlobal::g_io->readFwSn()) << std::endl;
+        _debug() << "Open success!";
+        _debug() << "FW S/N: " << (fw_id = QsGlobal::g_io->readFwSn());
 
         if (fw_id != ID_FWWR) {
-            std::cout << "Attempting to load firmware..." << std::endl;
+            _debug() << "Attempting to load firmware...";
             int result = QsGlobal::g_io->loadFirmware(firmware_hex);
             if (result == 0) {
-                std::cout << "Firmware load success!" << std::endl;
+                _debug() << "Firmware load success!";
                 QsGlobal::g_io->close();
                 sleep.msleep(5000);
                 ret = QsGlobal::g_io->findQsDevice(QS1R_VID, QS1R_PID, index);
                 if (ret != 0) {
-                    std::cerr << "Could not find any QS1R devices!" << std::endl;
+                    _debug() << "Could not find any QS1R devices!";
                     return -1;
                 } else {
                     ret = QsGlobal::g_io->open();
                     if (ret != 0) {
-                        std::cerr << "Open Device Error: " << libusb_error_name(ret) << std::endl;
+                        _debug() << "Open Device Error: " << libusb_error_name(ret);
                         return -1;
                     }
                 }
             }
         } else {
-            std::cout << "Firmware is already loaded!" << std::endl;
+            _debug() << "Firmware is already loaded!";
         }
 
-        std::cout << "FW S/N: " << std::dec << (fw_id = QsGlobal::g_io->readFwSn()) << std::endl;
+        _debug() << "FW S/N: " << std::dec << (fw_id = QsGlobal::g_io->readFwSn());
 
-        std::cout << "FPGA ID returned: " << std::hex << (fpga_id = QsGlobal::g_io->readMultibusInt(MB_VERSION_REG))
-                  << std::dec << std::endl;
+        _debug() << "FPGA ID returned: " << std::hex << (fpga_id = QsGlobal::g_io->readMultibusInt(MB_VERSION_REG))
+                  << std::dec;
 
         if (fpga_id != ID_1RXWR) {
-            std::cout << "Attempting to load FPGA bitstream..." << std::endl;
+            _debug() << "Attempting to load FPGA bitstream...";
             int result = QsGlobal::g_io->loadFpgaFromBitstream(fpga_bitstream, fpga_bitstream_size);
             if (result == 0) {
-                std::cout << "FPGA load success!" << std::endl;
+                _debug() << "FPGA load success!";
                 sleep.msleep(2000);
             }
         } else {
-            std::cout << "FPGA already loaded!" << std::endl;
+            _debug() << "FPGA already loaded!";
         }
 
-        std::cout << "FPGA ID returned: " << std::hex << (fpga_id = QsGlobal::g_io->readMultibusInt(MB_VERSION_REG))
-                  << std::dec << std::endl;
+        _debug() << "FPGA ID returned: " << std::hex << (fpga_id = QsGlobal::g_io->readMultibusInt(MB_VERSION_REG))
+                  << std::dec;
 
     } else {
-        std::cerr << "Error opening device!" << std::endl;
+        std::cerr << "Error opening device!";
         return -1;
     }
 
-    std::cout << "QS1R index [" << index << "] hardware was successfully initialized!" << std::endl;
+    _debug() << "QS1R index [" << index << "] hardware was successfully initialized!";
     m_is_hardware_init = true;
     QsGlobal::g_is_hardware_init = true;
     return 0;
@@ -371,11 +373,11 @@ void QS1RServer::setStatusText(String text) { _debug() << text; }
 // ------------------------------------------------------------
 // Displays the server startup message
 // ------------------------------------------------------------
-void QS1RServer::showStartupMessage() { std::cout << "Server is starting..." << std::endl; }
+void QS1RServer::showStartupMessage() { _debug() << "Server is starting..."; }
 // ------------------------------------------------------------
 // Displays the server startup message with ready
 // ------------------------------------------------------------
-void QS1RServer::showStartupMessageWithReady() { std::cout << "Server is starting..." << std::endl; }
+void QS1RServer::showStartupMessageWithReady() { _debug() << "Server is starting..."; }
 
 // ------------------------------------------------------------
 // Quits the server application
@@ -2908,7 +2910,7 @@ void QS1RServer::parseLocalCommand() {
         } else if (resp == "6") // write hardware sn
         {
             bool ok = false;
-            std::cout << "Program S/N: Enter UUID" << std::endl;
+            _debug() << "Program S/N: Enter UUID";
             std::string str_in;
             std::cin >> str_in;
 

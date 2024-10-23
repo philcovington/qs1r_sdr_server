@@ -43,7 +43,7 @@ const double TWO_PI = 6.283185307179586476925286766559;
 
 class QsGlobal {
 public:
-	// static std::unique_ptr<QS1RServer> g_server;
+	static QS1RServer* g_server; // raw pointer
 	static std::unique_ptr<QsDataReader> g_data_reader;	
 	static std::unique_ptr<libusb_device, void(*)(libusb_device*)> g_device;	
 	static std::unique_ptr<QsCpxVectorCircularBuffer> g_cpx_readin_ring;
