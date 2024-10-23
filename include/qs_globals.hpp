@@ -34,6 +34,7 @@
 #include "../include/qs_io_libusb.hpp"
 #include "../include/qs_memory.hpp"
 #include "../include/qs_wait_condition.hpp"
+#include "../include/qs_dac_writer.hpp"
 #include <libusb-1.0/libusb.h>
 
 #include <memory>
@@ -41,14 +42,14 @@
 const double ONE_PI = 3.1415926535897932384626433832795;
 const double TWO_PI = 6.283185307179586476925286766559;
 
+class QS1RServer;
+
 class QsGlobal {
 public:
 	static QS1RServer* g_server; // raw pointer
 	static std::unique_ptr<QsDataReader> g_data_reader;	
-	static std::unique_ptr<libusb_device, void(*)(libusb_device*)> g_device;	
-	static std::unique_ptr<QsCpxVectorCircularBuffer> g_cpx_readin_ring;
-	static std::unique_ptr<QsCpxVectorCircularBuffer> g_cpx_ps1_ring;
-	static std::unique_ptr<QsCpxVectorCircularBuffer> g_cpx_ps2_ring;
+	static std::unique_ptr<QsDacWriter> g_dac_writer;
+	static std::unique_ptr<QsCpxVectorCircularBuffer> g_cpx_readin_ring;	
 	static std::unique_ptr<QsCpxVectorCircularBuffer> g_cpx_sd_ring;
 	static std::unique_ptr<QsFloatVectorCircularBuffer> g_float_rt_ring;
 	static std::unique_ptr<QsFloatVectorCircularBuffer> g_float_dac_ring;

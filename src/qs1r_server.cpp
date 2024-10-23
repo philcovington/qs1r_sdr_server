@@ -21,6 +21,7 @@
 #include "../include/qs_state.hpp"
 #include "../include/qs_stringclass.hpp"
 #include "../include/qs_uuid.hpp"
+#include "qs1r_server.hpp"
 #include <algorithm>
 #include <array>
 #include <cstdint>
@@ -107,9 +108,20 @@ void QS1RServer::initSupportedSampleRatesList() {
     m_supported_samplerates.append(String("2500000").toStdString());
 }
 
-void QS1RServer::clearAllBuffers() {
-    QsGlobal::g_cpx_ps1_ring->empty();
-    QsGlobal::g_cpx_ps2_ring->empty();
+int QS1RServer::initRingBuffers() {
+    QsGlobal::g_cpx_readin_ring = std::make_unique<QsCpxVectorCircularBuffer>();    ;
+    QsGlobal::g_cpx_sd_ring = std::make_unique<QsCpxVectorCircularBuffer>();
+    QsGlobal::g_float_rt_ring = std::make_unique<QsFloatVectorCircularBuffer>();
+    QsGlobal::g_float_dac_ring = std::make_unique<QsFloatVectorCircularBuffer>();
+    return 0;
+}
+
+int QS1RServer::initThreads() {
+    QsGlobal::g_data_reader = std::make_unique<QsDataReader>();
+    QsGlobal::g_dac_writer = std::make_unique<QsDacWriter>();
+}
+
+void QS1RServer::clearAllBuffers() {    
     QsGlobal::g_cpx_readin_ring->empty();
     QsGlobal::g_cpx_sd_ring->empty();
     QsGlobal::g_float_dac_ring->empty();
@@ -233,7 +245,7 @@ int QS1RServer::initQS1RHardware() {
         _debug() << "FW S/N: " << std::dec << (fw_id = QsGlobal::g_io->readFwSn());
 
         _debug() << "FPGA ID returned: " << std::hex << (fpga_id = QsGlobal::g_io->readMultibusInt(MB_VERSION_REG))
-                  << std::dec;
+                 << std::dec;
 
         if (fpga_id != ID_1RXWR) {
             _debug() << "Attempting to load FPGA bitstream...";
@@ -247,7 +259,7 @@ int QS1RServer::initQS1RHardware() {
         }
 
         _debug() << "FPGA ID returned: " << std::hex << (fpga_id = QsGlobal::g_io->readMultibusInt(MB_VERSION_REG))
-                  << std::dec;
+                 << std::dec;
 
     } else {
         std::cerr << "Error opening device!";
@@ -764,6 +776,57 @@ void QS1RServer::setRxMode(String mode) { QsGlobal::g_memory->setDemodMode(modeS
 // Prints debug messages from script
 // ------------------------------------------------------------
 void QS1RServer::scriptDebugPrint(String msg) { _debug() << "from script: " + msg; }
+
+// Testing
+int QS1RServer::startDataReader() {
+    if (QsGlobal::g_data_reader == nullptr) {
+        QsGlobal::g_data_reader = std::make_unique<QsDataReader>();
+    }
+    if (QsGlobal::g_cpx_readin_ring == nullptr) {
+        QsGlobal::g_cpx_readin_ring = std::make_unique<QsCpxVectorCircularBuffer>();
+    }
+    _debug() << "Starting datareader thread...";
+    QsGlobal::g_data_reader->init();
+    QsGlobal::g_data_reader->start();
+    _debug() << "Sleeping for 10 seconds...";
+    sleep.sleep(10);
+    _debug() << "Stopping datareader thread...";
+    QsGlobal::g_data_reader->stop();
+    return 0;
+}
+
+// Testing
+int QS1RServer::startDACWriter() {
+    if (QsGlobal::g_dac_writer == nullptr) {
+        QsGlobal::g_dac_writer = std::make_unique<QsDacWriter>();
+    }
+    if (QsGlobal::g_float_dac_ring == nullptr) {
+        QsGlobal::g_float_dac_ring = std::make_unique<QsFloatVectorCircularBuffer>();
+    }
+    _debug() << "Starting dac writer thread...";
+    QsGlobal::g_dac_writer->init();
+    QsGlobal::g_dac_writer->start();
+    _debug() << "Sleeping for 10 seconds...";
+    sleep.sleep(10);
+    _debug() << "Stopping dac writer thread...";
+    QsGlobal::g_dac_writer->stop();
+    return 0;
+}
+
+// Testing
+int QS1RServer::startDSPProcessor() {
+    if (p_dsp_proc == nullptr) {
+        _debug() << "Error!  First create an instance of the DSP processor!";
+    }
+    _debug() << "Starting dsp processor thread...";
+    p_dsp_proc->init();
+    p_dsp_proc->start();
+    _debug() << "Sleeping for 10 seconds...";
+    sleep.sleep(10);
+    _debug() << "Stopping dsp processor thread...";
+    p_dsp_proc->stop();
+    return 0;
+}
 
 // ------------------------------------------------------------
 // Sets the encode clock correction for all rx

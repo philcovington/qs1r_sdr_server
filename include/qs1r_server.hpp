@@ -46,7 +46,10 @@ class QS1RServer {
     unsigned int controlRegister0Value();
     unsigned int controlRegister1Value();
 
-    bool isWavFileAtEnd();
+    // For Testing
+    int startDataReader();
+    int startDACWriter();
+    int startDSPProcessor();
 
     bool pgaMode();
     bool randMode();
@@ -78,6 +81,8 @@ class QS1RServer {
 
     void initQsAudio(double rate);
     int initQS1RHardware();
+    int initRingBuffers();
+    int initThreads();
     void initQsMemory();
     void initSMeterCorrectionMap();
 
@@ -136,7 +141,7 @@ class QS1RServer {
     void setRxFrequency(double freq);
     String getRxMode();
     void setRxMode(String mode);
-    void scriptDebugPrint(String msg);
+    void scriptDebugPrint(String msg);    
 
   private:
     bool setFpgaForSampleRate(double samplerate);

@@ -45,6 +45,15 @@ int main() {
 
     _debug() << "QS1R server shutting down...";
 
+    qs1r.initRingBuffers();
+    qs1r.initThreads();
+    
+    qs1r.startDataReader();
+
+    qs1r.startDACWriter();
+
+    qs1r.startDSPProcessor();
+
     qs1r.shutdown();
 
     sleep.msleep(500);

@@ -1,17 +1,10 @@
 #include "qs_globals.hpp"
 
-// Custom deleter for libusb_device
-void libusb_device_deleter(libusb_device* dev) {    
-    libusb_unref_device(dev);
-}
-
 // Define the static members
 QS1RServer* QsGlobal::g_server = nullptr;
 std::unique_ptr<QsDataReader> QsGlobal::g_data_reader = nullptr;
-std::unique_ptr<libusb_device, void (*)(libusb_device *)> QsGlobal::g_device(nullptr, libusb_device_deleter);
+std::unique_ptr<QsDacWriter> QsGlobal::g_dac_writer = nullptr;
 std::unique_ptr<QsCpxVectorCircularBuffer> QsGlobal::g_cpx_readin_ring = nullptr;
-std::unique_ptr<QsCpxVectorCircularBuffer> QsGlobal::g_cpx_ps1_ring = nullptr;
-std::unique_ptr<QsCpxVectorCircularBuffer> QsGlobal::g_cpx_ps2_ring = nullptr;
 std::unique_ptr<QsCpxVectorCircularBuffer> QsGlobal::g_cpx_sd_ring = nullptr;
 std::unique_ptr<QsFloatVectorCircularBuffer> QsGlobal::g_float_rt_ring = nullptr;
 std::unique_ptr<QsFloatVectorCircularBuffer> QsGlobal::g_float_dac_ring = nullptr;

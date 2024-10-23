@@ -1,7 +1,5 @@
 #pragma once
 
-#pragma once
-
 #include <atomic>
 #include <chrono>
 #include <condition_variable>

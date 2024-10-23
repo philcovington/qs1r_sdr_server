@@ -57,8 +57,7 @@ void QsDspProcessor::init(int rx_num) {
     m_rs_rate = QsGlobal::g_memory->getResamplerRate();
     m_rs_quality = QsGlobal::g_memory->getResamplerQuality();
 
-    QsGlobal::g_cpx_sd_ring->init(m_sd_buffer_size);
-    QsGlobal::g_cpx_ps1_ring->init(m_ps_size * 16);
+    QsGlobal::g_cpx_sd_ring->init(m_sd_buffer_size);    
 
     in_cpx.resize(m_bsize);
     QsSignalOps::Zero(in_cpx);
@@ -78,8 +77,7 @@ void QsDspProcessor::init(int rx_num) {
     m_outframesX2 = m_req_outframes * 2;
 
     QsGlobal::g_float_rt_ring->init(m_outframesX2 * RT_RING_SZ_MULT);
-    QsGlobal::g_float_dac_ring->init(m_outframesX2 * DAC_RING_SZ_MULT);
-    QsGlobal::g_cpx_ps2_ring->init(m_bsize * 2);    
+    QsGlobal::g_float_dac_ring->init(m_outframesX2 * DAC_RING_SZ_MULT);    
 
     // ANB
     p_anb->init();
@@ -150,11 +148,9 @@ void QsDspProcessor::run() {
     QsSignalOps::Zero(rs_cpx);
 
     QsGlobal::g_cpx_sd_ring->init(m_sd_buffer_size);
-    QsGlobal::g_cpx_ps1_ring->init(m_ps_size * 8);
-
+    
     QsGlobal::g_cpx_sd_ring->empty();
-    QsGlobal::g_cpx_ps1_ring->empty();
-
+    
     int dstlen = 0;
 
     m_rs_input_rate = QsGlobal::g_memory->getDataPostProcRate();
@@ -169,8 +165,7 @@ void QsDspProcessor::run() {
 
     QsGlobal::g_float_rt_ring->init(m_outframesX2 * RT_RING_SZ_MULT);
     QsGlobal::g_float_dac_ring->init(m_outframesX2 * DAC_RING_SZ_MULT);
-    QsGlobal::g_cpx_ps2_ring->init(m_bsize * 16);
-
+    
     m_is_running = true;
     m_thread_go = true;
 
@@ -215,12 +210,6 @@ void QsDspProcessor::run() {
             p_iir5->process(rs_cpx_n);
             p_iir6->process(rs_cpx_n);
             p_iir7->process(rs_cpx_n);
-
-            // =================<POWER SPECTRUM>==================
-            if (QsGlobal::g_cpx_ps2_ring->writeAvail() >= m_bsize) {
-                QsGlobal::g_cpx_ps2_ring->write(rs_cpx_n, m_bsize);
-            }
-            // =================</POWER SPECTRUM>==================
 
             if (QsGlobal::g_memory->getDemodMode() == dmCW) {
                 // ======== <CW TONE GENERATOR> ===========
@@ -322,8 +311,7 @@ void QsDspProcessor::run() {
 void QsDspProcessor::stop() { m_thread_go = false; }
 
 void QsDspProcessor::clearBuffers() {
-    QsGlobal::g_cpx_sd_ring->empty();
-    QsGlobal::g_cpx_ps1_ring->empty();
+    QsGlobal::g_cpx_sd_ring->empty();    
 }
 
 // RESAMPLER
