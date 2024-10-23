@@ -172,10 +172,12 @@ void QsDspProcessor::run() {
     m_thread_go = true;
 
     while (m_thread_go) {
+        
         // read data from reader ring buffer
-        while (QsGlobal::g_cpx_readin_ring->readAvail() >= m_bsize) {
+        while (QsGlobal::g_cpx_readin_ring->readAvail() >= m_bsize & m_thread_go == true) {
+            
             QsGlobal::g_cpx_readin_ring->read(in_cpx);
-
+            
             // Do noiseblankers
             // ======== <AVERAGING NOISE BLANKER> ===========
             p_anb->process(in_cpx);
@@ -194,8 +196,8 @@ void QsDspProcessor::run() {
             dstlen = p_downconv->process(&in_cpx[0], &rs_cpx[0], m_bsize);
             QsGlobal::g_cpx_sd_ring->write(rs_cpx, dstlen);
         }
-
-        while (QsGlobal::g_cpx_sd_ring->readAvail() >= m_bsize) {
+       
+        while (QsGlobal::g_cpx_sd_ring->readAvail() >= m_bsize & m_thread_go == true) {
             // read data from integer resample buffer
             QsGlobal::g_cpx_sd_ring->read(rs_cpx_n, m_bsize);
 

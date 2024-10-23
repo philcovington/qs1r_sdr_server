@@ -119,6 +119,7 @@ int QS1RServer::initRingBuffers() {
 int QS1RServer::initThreads() {
     QsGlobal::g_data_reader = std::make_unique<QsDataReader>();
     QsGlobal::g_dac_writer = std::make_unique<QsDacWriter>();
+    return 0;
 }
 
 void QS1RServer::clearAllBuffers() {    
@@ -789,7 +790,7 @@ int QS1RServer::startDataReader() {
     QsGlobal::g_data_reader->init();
     QsGlobal::g_data_reader->start();
     _debug() << "Sleeping for 10 seconds...";
-    sleep.sleep(10);
+    sleep.sleep(3);
     _debug() << "Stopping datareader thread...";
     QsGlobal::g_data_reader->stop();    
     return 0;
@@ -807,7 +808,7 @@ int QS1RServer::startDACWriter() {
     QsGlobal::g_dac_writer->init();
     QsGlobal::g_dac_writer->start();
     _debug() << "Sleeping for 10 seconds...";
-    sleep.sleep(10);
+    sleep.sleep(3);
     _debug() << "Stopping dac writer thread...";
     QsGlobal::g_dac_writer->stop();    
     return 0;
@@ -822,7 +823,7 @@ int QS1RServer::startDSPProcessor() {
     p_dsp_proc->init();
     p_dsp_proc->start();
     _debug() << "Sleeping for 10 seconds...";
-    sleep.sleep(10);
+    sleep.sleep(3);
     _debug() << "Stopping dsp processor thread...";
     p_dsp_proc->stop();    
     return 0;
