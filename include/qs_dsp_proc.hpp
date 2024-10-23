@@ -43,6 +43,7 @@
 #include "../include/qs_main_rx_filter.hpp"
 #include "../include/qs_nr_filter.hpp"
 #include "../include/qs_post_rx_filter.hpp"
+#include "../include/qs_resampler.hpp"
 #include "../include/qs_sam_demod.hpp"
 #include "../include/qs_signalops.hpp"
 #include "../include/qs_sleep.hpp"
@@ -52,10 +53,11 @@
 #include "../include/qs_threading.hpp"
 #include "../include/qs_tone_gen.hpp"
 #include "../include/qs_volume.hpp"
-#include "../include/qs_resampler.hpp"
+#include <atomic>
 #include <memory>
+#include <thread>
 
-class QsDspProcessor : public Thread {
+class QsDspProcessor {
   public:
     // Unique pointers to DSP components
     std::unique_ptr<QsToneGenerator> p_tg0;
@@ -90,12 +92,13 @@ class QsDspProcessor : public Thread {
     void clearBuffers();
     void init(int rx_num = 1);
     void reinit();
-
-    // Overriding Thread's run method
-    void run() override;
-    void stop() override;
+    void start();
+    void stop();
+    bool isRunning();
 
   private:
+    void run();
+
     // Member variables for DSP processing
     unsigned int m_rx_num;
     unsigned int m_bsize;
@@ -105,8 +108,8 @@ class QsDspProcessor : public Thread {
     unsigned int m_req_outframes;
     unsigned int m_outframesX2;
 
-    bool m_thread_go;
-    bool m_is_running;
+    std::atomic<bool> m_thread_go;
+    std::atomic<bool> m_is_running;
     bool m_dac_bypass;
     bool m_rt_audio_bypass;
 
@@ -122,7 +125,6 @@ class QsDspProcessor : public Thread {
 
     QsSleep sleep;
 
-    // RESAMPLER
     std::unique_ptr<Resampler> resampler;
     double m_rs_output_rate;
     double m_rs_input_rate;
@@ -130,6 +132,7 @@ class QsDspProcessor : public Thread {
     qs_vect_f rs_in_interleaved;
     qs_vect_f rs_out_interleaved;
 
+    std::thread m_thread;
     void initResampler(int size);
     void initManualNotch();
 };

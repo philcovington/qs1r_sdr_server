@@ -10,6 +10,9 @@ QsDataReader::QsDataReader()
 
 QsDataReader::~QsDataReader() {
     stop(); // Ensure the thread is stopped before destruction
+    if (m_thread.joinable()) {
+        m_thread.join(); // Wait for the thread to finish
+    }
 }
 
 void QsDataReader::reinit() { init(); }
@@ -35,6 +38,14 @@ void QsDataReader::init() {
     QsSignalOps::Zero(cpx_out);
 }
 
+void QsDataReader::start() {
+    // Start the thread only if it isn't already running
+    if (!m_is_running && !m_thread_go) {
+        m_thread_go = true;
+        m_thread = std::thread(&QsDataReader::run, this); // Launch the run() method in a new thread
+    }
+}
+
 void QsDataReader::run() {
     QsSignalOps::Zero(in_interleaved_i);
     QsSignalOps::Zero(in_interleaved_f);
@@ -47,7 +58,6 @@ void QsDataReader::run() {
     QsGlobal::g_cpx_readin_ring->empty();
 
     m_is_running = true;
-    m_thread_go = true;
     m_qs1r_fail_emitted = false;
 
     while (m_thread_go) {
@@ -84,8 +94,14 @@ void QsDataReader::run() {
 }
 
 void QsDataReader::stop() {
-    m_thread_go = false;
-    Thread::stop();              // Stop the base class thread
+    m_thread_go = false; // Signal the thread to stop
+    if (m_thread.joinable()) {
+        m_thread.join(); // Wait for the thread to finish
+    }
 }
 
 void QsDataReader::clearBuffers() { QsGlobal::g_cpx_readin_ring->empty(); }
+
+bool QsDataReader::isRunning() {
+    return m_thread_go;
+}

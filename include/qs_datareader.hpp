@@ -30,23 +30,25 @@
 #pragma once
 
 #include "../include/qs_sleep.hpp"
-#include "../include/qs_threading.hpp"
 #include "../include/qs_types.hpp"
 #include <atomic>
+#include <thread>
 
-class QsDataReader : public Thread {
+class QsDataReader {
   public:
     QsDataReader();
     ~QsDataReader();
 
-    void run() override; // Override the run method from the Thread class    
-    void stop() override; // Override the stop method from the Thread class
-    void clearBuffers();
-    void reinit();
-    void init();
+    void start();        // Method to start the data reader thread
+    void stop();         // Method to stop the data reader thread
+    void clearBuffers(); // Method to clear the buffers
+    void reinit();       // Method to reinitialize the data reader
+    void init();         // Method to initialize the data reader
+    bool isRunning();
 
   private:
-    void onQs1rReadFail();
+    void run();            // Method containing the main logic for the thread
+    void onQs1rReadFail(); // Method for handling failure
 
     // Thread control flags
     std::atomic<bool> m_thread_go;
@@ -70,4 +72,7 @@ class QsDataReader : public Thread {
     qs_vect_cpx cpx_out;
 
     QsSleep sleep;
+
+    // The thread object
+    std::thread m_thread;
 };

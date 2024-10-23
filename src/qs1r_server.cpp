@@ -611,17 +611,17 @@ void QS1RServer::startIo(bool iswav) {
 
     // start the dsp processor thread
     if (!p_dsp_proc->isRunning())
-        p_dsp_proc->start(Thread::ThreadPriority::TimeCritical);
+        p_dsp_proc->start();
 
-    if (!QsGlobal::g_data_reader->isRunning())
-        QsGlobal::g_data_reader->start(Thread::ThreadPriority::TimeCritical);
+    // if (!QsGlobal::g_data_reader->isRunning())
+    //     QsGlobal::g_data_reader->start(Thread::ThreadPriority::TimeCritical);
 
     bool dac_bypass = false;
     dac_bypass = p_qsState->dacBypass();
 
     if (!dac_bypass) {
         if (!p_dac_writer->isRunning())
-            p_dac_writer->start(Thread::ThreadPriority::Normal);
+            p_dac_writer->start();
     }
 
     if (!m_is_rt_audio_bypass) {
@@ -655,19 +655,19 @@ void QS1RServer::stopIo() {
     _debug() << "stopping dac writer...";
     if (p_dac_writer->isRunning()) {
         p_dac_writer->stop();
-        p_dac_writer->wait(std::chrono::milliseconds(10000));
+        // p_dac_writer->wait(std::chrono::milliseconds(10000));
     }
 
     _debug() << "stopping dsp processor...";
     if (p_dsp_proc->isRunning()) {
         p_dsp_proc->stop();
-        p_dsp_proc->wait(std::chrono::milliseconds(10000));
+        // p_dsp_proc->wait(std::chrono::milliseconds(10000));
     }
 
     _debug() << "stopping data reader...";
     if (QsGlobal::g_data_reader->isRunning()) {
         QsGlobal::g_data_reader->stop();
-        QsGlobal::g_data_reader->wait(std::chrono::milliseconds(10000));
+        // QsGlobal::g_data_reader->wait(std::chrono::milliseconds(10000));
     }
 
     _debug() << "stopping wav writer...";
@@ -791,7 +791,7 @@ int QS1RServer::startDataReader() {
     _debug() << "Sleeping for 10 seconds...";
     sleep.sleep(10);
     _debug() << "Stopping datareader thread...";
-    QsGlobal::g_data_reader->stop();
+    QsGlobal::g_data_reader->stop();    
     return 0;
 }
 
@@ -809,7 +809,7 @@ int QS1RServer::startDACWriter() {
     _debug() << "Sleeping for 10 seconds...";
     sleep.sleep(10);
     _debug() << "Stopping dac writer thread...";
-    QsGlobal::g_dac_writer->stop();
+    QsGlobal::g_dac_writer->stop();    
     return 0;
 }
 
@@ -824,7 +824,7 @@ int QS1RServer::startDSPProcessor() {
     _debug() << "Sleeping for 10 seconds...";
     sleep.sleep(10);
     _debug() << "Stopping dsp processor thread...";
-    p_dsp_proc->stop();
+    p_dsp_proc->stop();    
     return 0;
 }
 

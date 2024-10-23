@@ -30,21 +30,22 @@
 #include "../include/qs_defines.hpp"
 #include "../include/qs_globals.hpp"
 #include "../include/qs_memory.hpp"
-#include "../include/qs_threading.hpp"
 #include "../include/qs_sleep.hpp"
 #include <atomic>
+#include <thread>
 
-class QsDacWriter : public Thread {
+class QsDacWriter {
   public:
     QsDacWriter();
 
     void init();
     void reinit();
-
-    void run() override; // Override the run method from the Thread class
-    void stop() override; // Override the stop method from the Thread class
+    void start();        // Method to start the DAC writer thread
+    void stop();         // Method to stop the DAC writer thread
+    bool isRunning();
 
   private:
+    void run();          // Method containing the main logic for the thread
 
     std::atomic<bool> m_thread_go;
     std::atomic<bool> m_is_running;
@@ -55,5 +56,8 @@ class QsDacWriter : public Thread {
     qs_vect_f out_f;
     qs_vect_s out_s;
 
-	QsSleep sleep;
+    QsSleep sleep;
+
+    // The thread object
+    std::thread m_thread;
 };
