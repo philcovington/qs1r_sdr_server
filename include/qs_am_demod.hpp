@@ -24,6 +24,7 @@
 
 #pragma once
 
+#include "../include/qs_types.hpp"
 #include "../include/qs_signalops.hpp"
 #include "../include/qs_globals.hpp"
 
