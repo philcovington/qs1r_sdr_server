@@ -8,8 +8,6 @@
 #include "../include/qs_debugloggerclass.hpp"
 #include "../include/qs_defines.hpp"
 #include "../include/qs_downcnv.hpp"
-#include "../include/qs_fmn_demod.hpp"
-#include "../include/qs_fmw_demod.hpp"
 #include "../include/qs_fm_demod.hpp"
 #include "../include/qs_globals.hpp"
 #include "../include/qs_iir_filter.hpp"

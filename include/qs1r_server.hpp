@@ -45,6 +45,7 @@ class QS1RServer {
     unsigned int controlRegister1Value();
 
     // For Testing
+    int startAllThreads();
     int startDataReader();
     int startDACWriter();
     int startDSPProcessor();

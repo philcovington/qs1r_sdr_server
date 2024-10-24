@@ -41,21 +41,13 @@ int main() {
 
     _debug() << "PGA MODE NOW IS: " << qs1r.pgaMode();
     _debug() << "RAND MODE NOW IS: " << qs1r.randMode();
-    _debug() << "DITHER MODE NOW IS: " << qs1r.ditherMode();
-
-    _debug() << "QS1R server shutting down...";
-
-    qs1r.initRingBuffers();
-    qs1r.initThreads();
+    _debug() << "DITHER MODE NOW IS: " << qs1r.ditherMode();    
     
-    qs1r.startDataReader();
-
-    qs1r.startDACWriter();
-
-    qs1r.startDSPProcessor();
+    qs1r.startAllThreads();
 
     qs1r.shutdown();
 
+    _debug() << "QS1R server shutting down...";
     sleep.msleep(500);
 
     return 0;

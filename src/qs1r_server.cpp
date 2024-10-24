@@ -90,6 +90,8 @@ void QS1RServer::initialize() {
     initSMeterCorrectionMap();
     initRingBuffers();
     initThreads();
+    updateFPGARegisters();
+    setFpgaForSampleRate(50000);
 }
 
 void QS1RServer::initSupportedSampleRatesList() {
@@ -393,7 +395,7 @@ void QS1RServer::showStartupMessageWithReady() { _debug() << "Server is starting
 // ------------------------------------------------------------
 // Quits the server application
 // ------------------------------------------------------------
-void QS1RServer::quit() {}
+void QS1RServer::quit() { this->shutdown(); }
 
 // ------------------------------------------------------------
 // Returns the supported sample rates
@@ -769,6 +771,23 @@ void QS1RServer::setRxMode(String mode) { QsGlobal::g_memory->setDemodMode(modeS
 // ------------------------------------------------------------
 void QS1RServer::scriptDebugPrint(String msg) { _debug() << "from script: " + msg; }
 
+int QS1RServer::startAllThreads() {
+    _debug() << "Starting datareader thread...";
+    QsGlobal::g_data_reader->start(); 
+    _debug() << "Starting dsp processor thread...";
+    QsGlobal::g_dsp_proc->start();
+    _debug() << "Starting dac writer thread...";
+    QsGlobal::g_dac_writer->start(); 
+    _debug() << "Running for 10 seconds...";
+    sleep.sleep(10); 
+    _debug() << "Stopping dac writer thread...";
+    QsGlobal::g_dac_writer->stop();
+    _debug() << "Stopping dsp processor thread...";
+    QsGlobal::g_dsp_proc->stop(); 
+    _debug() << "Stopping datareader thread...";
+    QsGlobal::g_data_reader->stop();
+    return 0;    
+}
 // Testing
 int QS1RServer::startDataReader() {
     if (QsGlobal::g_data_reader == nullptr) {
