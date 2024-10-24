@@ -33,6 +33,7 @@
 #include "../include/qs_memory.hpp"
 #include "../include/qs_wait_condition.hpp"
 #include "../include/qs_dac_writer.hpp"
+#include "../include/qs_dsp_proc.hpp"
 #include "../include/qs_circ_buf.hpp"
 #include <libusb-1.0/libusb.h>
 
@@ -47,6 +48,7 @@ class QsGlobal {
 public:
 	static QS1RServer* g_server; // raw pointer
 	static std::unique_ptr<QsDataReader> g_data_reader;	
+	static std::unique_ptr<QsDspProcessor> g_dsp_proc;
 	static std::unique_ptr<QsDacWriter> g_dac_writer;	
 	static std::unique_ptr<QsCircularBuffer<std::complex<float>>> g_cpx_readin_ring;
 	static std::unique_ptr<QsCircularBuffer<std::complex<float>>> g_cpx_sd_ring;

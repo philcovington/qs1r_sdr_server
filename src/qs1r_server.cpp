@@ -28,13 +28,12 @@
 #include <sstream>
 
 QS1RServer::QS1RServer()
-    : p_dac_writer(std::make_unique<QsDacWriter>()), p_rta(std::make_unique<QsAudio>()),
-      p_qsState(std::make_unique<QsState>()), p_dsp_proc(std::make_unique<QsDspProcessor>()),
+    : p_rta(std::make_unique<QsAudio>()), p_qsState(std::make_unique<QsState>()),
       p_io_thread(std::make_unique<QsIoThread>()), m_is_fpga_loaded(false), m_is_io_setup(false),
-      m_is_factory_init_enabled(false), m_is_was_factory_init(false), 
-      m_gui_rx1_is_connected(false), m_gui_rx2_is_connected(false), m_driver_type("None"), m_local_rx_num_selector(1),
-      m_freq_offset_rx1(0.0), m_freq_offset_rx2(0.0), m_proc_samplerate(50000.0), m_post_proc_samplerate(50000.0),
-      m_step_size(500.0), m_status_message_backing_register(0), m_prev_vol_val(0) {
+      m_is_factory_init_enabled(false), m_is_was_factory_init(false), m_gui_rx1_is_connected(false),
+      m_gui_rx2_is_connected(false), m_driver_type("None"), m_local_rx_num_selector(1), m_freq_offset_rx1(0.0),
+      m_freq_offset_rx2(0.0), m_proc_samplerate(50000.0), m_post_proc_samplerate(50000.0), m_step_size(500.0),
+      m_status_message_backing_register(0), m_prev_vol_val(0) {
 
     QsGlobal::g_server = this;
 
@@ -43,9 +42,7 @@ QS1RServer::QS1RServer()
     QsGlobal::g_is_hardware_init = false;
 
     initQsMemory();
-
     sleep.msleep(500);
-
     initialize();
 }
 
@@ -89,12 +86,14 @@ void QS1RServer::shutdown() {
 void QS1RServer::initialize() {
     error_flag = false;
     initSupportedSampleRatesList();
-    showStartupMessage();    
+    showStartupMessage();
     initSMeterCorrectionMap();
+    initRingBuffers();
+    initThreads();
 }
 
 void QS1RServer::initSupportedSampleRatesList() {
-
+    _debug() << "initializing sample rate list...";
     m_supported_samplerates.clear();
     m_supported_samplerates.append(String("25000").toStdString());
     m_supported_samplerates.append(String("50000").toStdString());
@@ -108,7 +107,8 @@ void QS1RServer::initSupportedSampleRatesList() {
 }
 
 int QS1RServer::initRingBuffers() {
-    QsGlobal::g_cpx_readin_ring = std::make_unique<QsCircularBuffer<std::complex<float>>>();   
+    _debug() << "initializing ring buffers...";
+    QsGlobal::g_cpx_readin_ring = std::make_unique<QsCircularBuffer<std::complex<float>>>();
     QsGlobal::g_cpx_sd_ring = std::make_unique<QsCircularBuffer<std::complex<float>>>();
     QsGlobal::g_float_rt_ring = std::make_unique<QsCircularBuffer<float>>();
     QsGlobal::g_float_dac_ring = std::make_unique<QsCircularBuffer<float>>();
@@ -116,12 +116,15 @@ int QS1RServer::initRingBuffers() {
 }
 
 int QS1RServer::initThreads() {
-    QsGlobal::g_data_reader = std::make_unique<QsDataReader>();
-    QsGlobal::g_dac_writer = std::make_unique<QsDacWriter>();
+    _debug() << "initializing threads...";
+    QsGlobal::g_data_reader->init();
+    QsGlobal::g_dsp_proc->init();
+    QsGlobal::g_dac_writer->init();
     return 0;
 }
 
-void QS1RServer::clearAllBuffers() {    
+void QS1RServer::clearAllBuffers() {
+    _debug() << "clearing ring buffers...";
     QsGlobal::g_cpx_readin_ring->empty();
     QsGlobal::g_cpx_sd_ring->empty();
     QsGlobal::g_float_dac_ring->empty();
@@ -136,7 +139,7 @@ void QS1RServer::clearAllBuffers() {
 // ------------------------------------------------------------
 void QS1RServer::initQsAudio(double rate) {
     // see if we have an audio output device
-
+    _debug() << "initializing QsAudio...";
     if (m_is_io_running) {
         stopIo();
     }
@@ -151,7 +154,7 @@ void QS1RServer::initQsAudio(double rate) {
 
     p_rta->initAudio(frames, rate, in_dev_id, out_dev_id, ok);
 
-    if (!ok) {        
+    if (!ok) {
         setStatusText("Soundcard output init error.");
     }
 }
@@ -160,6 +163,7 @@ void QS1RServer::initQsAudio(double rate) {
 // Initializes Rx Persistance with qsStateSettings
 // ------------------------------------------------------------
 void QS1RServer::initQsMemory() {
+    _debug() << "initializing QsMemory...";
     if (QsGlobal::g_memory == nullptr) {
         std::cerr << "You need to make an instance of QsMemory first!";
     }
@@ -176,7 +180,7 @@ void QS1RServer::initQsMemory() {
     QsGlobal::g_memory->setSMeterCorrection(p_qsState->smeterCorrection());
     QsGlobal::g_memory->setEncodeFreqCorrect(p_qsState->clockCorrection());
     QsGlobal::g_memory->setRtAudioFrames(p_qsState->rtAudioFrameSize());
-    QsGlobal::g_memory->setDataProcRate(p_qsState->startupSampleRate());    
+    QsGlobal::g_memory->setDataProcRate(p_qsState->startupSampleRate());
     QsGlobal::g_memory->setReadBlockSize(p_qsState->blockSize());
     QsGlobal::g_memory->setResamplerQuality(p_qsState->rsQual());
     QsGlobal::g_memory->setEncodeFreqCorrect(p_qsState->clockCorrection());
@@ -189,6 +193,7 @@ void QS1RServer::initQsMemory() {
 // Initialize the QS1R Hardware
 // ------------------------------------------------------------
 int QS1RServer::initQS1RHardware() {
+    _debug() << "initializing hardware...";
     unsigned int index = 0;
     m_driver_type = "None";
     int ret = -1;
@@ -307,6 +312,7 @@ void QS1RServer::setTxPdacLevel(unsigned int value) {
 // INITIALIZE THE S METER CORRECTION MAP
 // ------------------------------------------------------------
 void QS1RServer::initSMeterCorrectionMap() {
+    _debug() << "initializing s-meter correction map...";
     SMETERCORRECTMAP[25000] = -17.7;
     SMETERCORRECTMAP[50000] = -17.6;
     SMETERCORRECTMAP[125000] = -16.3;
@@ -323,12 +329,13 @@ void QS1RServer::initSMeterCorrectionMap() {
 // LOADS THE INITIAL FPGA REGISTER SETTINGS
 // ------------------------------------------------------------
 void QS1RServer::updateFPGARegisters() {
+    _debug() << "updating fpga registers...";
     clearFpgaControlRegisters();
 
     // do a master reset of DDC in FPGA
     setDdcMasterReset(true);
     setDdcMasterReset(false);
-    
+
     // Set initial Ext Mute Enable Mode
 
     setDacExtMuteEnable(p_qsState->extMuteEnable());
@@ -568,13 +575,13 @@ void QS1RServer::setupIo() {
     bool dac_bypass = false;
     dac_bypass = QsGlobal::g_memory->getDacBypass();
 
-    p_dsp_proc->init(rx_num);
+    QsGlobal::g_dsp_proc->init(rx_num);
 
-    p_dac_writer->init();
+    QsGlobal::g_dac_writer->init();
 
-    if (dac_bypass) {
-        setDacOutputDisable(true);
-    }
+#ifndef __DAC_OUT__
+    setDacOutputDisable(true);
+#endif
 
     m_is_io_setup = true;
 
@@ -603,20 +610,20 @@ void QS1RServer::startIo(bool iswav) {
     setDdcMasterReset(false);
 
     // start the dsp processor thread
-    if (!p_dsp_proc->isRunning())
-        p_dsp_proc->start();
+    if (!QsGlobal::g_dsp_proc->isRunning())
+        QsGlobal::g_dsp_proc->start();
 
     if (!QsGlobal::g_data_reader->isRunning())
         QsGlobal::g_data_reader->start();
 
 #ifdef __DAC_OUT__
-    if (!p_dac_writer->isRunning())
-        p_dac_writer->start();    
+    if (!QsGlobal::g_dac_writer->isRunning())
+        QsGlobal::g_dac_writer->start();
 #endif
 #ifdef __SOUND_OUT__
     initQsAudio(QsGlobal::g_memory->getResamplerRate());
     p_rta->startStream();
-    QsGlobal::g_float_rt_ring->empty();   
+    QsGlobal::g_float_rt_ring->empty();
 #endif
     m_is_io_running = true;
 
@@ -634,7 +641,7 @@ void QS1RServer::stopIo() {
     // is important!
 
     _debug() << "stopping tx thread...";
-    
+
 #ifdef __SOUND_OUT__
     _debug() << "stopping rt audio...";
     p_rta->stopStream();
@@ -643,24 +650,22 @@ void QS1RServer::stopIo() {
 #ifdef __DAC_OUT__
     _debug() << "stopping dac writer...";
     if (p_dac_writer->isRunning()) {
-        p_dac_writer->stop();        
+        p_dac_writer->stop();
     }
 #endif
 
     _debug() << "stopping dsp processor...";
-    if (p_dsp_proc->isRunning()) {
-        p_dsp_proc->stop();
-        // p_dsp_proc->wait(std::chrono::milliseconds(10000));
+    if (QsGlobal::g_dsp_proc->isRunning()) {
+        QsGlobal::g_dsp_proc->stop();
     }
 
     _debug() << "stopping data reader...";
     if (QsGlobal::g_data_reader->isRunning()) {
         QsGlobal::g_data_reader->stop();
-        // QsGlobal::g_data_reader->wait(std::chrono::milliseconds(10000));
     }
 
     QsGlobal::g_data_reader->clearBuffers();
-    p_dsp_proc->clearBuffers();
+    QsGlobal::g_dsp_proc->clearBuffers();
 
     m_is_io_running = false;
 }
@@ -778,7 +783,7 @@ int QS1RServer::startDataReader() {
     _debug() << "Sleeping for 3 seconds...";
     sleep.sleep(3);
     _debug() << "Stopping datareader thread...";
-    QsGlobal::g_data_reader->stop();    
+    QsGlobal::g_data_reader->stop();
     return 0;
 }
 
@@ -796,22 +801,22 @@ int QS1RServer::startDACWriter() {
     _debug() << "Sleeping for 3 seconds...";
     sleep.sleep(3);
     _debug() << "Stopping dac writer thread...";
-    QsGlobal::g_dac_writer->stop();    
+    QsGlobal::g_dac_writer->stop();
     return 0;
 }
 
 // Testing
 int QS1RServer::startDSPProcessor() {
-    if (p_dsp_proc == nullptr) {
-        _debug() << "Error!  First create an instance of the DSP processor!";
+    if (QsGlobal::g_dsp_proc == nullptr) {
+        QsGlobal::g_dsp_proc = std::make_unique<QsDspProcessor>();
     }
     _debug() << "Starting dsp processor thread...";
-    p_dsp_proc->init();
-    p_dsp_proc->start();
+    QsGlobal::g_dsp_proc->init();
+    QsGlobal::g_dsp_proc->start();
     _debug() << "Sleeping for 3 seconds...";
     sleep.sleep(3);
     _debug() << "Stopping dsp processor thread...";
-    p_dsp_proc->stop();    
+    QsGlobal::g_dsp_proc->stop();
     return 0;
 }
 
@@ -2796,7 +2801,7 @@ void QS1RServer::parseLocalCommand() {
             setStatusText("Value is invalid.");
         }
     } else if (resp == "get startup_dither_value") {
-        setStatusText("Startup dither value is: " + String::number(p_qsState->dith()));    
+        setStatusText("Startup dither value is: " + String::number(p_qsState->dith()));
     } else if (resp.contains("set startup_agc_decay_speed ")) {
         String str = resp.remove("set startup_agc_decay_speed ");
         bool ok = false;
@@ -2852,7 +2857,7 @@ void QS1RServer::parseLocalCommand() {
             setStatusText("Dac is bypassed, value: 1 ");
         } else {
             setStatusText("Dac is not bypassed, value: 0 ");
-        }    
+        }
     } else if (resp.contains("reset device")) {
         stopIo();
         sleep.msleep(200);

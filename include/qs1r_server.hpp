@@ -36,11 +36,9 @@ class QS1RServer {
   public:
     QS1RServer();
     ~QS1RServer();
-
-    std::unique_ptr<QsDacWriter> p_dac_writer;
+    
     std::unique_ptr<QsAudio> p_rta;
-    std::unique_ptr<QsState> p_qsState;
-    std::unique_ptr<QsDspProcessor> p_dsp_proc;
+    std::unique_ptr<QsState> p_qsState;    
     std::unique_ptr<QsIoThread> p_io_thread;
 
     unsigned int controlRegister0Value();
@@ -185,8 +183,7 @@ class QS1RServer {
     bool m_is_was_factory_init;
 
     bool hardware_is_registered;
-    bool m_is_fpga_loaded;
-    bool m_is_rt_audio_bypass;
+    bool m_is_fpga_loaded;    
     bool m_gui_rx1_is_connected;
     bool m_gui_rx2_is_connected;
 

@@ -10,17 +10,13 @@ void QsState::init() {
 
 void QsState::readSettings() {
 
-    m_block_size = settings->value("BlockSize", QS_DEFAULT_DSP_BLOCKSIZE);
-    m_ps_block_size = (settings->value("PsBlockSize", QS_DEFAULT_PS_BLOCKSIZE));
-    m_tx_block_size = (settings->value("TxBlockSize", QS_DEFAULT_TX_BLOCKSIZE));
+    m_block_size = settings->value("BlockSize", QS_DEFAULT_DSP_BLOCKSIZE);    
     m_rs_quality = (settings->value("ResamplerQuality", QS_DEFAULT_RS_QUAL));
     m_rta_audio_frames = (settings->value("RtAudioFrameSize", QS_DEFAULT_RT_FRAMES));
     m_clock_correction = (settings->value("ClockCorrection", QS_DEFAULT_CLOCK_CORRECT));
     m_encode_clk_freq = (settings->value("EncodeClockFreq", QS_DEFAULT_ENC_FREQ));
     m_smeter_correction = (settings->value("SMeterCorrection", 0.0));
-    m_main_filter_taps = (settings->value("MainFilterTaps", QS_DEFAULT_MAIN_FILTER_SIZE));
-
-    ;
+    m_main_filter_taps = (settings->value("MainFilterTaps", QS_DEFAULT_MAIN_FILTER_SIZE));    
     m_startup_sample_rate = (settings->value("SampleRate", QS_DEFAULT_DSP_RATE));
     m_startup_freq = (settings->value("Frequency", QS_DEFAULT_FREQ));
     m_startup_filter_low = (settings->value("FilterLow", QS_DEFAULT_FILTER_LO));
@@ -28,9 +24,7 @@ void QsState::readSettings() {
     m_startup_mode = ((QSDEMODMODE)settings->value("Mode", QS_DEFAULT_DEMOD_MODE));
     m_startup_volume = (settings->value("Volume", QS_DEFAULT_VOLUME));
     m_startup_agc_decay_speed = (settings->value("AGCDecaySpeed", QS_DEFAULT_AGC_LONG_DECAY));
-    m_startup_agc_threshold = (settings->value("AGCThreshold", QS_DEFAULT_AGC_THRESHOLD));
-
-    ;
+    m_startup_agc_threshold = (settings->value("AGCThreshold", QS_DEFAULT_AGC_THRESHOLD));    
     m_rand_is_on = (settings->value("RAND", QS_DEFAULT_RAND));
     m_dith_is_on = (settings->value("DITH", QS_DEFAULT_DITH));
     m_pga_is_on = (settings->value("PGA", QS_DEFAULT_PGA));    
