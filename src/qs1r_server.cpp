@@ -109,10 +109,10 @@ void QS1RServer::initSupportedSampleRatesList() {
 }
 
 int QS1RServer::initRingBuffers() {
-    QsGlobal::g_cpx_readin_ring = std::make_unique<QsCpxVectorCircularBuffer>();    ;
-    QsGlobal::g_cpx_sd_ring = std::make_unique<QsCpxVectorCircularBuffer>();
-    QsGlobal::g_float_rt_ring = std::make_unique<QsFloatVectorCircularBuffer>();
-    QsGlobal::g_float_dac_ring = std::make_unique<QsFloatVectorCircularBuffer>();
+    QsGlobal::g_cpx_readin_ring = std::make_unique<QsCircularBuffer<std::complex<float>>>();    ;
+    QsGlobal::g_cpx_sd_ring = std::make_unique<QsCircularBuffer<std::complex<float>>>();
+    QsGlobal::g_float_rt_ring = std::make_unique<QsCircularBuffer<float>>();
+    QsGlobal::g_float_dac_ring = std::make_unique<QsCircularBuffer<float>>();
     return 0;
 }
 
@@ -784,7 +784,7 @@ int QS1RServer::startDataReader() {
         QsGlobal::g_data_reader = std::make_unique<QsDataReader>();
     }
     if (QsGlobal::g_cpx_readin_ring == nullptr) {
-        QsGlobal::g_cpx_readin_ring = std::make_unique<QsCpxVectorCircularBuffer>();
+        QsGlobal::g_cpx_readin_ring = std::make_unique<QsCircularBuffer<std::complex<float>>>();
     }
     _debug() << "Starting datareader thread...";
     QsGlobal::g_data_reader->init();
@@ -802,7 +802,7 @@ int QS1RServer::startDACWriter() {
         QsGlobal::g_dac_writer = std::make_unique<QsDacWriter>();
     }
     if (QsGlobal::g_float_dac_ring == nullptr) {
-        QsGlobal::g_float_dac_ring = std::make_unique<QsFloatVectorCircularBuffer>();
+        QsGlobal::g_float_dac_ring = std::make_unique<QsCircularBuffer<float>>();
     }
     _debug() << "Starting dac writer thread...";
     QsGlobal::g_dac_writer->init();

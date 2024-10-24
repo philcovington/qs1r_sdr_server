@@ -28,13 +28,12 @@
 #pragma once
 
 #include "../include/qs1r_server.hpp"
-#include "../include/qs_cpx_vector_cb.hpp"
 #include "../include/qs_datareader.hpp"
-#include "../include/qs_float_vector_cb.hpp"
 #include "../include/qs_io_libusb.hpp"
 #include "../include/qs_memory.hpp"
 #include "../include/qs_wait_condition.hpp"
 #include "../include/qs_dac_writer.hpp"
+#include "../include/qs_circ_buf.hpp"
 #include <libusb-1.0/libusb.h>
 
 #include <memory>
@@ -48,11 +47,11 @@ class QsGlobal {
 public:
 	static QS1RServer* g_server; // raw pointer
 	static std::unique_ptr<QsDataReader> g_data_reader;	
-	static std::unique_ptr<QsDacWriter> g_dac_writer;
-	static std::unique_ptr<QsCpxVectorCircularBuffer> g_cpx_readin_ring;	
-	static std::unique_ptr<QsCpxVectorCircularBuffer> g_cpx_sd_ring;
-	static std::unique_ptr<QsFloatVectorCircularBuffer> g_float_rt_ring;
-	static std::unique_ptr<QsFloatVectorCircularBuffer> g_float_dac_ring;
+	static std::unique_ptr<QsDacWriter> g_dac_writer;	
+	static std::unique_ptr<QsCircularBuffer<std::complex<float>>> g_cpx_readin_ring;
+	static std::unique_ptr<QsCircularBuffer<std::complex<float>>> g_cpx_sd_ring;
+	static std::unique_ptr<QsCircularBuffer<float>> g_float_rt_ring;
+	static std::unique_ptr<QsCircularBuffer<float>> g_float_dac_ring;
 	static std::unique_ptr<QsIOLib_LibUSB> g_io;
 	static std::unique_ptr<QsMemory> g_memory;	
 	static bool g_swap_iq;
