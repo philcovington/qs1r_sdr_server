@@ -649,8 +649,8 @@ void QS1RServer::stopIo() {
 
 #ifdef __DAC_OUT__
     _debug() << "stopping dac writer...";
-    if (p_dac_writer->isRunning()) {
-        p_dac_writer->stop();
+    if (QsGlobal::g_dac_writer->isRunning()) {
+        QsGlobal::g_dac_writer->stop();
     }
 #endif
 

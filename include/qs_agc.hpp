@@ -52,6 +52,8 @@ class QsAgc {
     void process(qs_vect_cpx &src_dst);
 
   private:
+
+    float update_avg(float avg, float value, float rise_alpha, float fall_alpha);
     int m_post_processing_rate;
 
     bool m_agc_use_hang;
