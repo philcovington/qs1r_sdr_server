@@ -5,7 +5,8 @@
 
 QsDacWriter::QsDacWriter() : m_bsize(0), m_bsizeX2(0), m_thread_go(false), m_is_running(false) {}
 
-void QsDacWriter::init() {
+void QsDacWriter::init(bool test_mode) {
+    m_testMode = test_mode;
     m_bsize = QsGlobal::g_memory->getDACBlockSize();
     m_bsizeX2 = m_bsize * 2;
 
@@ -32,7 +33,10 @@ void QsDacWriter::run() {
     QsSignalOps::Zero(out_s);
 
     while (m_thread_go) {
-        if (QsGlobal::g_float_dac_ring->readAvail() >= m_bsizeX2) {
+        if (m_testMode) {
+            generateTone(m_toneFrequency, m_toneAmplitude, m_sampleRate);
+            QsSignalOps::Convert(out_f, out_s, m_bsizeX2);
+        } else if (QsGlobal::g_float_dac_ring->readAvail() >= m_bsizeX2) {
             QsGlobal::g_float_dac_ring->read(out_f, m_bsizeX2);
             QsSignalOps::Convert(out_f, out_s, m_bsizeX2);
         } else {
@@ -61,4 +65,27 @@ void QsDacWriter::stop() {
 
 bool QsDacWriter::isRunning() {
     return m_thread_go;
+}
+
+void QsDacWriter::setTestModeParams(float frequency, float amplitude, u_int samplerate)
+{
+    m_toneFrequency = frequency;
+    m_toneAmplitude = amplitude;
+    m_sampleRate = samplerate;
+}
+
+void QsDacWriter::generateTone(float frequency, float amplitude, int sampleRate) {
+    static float phase = 0.0f;
+    float phaseIncrement = 2.0f * M_PI * frequency / sampleRate;
+
+    // Fill the buffer with a sine wave
+    for (size_t i = 0; i < m_bsizeX2; ++i) {
+        out_f[i] = amplitude * sin(phase);
+        phase += phaseIncrement;
+
+        // Keep phase between 0 and 2 * PI
+        if (phase > 2.0f * M_PI) {
+            phase -= 2.0f * M_PI;
+        }
+    }
 }

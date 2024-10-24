@@ -14,36 +14,9 @@ int main() {
     DebugLogger::DEBUG = true;
 
     QS1RServer qs1r;
-    QsSleep sleep;
-
-    int result = qs1r.initQS1RHardware();
-
-    if (qs1r.isHardwareInit() == true) 
-    {
-        std::cout << "Hardware was initialized" << std::endl;
-    }
-
-    _debug() << "PGA MODE IS: " << qs1r.pgaMode();
-    _debug() << "RAND MODE IS: " << qs1r.randMode();
-    _debug() << "DITHER MODE IS: " << qs1r.ditherMode();
-
-    result = qs1r.setPgaMode(true);
-
-    _debug() << "setPgaMode result: " << result;
-
-    result = qs1r.setRandMode(true);
-
-    _debug() << "setRandMode result: " << result;
-
-    result = qs1r.setDitherMode(true);
-
-    _debug() << "setDitherMode result: " << result;
-
-    _debug() << "PGA MODE NOW IS: " << qs1r.pgaMode();
-    _debug() << "RAND MODE NOW IS: " << qs1r.randMode();
-    _debug() << "DITHER MODE NOW IS: " << qs1r.ditherMode();    
+    QsSleep sleep;    
     
-    qs1r.startAllThreads();
+    qs1r.startDACWriter();
 
     qs1r.shutdown();
 

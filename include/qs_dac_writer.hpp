@@ -38,11 +38,13 @@ class QsDacWriter {
   public:
     QsDacWriter();
 
-    void init();
+    void init(bool test_mode = false);
     void reinit();
     void start();        // Method to start the DAC writer thread
     void stop();         // Method to stop the DAC writer thread
     bool isRunning();
+
+    void setTestModeParams(float frequency, float amplitude, u_int samplerate);
 
   private:
     void run();          // Method containing the main logic for the thread
@@ -60,4 +62,10 @@ class QsDacWriter {
 
     // The thread object
     std::thread m_thread;
+
+    void generateTone(float frequency, float amplitude, int sampleRate); // For testing
+    bool m_testMode = true;
+    float m_toneFrequency = 440.0f;  // A 440 Hz tone (standard A note)
+    float m_toneAmplitude = 0.25f;  // Set the amplitude (max 1.0)
+    int m_sampleRate = 50000;  // Sample rate (50 kHz)
 };

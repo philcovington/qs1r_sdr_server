@@ -90,8 +90,14 @@ void QS1RServer::initialize() {
     initSMeterCorrectionMap();
     initRingBuffers();
     initThreads();
+    if (initQS1RHardware() != 0) {
+        shutdown();
+    }
+    sleep.sleep(2);
     updateFPGARegisters();
     setFpgaForSampleRate(50000);
+    setDacOutputDisable(false);
+    _debug() << "Qs1r server initialization complete.";
 }
 
 void QS1RServer::initSupportedSampleRatesList() {
@@ -111,9 +117,13 @@ void QS1RServer::initSupportedSampleRatesList() {
 int QS1RServer::initRingBuffers() {
     _debug() << "initializing ring buffers...";
     QsGlobal::g_cpx_readin_ring = std::make_unique<QsCircularBuffer<std::complex<float>>>();
+    QsGlobal::g_cpx_readin_ring->init(2048);
     QsGlobal::g_cpx_sd_ring = std::make_unique<QsCircularBuffer<std::complex<float>>>();
+    QsGlobal::g_cpx_sd_ring->init(2048);
     QsGlobal::g_float_rt_ring = std::make_unique<QsCircularBuffer<float>>();
+    QsGlobal::g_float_rt_ring->init(2048);
     QsGlobal::g_float_dac_ring = std::make_unique<QsCircularBuffer<float>>();
+    QsGlobal::g_float_dac_ring->init(2048);
     return 0;
 }
 
@@ -195,7 +205,9 @@ void QS1RServer::initQsMemory() {
 // Initialize the QS1R Hardware
 // ------------------------------------------------------------
 int QS1RServer::initQS1RHardware() {
+    _debug() << "==========================";
     _debug() << "initializing hardware...";
+    _debug() << "==========================";
     unsigned int index = 0;
     m_driver_type = "None";
     int ret = -1;
@@ -270,7 +282,9 @@ int QS1RServer::initQS1RHardware() {
         return -1;
     }
 
+    _debug() << "==========================";
     _debug() << "QS1R index [" << index << "] hardware was successfully initialized!";
+    _debug() << "==========================";
     m_is_hardware_init = true;
     QsGlobal::g_is_hardware_init = true;
     return 0;
@@ -817,8 +831,8 @@ int QS1RServer::startDACWriter() {
     _debug() << "Starting dac writer thread...";
     QsGlobal::g_dac_writer->init();
     QsGlobal::g_dac_writer->start();
-    _debug() << "Sleeping for 3 seconds...";
-    sleep.sleep(3);
+    _debug() << "Thread will run for 10 seconds...";
+    sleep.sleep(10);
     _debug() << "Stopping dac writer thread...";
     QsGlobal::g_dac_writer->stop();
     return 0;
