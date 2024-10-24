@@ -33,6 +33,15 @@ target_compile_definitions(qs1r_server PRIVATE __LINUX_ALSA__)
 # Undefine __RTAUDIO_DUMMY__ using compiler flags
 target_compile_options(qs1r_server PRIVATE -U__RTAUDIO_DUMMY__)
 
+# Undefine __IIR_NOTCH__ using compiler flags
+target_compile_options(qs1r_server PRIVATE -U__IIR_NOTCH__)
+
+# Undefine __NOISE_BLANKERS__ using compiler flags
+target_compile_options(qs1r_server PRIVATE -U__NOISE_BLANKERS__)
+
+# Undefine __BINAURAL__ using compiler flags
+target_compile_options(qs1r_server PRIVATE -U__BINAURAL__)
+
 # Specify the build output directory
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/build)
 

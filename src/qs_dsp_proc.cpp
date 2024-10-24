@@ -4,7 +4,6 @@
 #include "../include/qs_auto_notch_filter.hpp"
 #include "../include/qs_avg_nb.hpp"
 #include "../include/qs_blk_nb.hpp"
-#include "../include/qs_cpx_vector_cb.hpp"
 #include "../include/qs_debugloggerclass.hpp"
 #include "../include/qs_downcnv.hpp"
 #include "../include/qs_fmn_demod.hpp"
@@ -205,7 +204,8 @@ void QsDspProcessor::run() {
             // ======== <MAIN FIR> ========
             p_main_filter->process(rs_cpx_n);
             // ======== </MAIN FIR> ========
-
+            
+#ifdef __IIR_NOTCH__
             p_iir0->process(rs_cpx_n);
             p_iir1->process(rs_cpx_n);
             p_iir2->process(rs_cpx_n);
@@ -214,6 +214,7 @@ void QsDspProcessor::run() {
             p_iir5->process(rs_cpx_n);
             p_iir6->process(rs_cpx_n);
             p_iir7->process(rs_cpx_n);
+#endif
 
             if (QsGlobal::g_memory->getDemodMode() == dmCW) {
                 // ======== <CW TONE GENERATOR> ===========

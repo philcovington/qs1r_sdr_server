@@ -109,7 +109,7 @@ void QS1RServer::initSupportedSampleRatesList() {
 }
 
 int QS1RServer::initRingBuffers() {
-    QsGlobal::g_cpx_readin_ring = std::make_unique<QsCircularBuffer<std::complex<float>>>();    ;
+    QsGlobal::g_cpx_readin_ring = std::make_unique<QsCircularBuffer<std::complex<float>>>();   
     QsGlobal::g_cpx_sd_ring = std::make_unique<QsCircularBuffer<std::complex<float>>>();
     QsGlobal::g_float_rt_ring = std::make_unique<QsCircularBuffer<float>>();
     QsGlobal::g_float_dac_ring = std::make_unique<QsCircularBuffer<float>>();

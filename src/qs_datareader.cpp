@@ -1,5 +1,4 @@
 #include "../include/qs_datareader.hpp"
-#include "../include/qs_cpx_vector_cb.hpp"
 #include "../include/qs_debugloggerclass.hpp"
 #include "../include/qs_globals.hpp"
 #include "../include/qs_types.hpp"

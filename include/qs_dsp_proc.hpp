@@ -31,7 +31,6 @@
 #include "../include/qs_auto_notch_filter.hpp"
 #include "../include/qs_avg_nb.hpp"
 #include "../include/qs_blk_nb.hpp"
-#include "../include/qs_cpx_vector_cb.hpp"
 #include "../include/qs_debugloggerclass.hpp"
 #include "../include/qs_defines.hpp"
 #include "../include/qs_downcnv.hpp"

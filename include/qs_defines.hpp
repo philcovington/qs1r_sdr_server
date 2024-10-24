@@ -13,7 +13,7 @@ enum QSTXVFOMODE { txFollowRXVfo = 0, txFollowTXVfo = 1 };
 #define NUMBER_OF_RECEIVERS 1
 #define MAX_RECEIVERS 2
 
-#define SDRMAXV_VERSION "5.0.0.9"
+#define SDRMAXV_VERSION "20241024"
 
 #define SPEC_OFFSET_VALUE 200.0
 
