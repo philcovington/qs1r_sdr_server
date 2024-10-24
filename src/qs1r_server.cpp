@@ -789,7 +789,7 @@ int QS1RServer::startDataReader() {
     _debug() << "Starting datareader thread...";
     QsGlobal::g_data_reader->init();
     QsGlobal::g_data_reader->start();
-    _debug() << "Sleeping for 10 seconds...";
+    _debug() << "Sleeping for 3 seconds...";
     sleep.sleep(3);
     _debug() << "Stopping datareader thread...";
     QsGlobal::g_data_reader->stop();    
@@ -807,7 +807,7 @@ int QS1RServer::startDACWriter() {
     _debug() << "Starting dac writer thread...";
     QsGlobal::g_dac_writer->init();
     QsGlobal::g_dac_writer->start();
-    _debug() << "Sleeping for 10 seconds...";
+    _debug() << "Sleeping for 3 seconds...";
     sleep.sleep(3);
     _debug() << "Stopping dac writer thread...";
     QsGlobal::g_dac_writer->stop();    
@@ -822,7 +822,7 @@ int QS1RServer::startDSPProcessor() {
     _debug() << "Starting dsp processor thread...";
     p_dsp_proc->init();
     p_dsp_proc->start();
-    _debug() << "Sleeping for 10 seconds...";
+    _debug() << "Sleeping for 3 seconds...";
     sleep.sleep(3);
     _debug() << "Stopping dsp processor thread...";
     p_dsp_proc->stop();    
