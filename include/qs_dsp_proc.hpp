@@ -34,8 +34,6 @@
 // #include "../include/qs_debugloggerclass.hpp"
 // #include "../include/qs_defines.hpp"
 // #include "../include/qs_downcnv.hpp"
-// #include "../include/qs_fmn_demod.hpp"
-// #include "../include/qs_fmw_demod.hpp"
 // #include "../include/qs_globals.hpp"
 // #include "../include/qs_iir_filter.hpp"
 // #include "../include/qs_io_libusb.hpp"
@@ -62,18 +60,22 @@ class QsDownConvertor;
 class QsMainRxFilter;
 class QsPostRxFilter;
 class QsSAMDemodulator;
-class QsFMNDemodulator;
-class QsFMWDemodulator;
+class QsFMCombinedDemodulator;
 class QsNoiseReductionFilter;
 class QsAutoNotchFilter;
 class QsSMeter;
 class QsSquelch;
 class QsVolume;
 class QS_IIR;
+class Resampler;
+class QsSleep;
 
 #include <atomic>
 #include <memory>
 #include <thread>
+
+#include "../include/qs_types.hpp"
+#include "../include/qs_sleep.hpp"
 
 class QsDspProcessor {
   public:
@@ -88,8 +90,7 @@ class QsDspProcessor {
     std::unique_ptr<QsPostRxFilter> p_post_filter;
     std::unique_ptr<QsAMDemodulator> p_am;
     std::unique_ptr<QsSAMDemodulator> p_sam;
-    std::unique_ptr<QsFMNDemodulator> p_fmn;
-    std::unique_ptr<QsFMWDemodulator> p_fmw;
+    std::unique_ptr<QsFMCombinedDemodulator> p_fm;
     std::unique_ptr<QsNoiseReductionFilter> p_nr;
     std::unique_ptr<QsAutoNotchFilter> p_anf;
     std::unique_ptr<QsSMeter> p_sm;
@@ -103,6 +104,7 @@ class QsDspProcessor {
     std::unique_ptr<QS_IIR> p_iir5;
     std::unique_ptr<QS_IIR> p_iir6;
     std::unique_ptr<QS_IIR> p_iir7;
+    std::unique_ptr<Resampler> resampler;
 
     explicit QsDspProcessor();
     ~QsDspProcessor();
@@ -143,7 +145,6 @@ class QsDspProcessor {
 
     QsSleep sleep;
 
-    std::unique_ptr<Resampler> resampler;
     double m_rs_output_rate;
     double m_rs_input_rate;
     int m_rs_quality;

@@ -1,21 +1,8 @@
 #include "../include/qs_fm_demod.hpp"
-#include <algorithm> // for std::clamp
+
+#include "../include/qs_globals.hpp" // Include global definitions and dependencies
+#include <algorithm>                 // for std::clamp
 #include <cmath>
-
-enum DemodMode { NARROW, WIDE };
-
-class QsFMCombinedDemodulator {
-  public:
-    QsFMCombinedDemodulator();
-    void init(DemodMode mode);
-    void process(qs_vect_cpx &src_dst);
-
-  private:
-    DemodMode m_mode; // Mode selector (NARROW or WIDE)
-    float m_bw, m_limit, m_zeta, m_norm, m_cos, m_sin, m_ncoPhase;
-    float m_phaseError, m_ncoFreq, m_ncoHighLimit, m_ncoLowLimit;
-    float m_alpha, m_beta, m_freqDcError, m_dc_alpha, m_outgain;
-};
 
 QsFMCombinedDemodulator::QsFMCombinedDemodulator()
     : m_mode(NARROW), m_bw(0), m_limit(0), m_zeta(0), m_norm(0), m_cos(0), m_sin(0), m_ncoPhase(0), m_phaseError(0),
@@ -48,7 +35,10 @@ void QsFMCombinedDemodulator::init(DemodMode mode) {
     m_outgain = 0.45 * QsGlobal::g_memory->getDataPostProcRate() / (ONE_PI * m_bw);
 }
 
-void QsFMCombinedDemodulator::process(qs_vect_cpx &src_dst) {
+void QsFMCombinedDemodulator::process(qs_vect_cpx &src_dst, DemodMode mode) {
+    if (m_mode != mode) {
+        init(mode);
+    }
     for (auto &sample : src_dst) {
         // Precompute trigonometric functions for the NCO phase
         m_sin = sin(m_ncoPhase);

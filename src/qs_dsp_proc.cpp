@@ -10,6 +10,7 @@
 #include "../include/qs_downcnv.hpp"
 #include "../include/qs_fmn_demod.hpp"
 #include "../include/qs_fmw_demod.hpp"
+#include "../include/qs_fm_demod.hpp"
 #include "../include/qs_globals.hpp"
 #include "../include/qs_iir_filter.hpp"
 #include "../include/qs_io_libusb.hpp"
@@ -31,24 +32,39 @@
 QsDspProcessor::QsDspProcessor()
     : m_rx_num(0), m_bsize(0), m_bsizeX2(0), m_sd_buffer_size(0), m_ps_size(0), m_req_outframes(0), m_outframesX2(0),
       m_thread_go(false), m_is_running(false), m_dac_bypass(false), m_rt_audio_bypass(false), m_processing_rate(0),
-      m_post_processing_rate(0), m_rs_rate(0), m_rs_quality(4), p_tg0(std::make_unique<QsToneGenerator>()),
-      p_anb(std::make_unique<QsAveragingNoiseBlanker>()), p_bnb(std::make_unique<QsBlockNoiseBlanker>()),
-      p_downconv(std::make_unique<QsDownConvertor>()), p_tg1(std::make_unique<QsToneGenerator>()),
-      p_agc(std::make_unique<QsAgc>()), p_main_filter(std::make_unique<QsMainRxFilter>()),
-      p_post_filter(std::make_unique<QsPostRxFilter>()), p_am(std::make_unique<QsAMDemodulator>()),
-      p_sam(std::make_unique<QsSAMDemodulator>()), p_fmn(std::make_unique<QsFMNDemodulator>()),
-      p_fmw(std::make_unique<QsFMWDemodulator>()), p_nr(std::make_unique<QsNoiseReductionFilter>()),
-      p_anf(std::make_unique<QsAutoNotchFilter>()), p_sm(std::make_unique<QsSMeter>()),
-      p_sq(std::make_unique<QsSquelch>()), p_vol(std::make_unique<QsVolume>()), p_iir0(std::make_unique<QS_IIR>()),
-      p_iir1(std::make_unique<QS_IIR>()), p_iir2(std::make_unique<QS_IIR>()), p_iir3(std::make_unique<QS_IIR>()),
-      p_iir4(std::make_unique<QS_IIR>()), p_iir5(std::make_unique<QS_IIR>()), p_iir6(std::make_unique<QS_IIR>()),
-      p_iir7(std::make_unique<QS_IIR>()), resampler(nullptr), m_rs_output_rate(0), m_rs_input_rate(0) {
+      m_post_processing_rate(0), m_rs_rate(0), m_rs_quality(4), resampler(nullptr), m_rs_output_rate(0),
+      m_rs_input_rate(0) {
     QsSleep sleep;
 }
 
 QsDspProcessor::~QsDspProcessor() {}
 
 void QsDspProcessor::init(int rx_num) {
+    p_tg0 = std::make_unique<QsToneGenerator>();
+    p_anb = std::make_unique<QsAveragingNoiseBlanker>();
+    p_bnb = std::make_unique<QsBlockNoiseBlanker>();
+    p_downconv = std::make_unique<QsDownConvertor>();
+    p_tg1 = std::make_unique<QsToneGenerator>();
+    p_agc = std::make_unique<QsAgc>();
+    p_main_filter = std::make_unique<QsMainRxFilter>();
+    p_post_filter = std::make_unique<QsPostRxFilter>();
+    p_am = std::make_unique<QsAMDemodulator>();
+    p_sam = std::make_unique<QsSAMDemodulator>();    ;
+    p_fm = std::make_unique<QsFMCombinedDemodulator>();
+    p_nr = std::make_unique<QsNoiseReductionFilter>();
+    p_anf = std::make_unique<QsAutoNotchFilter>();
+    p_sm = std::make_unique<QsSMeter>();
+    p_sq = std::make_unique<QsSquelch>();
+    p_vol = std::make_unique<QsVolume>();
+    p_iir0 = std::make_unique<QS_IIR>();
+    p_iir1 = std::make_unique<QS_IIR>();
+    p_iir2 = std::make_unique<QS_IIR>();
+    p_iir3 = std::make_unique<QS_IIR>();
+    p_iir4 = std::make_unique<QS_IIR>();
+    p_iir5 = std::make_unique<QS_IIR>();
+    p_iir6 = std::make_unique<QS_IIR>();
+    p_iir7 = std::make_unique<QS_IIR>();
+
     m_rx_num = rx_num;
     m_bsize = QsGlobal::g_memory->getReadBlockSize();
     m_bsizeX2 = m_bsize * 2;
@@ -111,8 +127,7 @@ void QsDspProcessor::init(int rx_num) {
     // DEMOD
     p_am->init();
     p_sam->init();
-    p_fmn->init();
-    p_fmw->init();
+    p_fm->init(NARROW);    
 
     // POST FILTER
     p_post_filter->init(m_bsize);
@@ -182,13 +197,13 @@ void QsDspProcessor::run() {
     m_thread_go = true;
 
     while (m_thread_go) {
-        
+
         // read data from reader ring buffer
         while (QsGlobal::g_cpx_readin_ring->readAvail() >= m_bsize & m_thread_go == true) {
-            
+
             QsGlobal::g_cpx_readin_ring->read(in_cpx);
 
-#ifdef __NOISE_BLANKERS__            
+#ifdef __NOISE_BLANKERS__
             // Do noiseblankers
             // ======== <AVERAGING NOISE BLANKER> ===========
             p_anb->process(in_cpx);
@@ -207,7 +222,7 @@ void QsDspProcessor::run() {
             dstlen = p_downconv->process(&in_cpx[0], &rs_cpx[0], m_bsize);
             QsGlobal::g_cpx_sd_ring->write(rs_cpx, dstlen);
         }
-       
+
         while (QsGlobal::g_cpx_sd_ring->readAvail() >= m_bsize & m_thread_go == true) {
             // read data from integer resample buffer
             QsGlobal::g_cpx_sd_ring->read(rs_cpx_n, m_bsize);
@@ -256,11 +271,11 @@ void QsDspProcessor::run() {
                 p_post_filter->process(rs_cpx_n);
                 break;
             case dmFMN:
-                p_fmn->process(rs_cpx_n);
+                p_fm->process(rs_cpx_n, NARROW);
                 p_post_filter->process(rs_cpx_n);
                 break;
             case dmFMW:
-                p_fmw->process(rs_cpx_n);
+                p_fm->process(rs_cpx_n, WIDE);
                 p_post_filter->process(rs_cpx_n);
                 break;
             default:
@@ -307,13 +322,13 @@ void QsDspProcessor::run() {
 
 #ifdef __SOUND_OUT__
             if (QsGlobal::g_float_rt_ring->writeAvail() >= m_outframesX2) {
-                    QsGlobal::g_float_rt_ring->write(rs_out_interleaved, m_outframesX2);
-            }            
+                QsGlobal::g_float_rt_ring->write(rs_out_interleaved, m_outframesX2);
+            }
 #endif
 #ifdef __DAC_OUT__
             if (QsGlobal::g_float_dac_ring->writeAvail() >= m_outframesX2) {
-                    QsGlobal::g_float_dac_ring->write(rs_out_interleaved, m_outframesX2);
-            }            
+                QsGlobal::g_float_dac_ring->write(rs_out_interleaved, m_outframesX2);
+            }
 #endif
         }
         sleep.usleep(1);

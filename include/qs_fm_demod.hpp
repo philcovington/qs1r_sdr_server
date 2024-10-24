@@ -1,7 +1,5 @@
-#ifndef QS_FM_DEMOD_HPP
-#define QS_FM_DEMOD_HPP
+#pragma once
 
-#include "../include/qs_globals.hpp"   // Include global definitions and dependencies
 #include "../include/qs_types.hpp" // Complex vector definition
 #include <cmath>
 
@@ -15,7 +13,7 @@ class QsFMCombinedDemodulator {
     void init(DemodMode mode);
 
     // Process the input vector of complex samples and demodulate them
-    void process(qs_vect_cpx &src_dst);
+    void process(qs_vect_cpx &src_dst, DemodMode mode=NARROW);
 
   private:
     DemodMode m_mode; // Mode selector (NARROW or WIDE)
@@ -41,4 +39,3 @@ class QsFMCombinedDemodulator {
     // Utility functions could be declared here if needed (e.g., private helper functions)
 };
 
-#endif // QS_FM_DEMOD_HPP
