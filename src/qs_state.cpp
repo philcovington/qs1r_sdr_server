@@ -33,9 +33,7 @@ void QsState::readSettings() {
     ;
     m_rand_is_on = (settings->value("RAND", QS_DEFAULT_RAND));
     m_dith_is_on = (settings->value("DITH", QS_DEFAULT_DITH));
-    m_pga_is_on = (settings->value("PGA", QS_DEFAULT_PGA));
-    m_dac_bypass_is_on = (settings->value("DACBYPASS", QS_DEFAULT_DAC_BYPASS));
-    m_rta_audio_bypass = (settings->value("RTABYPASS", QS_DEFAULT_RT_BYPASS));
+    m_pga_is_on = (settings->value("PGA", QS_DEFAULT_PGA));    
     m_ext_mute_enable_is_on = (settings->value("EXTMUTEENABLE", QS_DEFAULT_EXT_MUTE_ENABLE));
     m_rta_in_dev_id = (settings->value("AUDIOINID", QS_DEFAULT_RTA_IN_DEVID));
     m_rta_out_dev_id = (settings->value("AUDIOOUTID", QS_DEFAULT_RTA_OUT_DEVID));
@@ -181,18 +179,6 @@ double QsState::smeterCorrection() { return m_smeter_correction; }
 
 int QsState::mainFilterTapSize() { return m_main_filter_taps; }
 
-void QsState::setDacBypass(bool on) {
-    m_dac_bypass_is_on = on;
-    ;
-    settings->setValue("DACBYPASS", m_dac_bypass_is_on);
-}
-
-void QsState::setRtAudioBypass(bool on) {
-    m_rta_audio_bypass = on;
-    ;
-    settings->setValue("RTABYPASS", m_rta_audio_bypass);
-}
-
 void QsState::setRtAudioInDevId(int value) {
     m_rta_in_dev_id = value;
     ;
@@ -210,10 +196,6 @@ void QsState::setExtMuteEnable(bool on) {
     ;
     settings->setValue("EXTMUTEENABLE", m_ext_mute_enable_is_on);
 }
-
-bool QsState::dacBypass() { return m_dac_bypass_is_on; }
-
-bool QsState::rtAudioBypass() { return m_rta_audio_bypass; }
 
 bool QsState::extMuteEnable() { return m_ext_mute_enable_is_on; }
 

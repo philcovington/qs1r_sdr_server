@@ -80,11 +80,13 @@ void QsDspProcessor::init(int rx_num) {
     QsGlobal::g_float_rt_ring->init(m_outframesX2 * RT_RING_SZ_MULT);
     QsGlobal::g_float_dac_ring->init(m_outframesX2 * DAC_RING_SZ_MULT);
 
+#ifdef __NOISE_BLANKERS__
     // ANB
     p_anb->init();
 
     // BNB
     p_bnb->init();
+#endif
 
     // TONE GEN
     p_tg0->init(QsToneGenerator::rateDataRate);
@@ -113,8 +115,10 @@ void QsDspProcessor::init(int rx_num) {
     // MAIN FIR
     p_main_filter->init(m_bsize);
 
+#ifdef __AUTO_NOTCH__
     // ANF
     p_anf->init(m_bsize);
+#endif
 
     // NR
     p_nr->init(m_bsize);
@@ -125,6 +129,7 @@ void QsDspProcessor::init(int rx_num) {
     // CW TONE GEN
     p_tg1->init(QsToneGenerator::ratePostDataRate);
 
+#ifdef __IIR_NOTCH__
     // Instantiate 8 manual notch filters
     p_iir0->init(1, QS_IIR::iirBandReject);
     p_iir1->init(2, QS_IIR::iirBandReject);
@@ -134,6 +139,7 @@ void QsDspProcessor::init(int rx_num) {
     p_iir5->init(6, QS_IIR::iirBandReject);
     p_iir6->init(7, QS_IIR::iirBandReject);
     p_iir7->init(8, QS_IIR::iirBandReject);
+#endif
 }
 
 void QsDspProcessor::reinit() { init(m_rx_num); }
@@ -176,7 +182,8 @@ void QsDspProcessor::run() {
         while (QsGlobal::g_cpx_readin_ring->readAvail() >= m_bsize & m_thread_go == true) {
             
             QsGlobal::g_cpx_readin_ring->read(in_cpx);
-            
+
+#ifdef __NOISE_BLANKERS__            
             // Do noiseblankers
             // ======== <AVERAGING NOISE BLANKER> ===========
             p_anb->process(in_cpx);
@@ -185,7 +192,7 @@ void QsDspProcessor::run() {
             // ======== <BLOCK NOISE BLANKER> ===========
             p_bnb->process(in_cpx);
             // ======== </BLOCK NOISE BLANKER> ===========
-
+#endif
             // apply LO
             // ======== <TONE GENERATOR> ===========
             p_tg0->process(in_cpx);
@@ -204,7 +211,7 @@ void QsDspProcessor::run() {
             // ======== <MAIN FIR> ========
             p_main_filter->process(rs_cpx_n);
             // ======== </MAIN FIR> ========
-            
+
 #ifdef __IIR_NOTCH__
             p_iir0->process(rs_cpx_n);
             p_iir1->process(rs_cpx_n);
@@ -257,16 +264,18 @@ void QsDspProcessor::run() {
 
             // ======== </DEMODULATORS> ===========
 
+#ifdef __BINAURAL__
             // ======== <BINAURAL> =============
             if (!QsGlobal::g_memory->getBinauralMode()) {
                 QsSignalOps::CopyRealToImag(rs_cpx_n);
             }
             // ======== </BINAURAL> =============
-
+#endif
+#ifdef __AUTO_NOTCH__
             // ======== <AUTO NOTCH FILTER> =============
             p_anf->process(rs_cpx_n);
             // ======== </AUTO NOTCH FILTER> =============
-
+#endif
             // ======== <NOISE REDUCTION FILTER> =============
             p_nr->process(rs_cpx_n);
             // ======== </NOISE REDUCTION FILTER> =============
@@ -291,19 +300,16 @@ void QsDspProcessor::run() {
             p_vol->process(rs_out_interleaved);
             // ======== </VOLUME WITH LIMITER> ===========
 
-            if (!m_rt_audio_bypass) {
-                // write resampled data to audio ring
-                if (QsGlobal::g_float_rt_ring->writeAvail() >= m_outframesX2) {
+#ifdef __SOUND_OUT__
+            if (QsGlobal::g_float_rt_ring->writeAvail() >= m_outframesX2) {
                     QsGlobal::g_float_rt_ring->write(rs_out_interleaved, m_outframesX2);
-                }
-            }
-
-            if (!m_dac_bypass) {
-                // write resampled data to dac ring
-                if (QsGlobal::g_float_dac_ring->writeAvail() >= m_outframesX2) {
+            }            
+#endif
+#ifdef __DAC_OUT__
+            if (QsGlobal::g_float_dac_ring->writeAvail() >= m_outframesX2) {
                     QsGlobal::g_float_dac_ring->write(rs_out_interleaved, m_outframesX2);
-                }
-            }
+            }            
+#endif
         }
         sleep.usleep(1);
     }

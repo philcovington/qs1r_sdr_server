@@ -14,9 +14,7 @@ class QsState {
 
     bool m_rand_is_on;
     bool m_dith_is_on;
-    bool m_pga_is_on;
-    bool m_dac_bypass_is_on;
-    bool m_rta_audio_bypass;
+    bool m_pga_is_on;    
     bool m_ext_mute_enable_is_on;
 
     int m_block_size;
@@ -48,9 +46,7 @@ class QsState {
 
     bool rand();
     bool pga();
-    bool dith();
-    bool dacBypass();
-    bool rtAudioBypass();
+    bool dith();    
     bool extMuteEnable();
 
     int blockSize();
@@ -94,9 +90,7 @@ class QsState {
     void setDITH(bool on);
     void setClockCorrection(double value);
     void setSMeterCorrection(double value);
-    void setMainFilterTapSize(int value);
-    void setDacBypass(bool on);
-    void setRtAudioBypass(bool on);
+    void setMainFilterTapSize(int value);    
     void setRtAudioInDevId(int value);
     void setRtAudioOutDevId(int value);
     void setExtMuteEnable(bool on);

@@ -29,18 +29,20 @@ add_executable(qs1r_server ${SOURCES})
 
 # Define __LINUX_ALSA__ for the target
 target_compile_definitions(qs1r_server PRIVATE __LINUX_ALSA__)
-
 # Undefine __RTAUDIO_DUMMY__ using compiler flags
 target_compile_options(qs1r_server PRIVATE -U__RTAUDIO_DUMMY__)
-
 # Undefine __IIR_NOTCH__ using compiler flags
 target_compile_options(qs1r_server PRIVATE -U__IIR_NOTCH__)
-
 # Undefine __NOISE_BLANKERS__ using compiler flags
 target_compile_options(qs1r_server PRIVATE -U__NOISE_BLANKERS__)
-
+# Undefine __AUTO_NOTCH__ using compiler flags
+target_compile_options(qs1r_server PRIVATE -U__AUTO_NOTCH__)
 # Undefine __BINAURAL__ using compiler flags
 target_compile_options(qs1r_server PRIVATE -U__BINAURAL__)
+# Define __DAC_OUT__ for the target
+target_compile_definitions(qs1r_server PRIVATE __DAC_OUT__)
+# Undefine __SOUND_OUT__ using compiler flags
+target_compile_options(qs1r_server PRIVATE -U__SOUND_OUT__)
 
 # Specify the build output directory
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/build)

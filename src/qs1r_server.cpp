@@ -31,7 +31,7 @@ QS1RServer::QS1RServer()
     : p_dac_writer(std::make_unique<QsDacWriter>()), p_rta(std::make_unique<QsAudio>()),
       p_qsState(std::make_unique<QsState>()), p_dsp_proc(std::make_unique<QsDspProcessor>()),
       p_io_thread(std::make_unique<QsIoThread>()), m_is_fpga_loaded(false), m_is_io_setup(false),
-      m_is_factory_init_enabled(false), m_is_was_factory_init(false), m_is_rt_audio_bypass(false),
+      m_is_factory_init_enabled(false), m_is_was_factory_init(false), 
       m_gui_rx1_is_connected(false), m_gui_rx2_is_connected(false), m_driver_type("None"), m_local_rx_num_selector(1),
       m_freq_offset_rx1(0.0), m_freq_offset_rx2(0.0), m_proc_samplerate(50000.0), m_post_proc_samplerate(50000.0),
       m_step_size(500.0), m_status_message_backing_register(0), m_prev_vol_val(0) {
@@ -89,8 +89,7 @@ void QS1RServer::shutdown() {
 void QS1RServer::initialize() {
     error_flag = false;
     initSupportedSampleRatesList();
-    showStartupMessage();
-    m_is_rt_audio_bypass = QsGlobal::g_memory->getRtAudioBypass();
+    showStartupMessage();    
     initSMeterCorrectionMap();
 }
 
@@ -152,9 +151,8 @@ void QS1RServer::initQsAudio(double rate) {
 
     p_rta->initAudio(frames, rate, in_dev_id, out_dev_id, ok);
 
-    if (!ok) {
-        m_is_rt_audio_bypass = true;
-        setStatusText("Soundcard output is bypassed due to earlier error.");
+    if (!ok) {        
+        setStatusText("Soundcard output init error.");
     }
 }
 
@@ -178,9 +176,7 @@ void QS1RServer::initQsMemory() {
     QsGlobal::g_memory->setSMeterCorrection(p_qsState->smeterCorrection());
     QsGlobal::g_memory->setEncodeFreqCorrect(p_qsState->clockCorrection());
     QsGlobal::g_memory->setRtAudioFrames(p_qsState->rtAudioFrameSize());
-    QsGlobal::g_memory->setDataProcRate(p_qsState->startupSampleRate());
-    QsGlobal::g_memory->setRtAudioBypass(p_qsState->rtAudioBypass());
-    QsGlobal::g_memory->setDacBypass(p_qsState->dacBypass());
+    QsGlobal::g_memory->setDataProcRate(p_qsState->startupSampleRate());    
     QsGlobal::g_memory->setReadBlockSize(p_qsState->blockSize());
     QsGlobal::g_memory->setResamplerQuality(p_qsState->rsQual());
     QsGlobal::g_memory->setEncodeFreqCorrect(p_qsState->clockCorrection());
@@ -332,11 +328,7 @@ void QS1RServer::updateFPGARegisters() {
     // do a master reset of DDC in FPGA
     setDdcMasterReset(true);
     setDdcMasterReset(false);
-
-    // Set initial DAC bypass mode
-
-    setDacOutputDisable(p_qsState->dacBypass());
-
+    
     // Set initial Ext Mute Enable Mode
 
     setDacExtMuteEnable(p_qsState->extMuteEnable());
@@ -378,8 +370,7 @@ void QS1RServer::loadFPGAFile(String filename) {
 }
 
 // ------------------------------------------------------------
-// Manages the status window and keeps focus to the command
-// entry box.
+// Manages the status text
 // ------------------------------------------------------------
 void QS1RServer::setStatusText(String text) { _debug() << text; }
 
@@ -401,6 +392,7 @@ void QS1RServer::quit() {}
 // Returns the supported sample rates
 // ------------------------------------------------------------
 StringList QS1RServer::getSupportedSampleRates() { return m_supported_samplerates; }
+
 // ------------------------------------------------------------
 // Calculates the FPGA register settings for a given
 // sample rate and writes them to the FPGA.
@@ -614,23 +606,18 @@ void QS1RServer::startIo(bool iswav) {
     if (!p_dsp_proc->isRunning())
         p_dsp_proc->start();
 
-    // if (!QsGlobal::g_data_reader->isRunning())
-    //     QsGlobal::g_data_reader->start(Thread::ThreadPriority::TimeCritical);
+    if (!QsGlobal::g_data_reader->isRunning())
+        QsGlobal::g_data_reader->start();
 
-    bool dac_bypass = false;
-    dac_bypass = p_qsState->dacBypass();
-
-    if (!dac_bypass) {
-        if (!p_dac_writer->isRunning())
-            p_dac_writer->start();
-    }
-
-    if (!m_is_rt_audio_bypass) {
-        initQsAudio(QsGlobal::g_memory->getResamplerRate());
-        p_rta->startStream();
-        QsGlobal::g_float_rt_ring->empty();
-    }
-
+#ifdef __DAC_OUT__
+    if (!p_dac_writer->isRunning())
+        p_dac_writer->start();    
+#endif
+#ifdef __SOUND_OUT__
+    initQsAudio(QsGlobal::g_memory->getResamplerRate());
+    p_rta->startStream();
+    QsGlobal::g_float_rt_ring->empty();   
+#endif
     m_is_io_running = true;
 
     setRxFrequency(QsGlobal::g_memory->getRxLOFrequency(), 1, true);
@@ -647,17 +634,18 @@ void QS1RServer::stopIo() {
     // is important!
 
     _debug() << "stopping tx thread...";
-
+    
+#ifdef __SOUND_OUT__
     _debug() << "stopping rt audio...";
-    if (!m_is_rt_audio_bypass) {
-        p_rta->stopStream();
-    }
+    p_rta->stopStream();
+#endif
 
+#ifdef __DAC_OUT__
     _debug() << "stopping dac writer...";
     if (p_dac_writer->isRunning()) {
-        p_dac_writer->stop();
-        // p_dac_writer->wait(std::chrono::milliseconds(10000));
+        p_dac_writer->stop();        
     }
+#endif
 
     _debug() << "stopping dsp processor...";
     if (p_dsp_proc->isRunning()) {
@@ -670,8 +658,6 @@ void QS1RServer::stopIo() {
         QsGlobal::g_data_reader->stop();
         // QsGlobal::g_data_reader->wait(std::chrono::milliseconds(10000));
     }
-
-    _debug() << "stopping wav writer...";
 
     QsGlobal::g_data_reader->clearBuffers();
     p_dsp_proc->clearBuffers();
@@ -2621,8 +2607,9 @@ void QS1RServer::parseLocalCommand() {
     } else if (resp == "reinit audio") {
         if (m_is_io_running)
             stopIo();
-        if (!m_is_rt_audio_bypass)
-            initQsAudio(SR_OUT0);
+#ifdef __SOUND_OUT__
+        initQsAudio(SR_OUT0);
+#endif
     } else if (resp == "reinit dsp") {
         if (m_is_io_running)
             stopIo();
@@ -2809,18 +2796,7 @@ void QS1RServer::parseLocalCommand() {
             setStatusText("Value is invalid.");
         }
     } else if (resp == "get startup_dither_value") {
-        setStatusText("Startup dither value is: " + String::number(p_qsState->dith()));
-    } else if (resp.contains("set dac_bypass ")) {
-        String str = resp.remove("set dac_bypass ");
-        bool ok = false;
-        int value = str.toInt(&ok);
-        if (ok) {
-            p_qsState->setDacBypass((bool)value);
-            QsGlobal::g_memory->setDacBypass((bool)value);
-            setStatusText("Setting dac bypass to: " + String::number(value));
-        } else {
-            setStatusText("Dac Bypass value is invalid.  Must be 0/1");
-        }
+        setStatusText("Startup dither value is: " + String::number(p_qsState->dith()));    
     } else if (resp.contains("set startup_agc_decay_speed ")) {
         String str = resp.remove("set startup_agc_decay_speed ");
         bool ok = false;
@@ -2876,36 +2852,7 @@ void QS1RServer::parseLocalCommand() {
             setStatusText("Dac is bypassed, value: 1 ");
         } else {
             setStatusText("Dac is not bypassed, value: 0 ");
-        }
-    } else if (resp.contains("set audio_output_bypass ")) {
-        String str = resp.remove("set audio_output_bypass ");
-        bool ok = false;
-        int value = str.toInt(&ok);
-        if (ok) {
-            p_qsState->setRtAudioBypass((bool)value);
-            QsGlobal::g_memory->setRtAudioBypass((bool)value);
-            if (m_is_rt_audio_bypass) {
-                m_is_rt_audio_bypass = (bool)value;
-                if (!m_is_rt_audio_bypass) {
-                    initQsAudio(SR_OUT0);
-                }
-            } else {
-                m_is_rt_audio_bypass = (bool)value;
-            }
-            if (m_is_io_running)
-                stopIo();
-            setupIo();
-            setStatusText("Setting Audio output bypass to: " + String::number(value));
-        } else {
-            setStatusText("Audio output bypass value is invalid.  Must be 0/1");
-        }
-    } else if (resp.contains("get audio_output_bypass")) {
-        bool bypass = QsGlobal::g_memory->getRtAudioBypass();
-        if (bypass) {
-            setStatusText("Audio output is bypassed, value: 1 ");
-        } else {
-            setStatusText("Audio output is not bypassed, value: 0 ");
-        }
+        }    
     } else if (resp.contains("reset device")) {
         stopIo();
         sleep.msleep(200);
