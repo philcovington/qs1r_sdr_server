@@ -829,7 +829,7 @@ int QS1RServer::startDACWriter() {
         QsGlobal::g_float_dac_ring = std::make_unique<QsCircularBuffer<float>>();
     }
     _debug() << "Starting dac writer thread...";
-    QsGlobal::g_dac_writer->init();
+    QsGlobal::g_dac_writer->init(true);
     QsGlobal::g_dac_writer->start();
     _debug() << "Thread will run for 10 seconds...";
     sleep.sleep(10);
