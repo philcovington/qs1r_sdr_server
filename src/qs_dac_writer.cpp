@@ -29,6 +29,17 @@ void QsDacWriter::start() {
     if (!m_is_running && !m_thread_go) {
         m_thread_go = true;
         m_thread = std::thread(&QsDacWriter::run, this); // Launch the run() method in a new thread
+
+        // Set the thread priority
+        struct sched_param sch_params;
+        sch_params.sched_priority = sched_get_priority_max(SCHED_FIFO); // Set priority (range depends on policy)
+
+        pthread_t pthread = m_thread.native_handle();
+
+        // Apply real-time scheduling policy (SCHED_FIFO, SCHED_RR)
+        if (pthread_setschedparam(pthread, SCHED_FIFO, &sch_params)) {
+            std::cerr << "Failed to set thread scheduling: " << strerror(errno) << '\n';
+        }
     }
 }
 

@@ -16,7 +16,7 @@ int main() {
     QS1RServer qs1r;
     QsSleep sleep;    
     
-    qs1r.startDACWriter();
+     qs1r.startDACWriter();
 
     qs1r.shutdown();
 

@@ -26,6 +26,8 @@
 #include "../include/qs_tone_gen.hpp"
 #include "../include/qs_volume.hpp"
 #include <cmath>
+#include <pthread.h>
+#include <sched.h>
 
 QsDspProcessor::QsDspProcessor()
     : m_rx_num(0), m_bsize(0), m_bsizeX2(0), m_sd_buffer_size(0), m_ps_size(0), m_req_outframes(0), m_outframesX2(0),
@@ -47,7 +49,7 @@ void QsDspProcessor::init(int rx_num) {
     p_main_filter = std::make_unique<QsMainRxFilter>();
     p_post_filter = std::make_unique<QsPostRxFilter>();
     p_am = std::make_unique<QsAMDemodulator>();
-    p_sam = std::make_unique<QsSAMDemodulator>();    ;
+    p_sam = std::make_unique<QsSAMDemodulator>();    
     p_fm = std::make_unique<QsFMCombinedDemodulator>();
     p_nr = std::make_unique<QsNoiseReductionFilter>();
     p_anf = std::make_unique<QsAutoNotchFilter>();
@@ -125,7 +127,7 @@ void QsDspProcessor::init(int rx_num) {
     // DEMOD
     p_am->init();
     p_sam->init();
-    p_fm->init(NARROW);    
+    p_fm->init(NARROW);
 
     // POST FILTER
     p_post_filter->init(m_bsize);
@@ -145,7 +147,7 @@ void QsDspProcessor::init(int rx_num) {
     initResampler(m_bsize);
 
     // CW TONE GEN
-    p_tg1->init(QsToneGenerator::ratePostDataRate);
+    p_tg1->init(QsToneGenerator::ratePostDataRate);    
 
 #ifdef __IIR_NOTCH__
     // Instantiate 8 manual notch filters
@@ -189,8 +191,8 @@ void QsDspProcessor::run() {
     QsSignalOps::Zero(rs_cpx_n);
 
     QsGlobal::g_float_rt_ring->init(m_outframesX2 * RT_RING_SZ_MULT);
-    QsGlobal::g_float_dac_ring->init(m_outframesX2 * DAC_RING_SZ_MULT);
-
+    QsGlobal::g_float_dac_ring->init(m_outframesX2 * DAC_RING_SZ_MULT);  
+        
     m_is_running = true;
     m_thread_go = true;
 
@@ -198,8 +200,8 @@ void QsDspProcessor::run() {
 
         // read data from reader ring buffer
         while (QsGlobal::g_cpx_readin_ring->readAvail() >= m_bsize & m_thread_go == true) {
-
-            QsGlobal::g_cpx_readin_ring->read(in_cpx);
+            QsGlobal::g_cpx_readin_ring->read(in_cpx, m_bsize);
+            // QsGlobal::g_cpx_readin_ring->read(in_cpx);
 
 #ifdef __NOISE_BLANKERS__
             // Do noiseblankers
@@ -302,7 +304,7 @@ void QsDspProcessor::run() {
             p_sq->process(rs_cpx_n);
             // ======== </SQUELCH> ===========
 
-            QsSignalOps::Interleave(rs_cpx_n, rs_in_interleaved, m_bsize);
+            QsSignalOps::Interleave(rs_cpx_n, rs_in_interleaved, m_bsize);            
 
             // do fractional resampler to port audio rate
             // ======== <RESAMPLER> ==========
@@ -316,7 +318,7 @@ void QsDspProcessor::run() {
             // volume
             // ======== <VOLUME WITH LIMITER> ===========
             p_vol->process(rs_out_interleaved);
-            // ======== </VOLUME WITH LIMITER> ===========
+            // ======== </VOLUME WITH LIMITER> ===========                      
 
 #ifdef __SOUND_OUT__
             if (QsGlobal::g_float_rt_ring->writeAvail() >= m_outframesX2) {
@@ -329,7 +331,7 @@ void QsDspProcessor::run() {
             }
 #endif
         }
-        sleep.usleep(1);
+        // sleep.usleep(1);
     }
     m_is_running = false;
     _debug() << "dspproc thread stopped.";
@@ -340,6 +342,17 @@ void QsDspProcessor::start() {
     if (!m_is_running && !m_thread_go) {
         m_thread_go = true;
         m_thread = std::thread(&QsDspProcessor::run, this); // Launch the run() method in a new thread
+
+        // Set the thread priority
+        struct sched_param sch_params;
+        sch_params.sched_priority = sched_get_priority_max(SCHED_FIFO); // Set priority (range depends on policy)
+
+        pthread_t pthread = m_thread.native_handle();
+
+        // Apply real-time scheduling policy (SCHED_FIFO, SCHED_RR)
+        if (pthread_setschedparam(pthread, SCHED_FIFO, &sch_params)) {
+            std::cerr << "Failed to set thread scheduling: " << strerror(errno) << '\n';
+        }
     }
 }
 

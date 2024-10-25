@@ -832,11 +832,14 @@ int QS1RServer::startDACWriter() {
     QsGlobal::g_dac_writer->init(true);
     QsGlobal::g_dac_writer->setTestModeParams(1000, 0.01, 48000);
     QsGlobal::g_dac_writer->start();
-    _debug() << "Thread will run for 10 seconds...";
-    sleep.sleep(10);    
+    _debug() << "Thread will run for 3 seconds...";
+    sleep.sleep(3);    
     QsGlobal::g_dac_writer->setTestModeParams(440, 0.01, 48000);    
-    _debug() << "Thread will run for 10 seconds...";    
-    sleep.sleep(10);  
+    _debug() << "Thread will run for 3 seconds...";    
+    sleep.sleep(3); 
+    QsGlobal::g_dac_writer->setTestModeParams(240, 0.01, 48000);    
+    _debug() << "Thread will run for 3 seconds...";    
+    sleep.sleep(3); 
     _debug() << "Stopping dac writer thread...";
     QsGlobal::g_dac_writer->stop();
     return 0;
@@ -844,14 +847,22 @@ int QS1RServer::startDACWriter() {
 
 // Testing
 int QS1RServer::startDSPProcessor() {
+    if (QsGlobal::g_dac_writer == nullptr) {
+        QsGlobal::g_dac_writer = std::make_unique<QsDacWriter>();
+    }
+    if (QsGlobal::g_float_dac_ring == nullptr) {
+        QsGlobal::g_float_dac_ring = std::make_unique<QsCircularBuffer<float>>();
+    }
     if (QsGlobal::g_dsp_proc == nullptr) {
         QsGlobal::g_dsp_proc = std::make_unique<QsDspProcessor>();
     }
+    _debug() << "Starting dac writer thread...";
+    QsGlobal::g_dac_writer->init(false);
     _debug() << "Starting dsp processor thread...";
     QsGlobal::g_dsp_proc->init();
     QsGlobal::g_dsp_proc->start();
-    _debug() << "Sleeping for 3 seconds...";
-    sleep.sleep(3);
+    _debug() << "Sleeping for 5 seconds...";
+    sleep.sleep(5);
     _debug() << "Stopping dsp processor thread...";
     QsGlobal::g_dsp_proc->stop();
     return 0;

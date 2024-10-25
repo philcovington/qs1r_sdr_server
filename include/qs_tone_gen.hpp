@@ -44,6 +44,7 @@ class QsToneGenerator {
 
   private:
     QSDSPPOS m_tg_pos;
+    bool m_test_mode;
     double m_rate;
     double m_tg_inc;
     double m_tg_osc_cos;
@@ -53,7 +54,7 @@ class QsToneGenerator {
     double m_tg_lo_freq;
     double m_tg_osc_re;
     double m_tg_osc_im;
-    double m_tg_amplitude;
-    bool m_test_mode;
+    double m_tg_amplitude;    
+    double m_load_freq;
 };
 

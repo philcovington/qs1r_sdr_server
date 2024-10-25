@@ -115,7 +115,7 @@ void QsToneGenerator::init(QSDSPPOS pos) {
     m_tg_osc_sin = sin(m_tg_inc);
 }
 
-void QsToneGenerator::setFrequency(float frequency) { m_tg_lo_freq = frequency; }
+void QsToneGenerator::setFrequency(float frequency) { m_load_freq = frequency; }
 void QsToneGenerator::setAmplitude(float amplitude) { m_tg_amplitude = amplitude; }
 
 template <typename T> void QsToneGenerator::process(std::vector<T> &src_dst) {
@@ -131,7 +131,7 @@ template <typename T> void QsToneGenerator::process(std::vector<T> &src_dst) {
         new_lo_freq = QsGlobal::g_memory->getTxOffsetFrequency();
         break;
     default:
-        new_lo_freq = m_tg_lo_freq;
+        new_lo_freq = m_load_freq;
         break;
     }
 
