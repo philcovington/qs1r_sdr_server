@@ -16,7 +16,9 @@ void QsDacWriter::init(bool test_mode) {
     QsSignalOps::Zero(out_s);
 
     if (m_testMode) {
-        QsTestTone<float> tone(m_bsizeX2);
+        tone.init(QsToneGenerator::QSDSPPOS::rate48000);
+        tone.setAmplitude(0.01f);
+        tone.setFrequency(1000.0);
     }
 }
 
@@ -38,7 +40,7 @@ void QsDacWriter::run() {
 
     while (m_thread_go) {
         if (m_testMode) {
-            out_f = tone.generateTone();
+            tone.process(out_f);
             QsSignalOps::Convert(out_f, out_s, m_bsizeX2);
         } else if (QsGlobal::g_float_dac_ring->readAvail() >= m_bsizeX2) {
             QsGlobal::g_float_dac_ring->read(out_f, m_bsizeX2);
@@ -70,10 +72,25 @@ void QsDacWriter::stop() {
 bool QsDacWriter::isRunning() { return m_thread_go; }
 
 void QsDacWriter::setTestModeParams(float frequency, float amplitude, u_int samplerate) {
-    m_toneFrequency = frequency;
-    m_toneAmplitude = amplitude;
-    m_sampleRate = samplerate;
-    tone.setAmplitude(m_toneAmplitude);
-    tone.setFrequency(m_toneFrequency);
-    tone.setSampleRate(m_sampleRate);
+    if (m_testMode) {
+        m_toneFrequency = frequency;
+        m_toneAmplitude = amplitude;
+
+        switch (samplerate) {
+        case 24000:
+            tone.init(QsToneGenerator::QSDSPPOS::rate24000);
+            break;
+        case 48000:
+            tone.init(QsToneGenerator::QSDSPPOS::rate48000);
+            break;
+        case 50000:
+            tone.init(QsToneGenerator::QSDSPPOS::rate50000);
+            break;
+        default:
+            break;
+        }
+
+        tone.setAmplitude(m_toneAmplitude);
+        tone.setFrequency(m_toneFrequency);
+    }
 }

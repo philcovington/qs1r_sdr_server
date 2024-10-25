@@ -830,9 +830,13 @@ int QS1RServer::startDACWriter() {
     }
     _debug() << "Starting dac writer thread...";
     QsGlobal::g_dac_writer->init(true);
+    QsGlobal::g_dac_writer->setTestModeParams(1000, 0.01, 48000);
     QsGlobal::g_dac_writer->start();
     _debug() << "Thread will run for 10 seconds...";
-    sleep.sleep(10);
+    sleep.sleep(10);    
+    QsGlobal::g_dac_writer->setTestModeParams(440, 0.01, 48000);    
+    _debug() << "Thread will run for 10 seconds...";    
+    sleep.sleep(10);  
     _debug() << "Stopping dac writer thread...";
     QsGlobal::g_dac_writer->stop();
     return 0;

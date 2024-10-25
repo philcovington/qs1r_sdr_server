@@ -31,7 +31,7 @@
 #include "../include/qs_globals.hpp"
 #include "../include/qs_memory.hpp"
 #include "../include/qs_sleep.hpp"
-#include "../include/qs_test_tone.hpp"
+#include "../include/qs_tone_gen.hpp"
 #include <atomic>
 #include <thread>
 
@@ -64,9 +64,9 @@ class QsDacWriter {
     // The thread object
     std::thread m_thread;    
     
-    QsTestTone<float> tone;
+    QsToneGenerator tone;
     bool m_testMode = true;
-    float m_toneFrequency = 440.0f;  // A 440 Hz tone (standard A note)
-    float m_toneAmplitude = 0.25f;  // Set the amplitude (max 1.0)
-    int m_sampleRate = 50000;  // Sample rate (50 kHz)
+    float m_toneFrequency;  
+    float m_toneAmplitude;  
+    int m_sampleRate;  
 };

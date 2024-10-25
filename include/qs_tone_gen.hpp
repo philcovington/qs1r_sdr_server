@@ -23,19 +23,26 @@
 #pragma once
 
 #include "../include/qs_signalops.hpp"
+#include <vector>
+#include <complex>
 
 class QsToneGenerator {
 
   public:
-    enum QSDSPPOS { rateDataRate = 1, ratePostDataRate = 2, rateTxDataRate = 3 };
+    enum QSDSPPOS { rateDataRate = 1, ratePostDataRate = 2, rateTxDataRate = 3, rate24000 = 4, rate48000 = 5, rate50000 = 6};
 
     explicit QsToneGenerator();
 
-    void process(qs_vect_cpx &src_dst);
+    // Templated process function to handle either complex or real samples
+    template <typename T>
+    void process(std::vector<T> &src_dst);
+
     void init(QSDSPPOS pos);
 
+    void setFrequency(float frequency);
+    void setAmplitude(float amplitude);
+
   private:
-    // TONE GENERATOR
     QSDSPPOS m_tg_pos;
     double m_rate;
     double m_tg_inc;
@@ -46,6 +53,7 @@ class QsToneGenerator {
     double m_tg_lo_freq;
     double m_tg_osc_re;
     double m_tg_osc_im;
-
-    qs_vect_cpx::iterator cpx_itr;
+    double m_tg_amplitude;
+    bool m_test_mode;
 };
+
