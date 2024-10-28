@@ -562,9 +562,7 @@ void QS1RServer::setupIo() {
 
     initThreads();
 
-#ifndef __DAC_OUT__
-    setDacOutputDisable(true);
-#endif
+    setDacOutputDisable(false);
 
     m_is_io_setup = true;
 
@@ -575,7 +573,7 @@ void QS1RServer::setupIo() {
 // Starts the DSP processing
 // ------------------------------------------------------------
 void QS1RServer::startIo(bool iswav) {
-    if (m_is_io_running) {
+    if (QsGlobal::g_dsp_proc->isRunning()) {
         stopIo();
     }
 

@@ -14,7 +14,11 @@ int main() {
     DebugLogger::DEBUG = true;
 
     QS1RServer qs1r;
-    QsSleep sleep;    
+    QsSleep sleep; 
+
+    qs1r.startIo();
+    sleep.sleep(10);
+    qs1r.stopIo();   
     
     qs1r.shutdown();
 

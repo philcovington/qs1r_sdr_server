@@ -37,10 +37,12 @@ QsDspProcessor::QsDspProcessor()
 QsDspProcessor::~QsDspProcessor() {}
 
 void QsDspProcessor::init(int rx_num) {
+    _debug() << "QsDSPProessor init begin...";
     p_tg0 = std::make_unique<QsToneGenerator>();
     p_anb = std::make_unique<QsAveragingNoiseBlanker>();
     p_bnb = std::make_unique<QsBlockNoiseBlanker>();
     p_tg1 = std::make_unique<QsToneGenerator>();
+    p_tg_test = std::make_unique<QsToneGenerator>();
     p_agc = std::make_unique<QsAgc>();
     p_main_filter = std::make_unique<QsMainRxFilter>();
     p_post_filter = std::make_unique<QsPostRxFilter>();
@@ -141,12 +143,15 @@ void QsDspProcessor::init(int rx_num) {
     p_iir6->init(7, QS_IIR::iirBandReject);
     p_iir7->init(8, QS_IIR::iirBandReject);
 #endif
+
+    p_tg_test->init(QsToneGenerator::QSDSPPOS::rate50000);
+    _debug() << "QsDSPProessor init end...";
 }
 
 void QsDspProcessor::reinit() { init(m_rx_num); }
 
 void QsDspProcessor::run() {
-
+    _debug() << "QsDSPProcessor process begin...";
     QsSignalOps::Zero(buf_cpx);
     QsSignalOps::Zero(in_interleaved_i);
     QsSignalOps::Zero(in_interleaved_f);
@@ -281,6 +286,8 @@ void QsDspProcessor::run() {
             p_vol->process(out_interleaved_f);
             // ======== </VOLUME WITH LIMITER> ===========
 
+            p_tg_test->process(out_interleaved_f);
+
             QsSignalOps::Convert(out_interleaved_f, out_s, m_bsizeX2);
 
             // ======== <WRITE TO DAC> ===========
@@ -296,6 +303,7 @@ void QsDspProcessor::run() {
     }
     m_is_running = false;
     _debug() << "dspproc thread stopped.";
+    _debug() << "QsDSPProcessor process end...";
 }
 
 void QsDspProcessor::start() {
@@ -326,4 +334,4 @@ void QsDspProcessor::stop() {
 
 bool QsDspProcessor::isRunning() { return m_thread_go; }
 
-void QsDspProcessor::clearBuffers() { QsGlobal::g_cpx_sd_ring->empty(); }
+void QsDspProcessor::clearBuffers() {  }

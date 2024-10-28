@@ -80,6 +80,7 @@ class QsDspProcessor {
     std::unique_ptr<QsAveragingNoiseBlanker> p_anb;
     std::unique_ptr<QsBlockNoiseBlanker> p_bnb;
     std::unique_ptr<QsToneGenerator> p_tg1;
+    std::unique_ptr<QsToneGenerator> p_tg_test;
     std::unique_ptr<QsAgc> p_agc;
     std::unique_ptr<QsMainRxFilter> p_main_filter;
     std::unique_ptr<QsPostRxFilter> p_post_filter;
