@@ -135,8 +135,7 @@ class QsDspProcessor {
     qs_vect_f in_interleaved_f;
     qs_vect_f out_interleaved_f;
     qs_vect_i in_interleaved_i;
-    qs_vect_f in_interleaved_f;
-
+  
     qs_vect_s out_s;
 
     std::thread m_thread;    

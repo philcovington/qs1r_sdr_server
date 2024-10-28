@@ -187,16 +187,6 @@
 #define QS_DEFAULT_DAC_BYPASS false
 
 //****************************************************//
-//--------------WAV FILE RECORDING--------------------//
-//****************************************************//
-#define QS_DEFAULT_WAV_CONT false
-#define QS_DEFAULT_WAV_PREBUF false
-#define QS_DEFAULT_WAV_PREBUFTIME 10.0
-#define QS_DEFAULT_WAV_PATH "/SDRMAXIV Recordings/"
-#define QS_DEFAULT_WAV_IN_NAME "NONE"
-#define QS_DEFAULT_WAV_IN_LOOPS true
-
-//****************************************************//
 //--------------SPECTRUM OFFSET VALUE-----------------//
 //****************************************************//
 #define QS_DEFAULT_SPEC_OFFSET 200.0

@@ -20,8 +20,6 @@
 class QsDspProcessor;
 class QsDataProcessor;
 class QsDataPostProcessor;
-class QsDataReader;
-class QsDacWriter;
 class QsIOLib_LibUSB;
 class QsSleep;
 class QsState;
@@ -30,6 +28,8 @@ class SdrMaxV;
 class QsFilter;
 class QsFFT;
 class QsIoThread;
+
+enum DACCLKSEL { CLK_48k = 0, CLK_50k= 1};
 
 class QS1RServer {
 
@@ -96,8 +96,7 @@ class QS1RServer {
     void setDdcMasterReset(bool on);
     void setWideBandBypass(bool on);
     void setDDCSamplerate(int value);
-    void setDacClock24kSelect(bool value);
-    void setDacClock50kSelect(bool value);
+    void setDacClockSelect(DACCLKSEL value);
 
     void setTxPdacLevel(unsigned int value);
 

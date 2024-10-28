@@ -88,13 +88,6 @@ QsMemory::QsMemory() {
     m_adc_rand_on = QS_DEFAULT_RAND;
     m_adc_dith_on = QS_DEFAULT_DITH;
     m_rt_audio_frames = QS_DEFAULT_RT_FRAMES;
-    m_wav_rec_continuous = QS_DEFAULT_WAV_CONT;
-    m_wav_rec_prebuffer = QS_DEFAULT_WAV_PREBUF;
-    m_wav_in_loop = QS_DEFAULT_WAV_IN_LOOPS;
-    m_wav_rec_prebuffer_time = QS_DEFAULT_WAV_PREBUFTIME;
-    m_wav_rec_path = std::string(QS_DEFAULT_WAV_PATH);
-    m_wav_in_filename = QS_DEFAULT_WAV_IN_NAME;
-    m_wav_play_starttime = time_t();
     m_read_block_size = QS_DEFAULT_DSP_BLOCKSIZE;
     m_ps_block_size = QS_DEFAULT_PS_BLOCKSIZE;
     m_dac_block_size = QS_DEFAULT_DAC_BLOCKSIZE;

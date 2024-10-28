@@ -2,8 +2,6 @@
 #include "../include/qs_audio.hpp"
 #include "../include/qs_bitstream.hpp"
 #include "../include/qs_bytearray.hpp"
-#include "../include/qs_dac_writer.hpp"
-#include "../include/qs_datareader.hpp"
 #include "../include/qs_datastreamclass.hpp"
 #include "../include/qs_debugloggerclass.hpp"
 #include "../include/qs_dsp_proc.hpp"
@@ -87,8 +85,7 @@ void QS1RServer::initialize() {
     error_flag = false;
     initSupportedSampleRatesList();
     showStartupMessage();
-    initSMeterCorrectionMap();
-    initRingBuffers();
+    initSMeterCorrectionMap();    
     initThreads();
     if (initQS1RHardware() != 0) {
         shutdown();
@@ -97,6 +94,7 @@ void QS1RServer::initialize() {
     updateFPGARegisters();
     setFpgaForSampleRate(50000);
     setDacOutputDisable(false);
+    setDacClockSelect(CLK_50k);
     _debug() << "Qs1r server initialization complete.";
 }
 
@@ -128,10 +126,8 @@ int QS1RServer::initRingBuffers() {
 }
 
 int QS1RServer::initThreads() {
-    _debug() << "initializing threads...";
-    QsGlobal::g_data_reader->init();
+    _debug() << "initializing threads...";   
     QsGlobal::g_dsp_proc->init();
-    QsGlobal::g_dac_writer->init();
     return 0;
 }
 
@@ -427,7 +423,7 @@ bool QS1RServer::setFpgaForSampleRate(double samplerate) {
     if (was_io_running)
         stopIo();
 
-#define SR_OUT0 48000.0
+#define SR_OUT0 50000.0
 #define SR_OUT1 48000.0
 
     switch ((int)samplerate) {
@@ -473,11 +469,7 @@ bool QS1RServer::setFpgaForSampleRate(double samplerate) {
         QsGlobal::g_memory->setResamplerRate(SR_OUT0);
         return false;
     }
-
-    m_post_proc_samplerate = estimateDownConvertorRate(m_proc_samplerate, 20000.0);
-
-    QsGlobal::g_memory->setDataProcRate(m_proc_samplerate);
-    QsGlobal::g_memory->setDataPostProcRate(m_post_proc_samplerate);
+    QsGlobal::g_memory->setDataProcRate(m_proc_samplerate);    
 
     SMETERCORRECT = SMETERCORRECTMAP[(int)m_proc_samplerate];
 
@@ -485,10 +477,10 @@ bool QS1RServer::setFpgaForSampleRate(double samplerate) {
     setDDCSamplerate((int)m_proc_samplerate);
 
     // set the dac clock select
-    if (QsGlobal::g_memory->getResamplerRate() == 24000.0) {
-        setDacClock24kSelect(true);
+    if (QsGlobal::g_memory->getResamplerRate() == 48000.0) {
+        setDacClockSelect(CLK_48k);
     } else {
-        setDacClock24kSelect(false);
+        setDacClockSelect(CLK_50k);
     }
 
     if (was_io_running) {
@@ -586,14 +578,10 @@ void QS1RServer::setupIo() {
     m_is_io_setup = false;
     m_is_io_running = false;
 
-    QsGlobal::g_data_reader->init();
-
     bool dac_bypass = false;
     dac_bypass = QsGlobal::g_memory->getDacBypass();
 
-    QsGlobal::g_dsp_proc->init(rx_num);
-
-    QsGlobal::g_dac_writer->init();
+    initThreads();
 
 #ifndef __DAC_OUT__
     setDacOutputDisable(true);
@@ -627,20 +615,8 @@ void QS1RServer::startIo(bool iswav) {
 
     // start the dsp processor thread
     if (!QsGlobal::g_dsp_proc->isRunning())
-        QsGlobal::g_dsp_proc->start();
+        QsGlobal::g_dsp_proc->start(); 
 
-    if (!QsGlobal::g_data_reader->isRunning())
-        QsGlobal::g_data_reader->start();
-
-#ifdef __DAC_OUT__
-    if (!QsGlobal::g_dac_writer->isRunning())
-        QsGlobal::g_dac_writer->start();
-#endif
-#ifdef __SOUND_OUT__
-    initQsAudio(QsGlobal::g_memory->getResamplerRate());
-    p_rta->startStream();
-    QsGlobal::g_float_rt_ring->empty();
-#endif
     m_is_io_running = true;
 
     setRxFrequency(QsGlobal::g_memory->getRxLOFrequency(), 1, true);
@@ -658,29 +634,11 @@ void QS1RServer::stopIo() {
 
     _debug() << "stopping tx thread...";
 
-#ifdef __SOUND_OUT__
-    _debug() << "stopping rt audio...";
-    p_rta->stopStream();
-#endif
-
-#ifdef __DAC_OUT__
-    _debug() << "stopping dac writer...";
-    if (QsGlobal::g_dac_writer->isRunning()) {
-        QsGlobal::g_dac_writer->stop();
-    }
-#endif
-
     _debug() << "stopping dsp processor...";
     if (QsGlobal::g_dsp_proc->isRunning()) {
         QsGlobal::g_dsp_proc->stop();
     }
-
-    _debug() << "stopping data reader...";
-    if (QsGlobal::g_data_reader->isRunning()) {
-        QsGlobal::g_data_reader->stop();
-    }
-
-    QsGlobal::g_data_reader->clearBuffers();
+    
     QsGlobal::g_dsp_proc->clearBuffers();
 
     m_is_io_running = false;
@@ -1082,32 +1040,15 @@ void QS1RServer::setDDCSamplerate(int value) {
 }
 
 // ------------------------------------------------------------
-// Sets the DAC Clock Rate 0 = 48k, 1 = 24k
+// Sets the DAC Clock Rate 0 = 48k, 1 = 50k
 // ------------------------------------------------------------
-void QS1RServer::setDacClock24kSelect(bool value) {
+void QS1RServer::setDacClockSelect(DACCLKSEL value) {
     if (!m_is_hardware_init) {
         setStatusText("Error: Please initialize QS1R Hardware first!");
         return;
     }
     unsigned int result = QsGlobal::g_io->readMultibusInt(MB_CONTRL0);
-    if (value) {
-        result |= DAC_CLK_SEL;
-    } else {
-        result &= ~DAC_CLK_SEL;
-    }
-    QsGlobal::g_io->writeMultibusInt(MB_CONTRL0, result);
-}
-
-// ------------------------------------------------------------
-// Sets the DAC Clock Rate 0 = 25k, 1 = 50k
-// ------------------------------------------------------------
-void QS1RServer::setDacClock50kSelect(bool value) {
-    if (!m_is_hardware_init) {
-        setStatusText("Error: Please initialize QS1R Hardware first!");
-        return;
-    }
-    unsigned int result = QsGlobal::g_io->readMultibusInt(MB_CONTRL0);
-    if (value) {
+    if (value == CLK_50k) {
         result |= DAC_CLK_SEL;
     } else {
         result &= ~DAC_CLK_SEL;
