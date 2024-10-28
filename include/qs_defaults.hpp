@@ -1,7 +1,7 @@
 // qs_defaults.hpp
 #pragma once
 
-#define QS_DEFAULT_DSP_BLOCKSIZE 4096
+#define QS_DEFAULT_DSP_BLOCKSIZE 2048
 #define QS_DEFAULT_DSP_RATE 50000.0
 #define QS_DEFAULT_TX_DSP_RATE 50000.0
 #define QS_DEFAULT_FREQ 10e6
@@ -18,7 +18,7 @@
 //-----------------------DAC--------------------------//
 //****************************************************//
 #define QS_DEFAULT_DAC_BYPASS false
-#define QS_DEFAULT_DAC_BLOCKSIZE 2048
+#define QS_DEFAULT_DAC_BLOCKSIZE 1024
 #define QS_DEFAULT_EXT_MUTE_ENABLE false
 
 //****************************************************//

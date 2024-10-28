@@ -30,7 +30,7 @@ QS1RServer::QS1RServer()
       p_io_thread(std::make_unique<QsIoThread>()), m_is_fpga_loaded(false), m_is_io_setup(false),
       m_is_factory_init_enabled(false), m_is_was_factory_init(false), m_gui_rx1_is_connected(false),
       m_gui_rx2_is_connected(false), m_driver_type("None"), m_local_rx_num_selector(1), m_freq_offset_rx1(0.0),
-      m_freq_offset_rx2(0.0), m_proc_samplerate(50000.0), m_post_proc_samplerate(50000.0), m_step_size(500.0),
+      m_freq_offset_rx2(0.0), m_proc_samplerate(50000.0), m_step_size(500.0),
       m_status_message_backing_register(0), m_prev_vol_val(0) {
 
     QsGlobal::g_server = this;
@@ -40,8 +40,7 @@ QS1RServer::QS1RServer()
     QsGlobal::g_is_hardware_init = false;
 
     initQsMemory();
-    sleep.msleep(500);
-    initialize();
+    sleep.msleep(500);    
 }
 
 QS1RServer::~QS1RServer() { QsGlobal::g_server = nullptr; }
@@ -333,7 +332,7 @@ void QS1RServer::updateFPGARegisters() {
 
     // Set initial Wideband bypass mode
 
-    setWideBandBypass(false);
+    setWideBandBypass(true);
 
     // Set initial PGA mode
 
@@ -397,10 +396,10 @@ StringList QS1RServer::getSupportedSampleRates() { return m_supported_samplerate
 // Returns false if sample rate is not supported.
 // ------------------------------------------------------------
 bool QS1RServer::setFpgaForSampleRate(double samplerate) {
-    bool was_io_running = m_is_io_running;
+    // bool was_io_running = m_is_io_running;
 
-    if (was_io_running)
-        stopIo();
+    // if (was_io_running)
+    //     stopIo();
 
 #define SR_OUT0 50000.0
 #define SR_OUT1 48000.0
@@ -427,8 +426,7 @@ bool QS1RServer::setFpgaForSampleRate(double samplerate) {
         QsGlobal::g_memory->setResamplerRate(SR_OUT0);
         break;
     case 250000: // BW: 200000
-        m_proc_samplerate = samplerate;
-        m_post_proc_samplerate = 31250.0;
+        m_proc_samplerate = samplerate;        
         QsGlobal::g_memory->setResamplerRate(SR_OUT0);
         break;
     case 125000: // BW 100000
@@ -462,10 +460,10 @@ bool QS1RServer::setFpgaForSampleRate(double samplerate) {
         setDacClockSelect(CLK_50k);
     }
 
-    if (was_io_running) {
-        setupIo();
-        startIo();
-    }
+    // if (was_io_running) {
+    //     setupIo();
+    //     startIo();
+    // }
 
     return true;
 }

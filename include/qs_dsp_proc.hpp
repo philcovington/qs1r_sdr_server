@@ -64,6 +64,7 @@ class QsSMeter;
 class QsSquelch;
 class QsVolume;
 class QS_IIR;
+class QsTestTone;
 class QsSleep;
 
 #include <atomic>
@@ -100,6 +101,7 @@ class QsDspProcessor {
     std::unique_ptr<QS_IIR> p_iir5;
     std::unique_ptr<QS_IIR> p_iir6;
     std::unique_ptr<QS_IIR> p_iir7;
+    std::unique_ptr<QsTestTone> p_test_tone;
    
     explicit QsDspProcessor();
     ~QsDspProcessor();
@@ -141,4 +143,5 @@ class QsDspProcessor {
 
     std::thread m_thread;    
     void initManualNotch();
+        
 };

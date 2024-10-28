@@ -95,6 +95,8 @@ class QS1RServer {
 
     void clearFpgaControlRegisters();
 
+    void initialize();
+
     void setupIo();
     void startIo(bool iswav = false);
     void stopIo();
@@ -147,8 +149,6 @@ class QS1RServer {
 
     void unregisteredHardwareTimeout();
 
-    void initialize();
-
     void initSupportedSampleRatesList();
 
     void sendGUIUpdate(String value, int rxnum);
@@ -180,7 +180,6 @@ class QS1RServer {
     bool m_gui_rx1_is_connected;
     bool m_gui_rx2_is_connected;
 
-    double m_post_proc_samplerate;
     double m_proc_samplerate;
     double m_freq_offset_rx1;
     double m_freq_offset_rx2;
