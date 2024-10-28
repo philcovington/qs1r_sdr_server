@@ -117,16 +117,13 @@ class QsDspProcessor {
     unsigned int m_rx_num;
     unsigned int m_bsize;
     unsigned int m_bsizeX2;
-    unsigned int m_req_outframes;
-    unsigned int m_outframesX2;
-
+    
     std::atomic<bool> m_thread_go;
     std::atomic<bool> m_is_running;
     
-    double m_processing_rate;
-    double m_post_processing_rate;   
+    double m_processing_rate;     
 
-    qs_vect_cpx in_cpx;
+    qs_vect_cpx buf_cpx;
     qs_vect_f re_f;
     qs_vect_f im_f; 
 

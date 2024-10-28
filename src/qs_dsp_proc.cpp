@@ -30,9 +30,7 @@
 #include <sched.h>
 
 QsDspProcessor::QsDspProcessor()
-    : m_rx_num(0), m_bsize(0), m_bsizeX2(0), m_req_outframes(0), m_outframesX2(0),
-      m_thread_go(false), m_is_running(false), m_processing_rate(0),
-      m_post_processing_rate(0) {
+    : m_rx_num(0), m_bsize(2048), m_bsizeX2(4096), m_thread_go(false), m_is_running(false), m_processing_rate(0) {
     QsSleep sleep;
 }
 
@@ -41,7 +39,7 @@ QsDspProcessor::~QsDspProcessor() {}
 void QsDspProcessor::init(int rx_num) {
     p_tg0 = std::make_unique<QsToneGenerator>();
     p_anb = std::make_unique<QsAveragingNoiseBlanker>();
-    p_bnb = std::make_unique<QsBlockNoiseBlanker>();    
+    p_bnb = std::make_unique<QsBlockNoiseBlanker>();
     p_tg1 = std::make_unique<QsToneGenerator>();
     p_agc = std::make_unique<QsAgc>();
     p_main_filter = std::make_unique<QsMainRxFilter>();
@@ -65,21 +63,20 @@ void QsDspProcessor::init(int rx_num) {
 
     m_rx_num = rx_num;
     m_bsize = QsGlobal::g_memory->getReadBlockSize();
-    m_bsizeX2 = m_bsize * 2;    
+    m_bsizeX2 = m_bsize * 2;
     m_processing_rate = QsGlobal::g_memory->getDataProcRate();
-    m_post_processing_rate = QsGlobal::g_memory->getDataPostProcRate();
 
-    in_cpx.resize(m_bsize);
-    QsSignalOps::Zero(in_cpx);    
+    buf_cpx.resize(m_bsize);
+    QsSignalOps::Zero(buf_cpx);
     re_f.resize(m_bsize);
     QsSignalOps::Zero(re_f);
     im_f.resize(m_bsize);
-    QsSignalOps::Zero(im_f);   
+    QsSignalOps::Zero(im_f);
 
     in_re_f.resize(m_bsize);
     QsSignalOps::Zero(in_re_f);
     in_im_f.resize(m_bsize);
-    QsSignalOps::Zero(in_im_f); 
+    QsSignalOps::Zero(in_im_f);
 
     in_interleaved_i.resize(m_bsizeX2);
     QsSignalOps::Zero(in_interleaved_i);
@@ -100,7 +97,7 @@ void QsDspProcessor::init(int rx_num) {
 #endif
 
     // TONE GEN
-    p_tg0->init(QsToneGenerator::rateDataRate);    
+    p_tg0->init(QsToneGenerator::rateDataRate);
 
     // SM
     p_sm->init();
@@ -149,10 +146,8 @@ void QsDspProcessor::init(int rx_num) {
 void QsDspProcessor::reinit() { init(m_rx_num); }
 
 void QsDspProcessor::run() {
-    size_t sz = 0;
-    size_t outframes = 0;
 
-    QsSignalOps::Zero(in_cpx);
+    QsSignalOps::Zero(buf_cpx);
     QsSignalOps::Zero(in_interleaved_i);
     QsSignalOps::Zero(in_interleaved_f);
     QsSignalOps::Zero(out_interleaved_f);
@@ -185,73 +180,73 @@ void QsDspProcessor::run() {
             }
 
             // Convert in_re_f and in_im_f to Complex
-            QsSignalOps::RealToComplex(&in_re_f[0], &in_im_f[0], &in_cpx[0], m_bsize);            
+            QsSignalOps::RealToComplex(&in_re_f[0], &in_im_f[0], &buf_cpx[0], m_bsize);
 
 #ifdef __NOISE_BLANKERS__
             // Do noiseblankers
             // ======== <AVERAGING NOISE BLANKER> ===========
-            p_anb->process(in_cpx);
+            p_anb->process(buf_cpx);
             // ======== </AVERAGING NOISE BLANKER> ===========
 
             // ======== <BLOCK NOISE BLANKER> ===========
-            p_bnb->process(in_cpx);
+            p_bnb->process(buf_cpx);
             // ======== </BLOCK NOISE BLANKER> ===========
 #endif
             // apply LO
             // ======== <TONE GENERATOR> ===========
-            p_tg0->process(in_cpx);
+            p_tg0->process(buf_cpx);
             // ======== </TONE GENERATOR> ===========
 
             // main filter
             // ======== <MAIN FIR> ========
-            p_main_filter->process(in_cpx);
+            p_main_filter->process(buf_cpx);
             // ======== </MAIN FIR> ========
 
 #ifdef __IIR_NOTCH__
-            p_iir0->process(in_cpx);
-            p_iir1->process(in_cpx);
-            p_iir2->process(in_cpx);
-            p_iir3->process(in_cpx);
-            p_iir4->process(in_cpx);
-            p_iir5->process(in_cpx);
-            p_iir6->process(in_cpx);
-            p_iir7->process(in_cpx);
+            p_iir0->process(buf_cpx);
+            p_iir1->process(buf_cpx);
+            p_iir2->process(buf_cpx);
+            p_iir3->process(buf_cpx);
+            p_iir4->process(buf_cpx);
+            p_iir5->process(buf_cpx);
+            p_iir6->process(buf_cpx);
+            p_iir7->process(buf_cpx);
 #endif
 
             if (QsGlobal::g_memory->getDemodMode() == dmCW) {
                 // ======== <CW TONE GENERATOR> ===========
-                p_tg1->process(in_cpx);
+                p_tg1->process(buf_cpx);
                 // ======== </CW TONE GENERATOR> ===========
             }
 
             // process through s meter
             // ======== <S METER> ===========
-            p_sm->process(in_cpx);
+            p_sm->process(buf_cpx);
             // ======== </S METER> ===========
 
             // Do AGC
-            p_agc->process(in_cpx);
+            p_agc->process(buf_cpx);
 
-            QsSignalOps::Limit(in_cpx, m_bsize);
+            QsSignalOps::Limit(buf_cpx, m_bsize);
 
             // ======== <DEMODULATORS> ===========
 
             switch (QsGlobal::g_memory->getDemodMode()) {
             case dmAM:
-                p_am->process(in_cpx);
-                p_post_filter->process(in_cpx);
+                p_am->process(buf_cpx);
+                p_post_filter->process(buf_cpx);
                 break;
             case dmSAM:
-                p_sam->process(in_cpx);
-                p_post_filter->process(in_cpx);
+                p_sam->process(buf_cpx);
+                p_post_filter->process(buf_cpx);
                 break;
             case dmFMN:
-                p_fm->process(in_cpx, NARROW);
-                p_post_filter->process(in_cpx);
+                p_fm->process(buf_cpx, NARROW);
+                p_post_filter->process(buf_cpx);
                 break;
             case dmFMW:
-                p_fm->process(in_cpx, WIDE);
-                p_post_filter->process(in_cpx);
+                p_fm->process(buf_cpx, WIDE);
+                p_post_filter->process(buf_cpx);
                 break;
             default:
                 break;
@@ -262,41 +257,42 @@ void QsDspProcessor::run() {
 #ifdef __BINAURAL__
             // ======== <BINAURAL> =============
             if (!QsGlobal::g_memory->getBinauralMode()) {
-                QsSignalOps::CopyRealToImag(in_cpx);
+                QsSignalOps::CopyRealToImag(buf_cpx);
             }
             // ======== </BINAURAL> =============
 #endif
 #ifdef __AUTO_NOTCH__
             // ======== <AUTO NOTCH FILTER> =============
-            p_anf->process(in_cpx);
+            p_anf->process(buf_cpx);
             // ======== </AUTO NOTCH FILTER> =============
 #endif
             // ======== <NOISE REDUCTION FILTER> =============
-            p_nr->process(in_cpx);
+            p_nr->process(buf_cpx);
             // ======== </NOISE REDUCTION FILTER> =============
 
             // ======== <SQUELCH> ===========
-            p_sq->process(in_cpx);
+            p_sq->process(buf_cpx);
             // ======== </SQUELCH> ===========
 
-            QsSignalOps::Interleave(in_cpx, out_interleaved_f, m_bsize);
+            QsSignalOps::Interleave(buf_cpx, out_interleaved_f, m_bsize);
 
             // volume
             // ======== <VOLUME WITH LIMITER> ===========
             p_vol->process(out_interleaved_f);
             // ======== </VOLUME WITH LIMITER> ===========
 
-            QsSignalOps::Convert( out_interleaved_f, out_s, m_bsizeX2 );
+            QsSignalOps::Convert(out_interleaved_f, out_s, m_bsizeX2);
 
             // ======== <WRITE TO DAC> ===========
-            int result = QsGlobal::g_io->writeEP2(reinterpret_cast<unsigned char *>(&out_s[0]), m_bsizeX2 * sizeof(short));
+            int result =
+                QsGlobal::g_io->writeEP2(reinterpret_cast<unsigned char *>(&out_s[0]), m_bsizeX2 * sizeof(short));
             if (result == -1) {
                 // Failure handling
                 sleep.msleep(100);
                 _debug() << "Failed EP2 write.";
             }
             // ======== </WRITE TO DAC> ===========
-        }        
+        }
     }
     m_is_running = false;
     _debug() << "dspproc thread stopped.";
@@ -331,4 +327,3 @@ void QsDspProcessor::stop() {
 bool QsDspProcessor::isRunning() { return m_thread_go; }
 
 void QsDspProcessor::clearBuffers() { QsGlobal::g_cpx_sd_ring->empty(); }
-
