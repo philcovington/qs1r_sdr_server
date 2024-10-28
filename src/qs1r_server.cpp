@@ -112,31 +112,10 @@ void QS1RServer::initSupportedSampleRatesList() {
     m_supported_samplerates.append(String("2500000").toStdString());
 }
 
-int QS1RServer::initRingBuffers() {
-    _debug() << "initializing ring buffers...";
-    QsGlobal::g_cpx_readin_ring = std::make_unique<QsCircularBuffer<std::complex<float>>>();
-    QsGlobal::g_cpx_readin_ring->init(2048);
-    QsGlobal::g_cpx_sd_ring = std::make_unique<QsCircularBuffer<std::complex<float>>>();
-    QsGlobal::g_cpx_sd_ring->init(2048);
-    QsGlobal::g_float_rt_ring = std::make_unique<QsCircularBuffer<float>>();
-    QsGlobal::g_float_rt_ring->init(2048);
-    QsGlobal::g_float_dac_ring = std::make_unique<QsCircularBuffer<float>>();
-    QsGlobal::g_float_dac_ring->init(2048);
-    return 0;
-}
-
 int QS1RServer::initThreads() {
     _debug() << "initializing threads...";   
     QsGlobal::g_dsp_proc->init();
     return 0;
-}
-
-void QS1RServer::clearAllBuffers() {
-    _debug() << "clearing ring buffers...";
-    QsGlobal::g_cpx_readin_ring->empty();
-    QsGlobal::g_cpx_sd_ring->empty();
-    QsGlobal::g_float_dac_ring->empty();
-    QsGlobal::g_float_rt_ring->empty();
 }
 
 // ------------------------------------------------------------
@@ -742,89 +721,6 @@ void QS1RServer::setRxMode(String mode) { QsGlobal::g_memory->setDemodMode(modeS
 // Prints debug messages from script
 // ------------------------------------------------------------
 void QS1RServer::scriptDebugPrint(String msg) { _debug() << "from script: " + msg; }
-
-int QS1RServer::startAllThreads() {
-    _debug() << "Starting datareader thread...";
-    QsGlobal::g_data_reader->start(); 
-    _debug() << "Starting dsp processor thread...";
-    QsGlobal::g_dsp_proc->start();
-    _debug() << "Starting dac writer thread...";
-    QsGlobal::g_dac_writer->start(); 
-    _debug() << "Running for 10 seconds...";
-    sleep.sleep(10); 
-    _debug() << "Stopping dac writer thread...";
-    QsGlobal::g_dac_writer->stop();
-    _debug() << "Stopping dsp processor thread...";
-    QsGlobal::g_dsp_proc->stop(); 
-    _debug() << "Stopping datareader thread...";
-    QsGlobal::g_data_reader->stop();
-    return 0;    
-}
-// Testing
-int QS1RServer::startDataReader() {
-    if (QsGlobal::g_data_reader == nullptr) {
-        QsGlobal::g_data_reader = std::make_unique<QsDataReader>();
-    }
-    if (QsGlobal::g_cpx_readin_ring == nullptr) {
-        QsGlobal::g_cpx_readin_ring = std::make_unique<QsCircularBuffer<std::complex<float>>>();
-    }
-    _debug() << "Starting datareader thread...";
-    QsGlobal::g_data_reader->init();
-    QsGlobal::g_data_reader->start();
-    _debug() << "Sleeping for 3 seconds...";
-    sleep.sleep(3);
-    _debug() << "Stopping datareader thread...";
-    QsGlobal::g_data_reader->stop();
-    return 0;
-}
-
-// Testing
-int QS1RServer::startDACWriter() {
-    if (QsGlobal::g_dac_writer == nullptr) {
-        QsGlobal::g_dac_writer = std::make_unique<QsDacWriter>();
-    }
-    if (QsGlobal::g_float_dac_ring == nullptr) {
-        QsGlobal::g_float_dac_ring = std::make_unique<QsCircularBuffer<float>>();
-    }
-    _debug() << "Starting dac writer thread...";
-    QsGlobal::g_dac_writer->init(true);
-    QsGlobal::g_dac_writer->setTestModeParams(1000, 0.01, 48000);
-    QsGlobal::g_dac_writer->start();
-    _debug() << "Thread will run for 3 seconds...";
-    sleep.sleep(3);    
-    QsGlobal::g_dac_writer->setTestModeParams(440, 0.01, 48000);    
-    _debug() << "Thread will run for 3 seconds...";    
-    sleep.sleep(3); 
-    QsGlobal::g_dac_writer->setTestModeParams(240, 0.01, 48000);    
-    _debug() << "Thread will run for 3 seconds...";    
-    sleep.sleep(3); 
-    _debug() << "Stopping dac writer thread...";
-    QsGlobal::g_dac_writer->stop();
-    return 0;
-}
-
-// Testing
-int QS1RServer::startDSPProcessor() {
-    if (QsGlobal::g_dac_writer == nullptr) {
-        QsGlobal::g_dac_writer = std::make_unique<QsDacWriter>();
-    }
-    if (QsGlobal::g_float_dac_ring == nullptr) {
-        QsGlobal::g_float_dac_ring = std::make_unique<QsCircularBuffer<float>>();
-    }
-    if (QsGlobal::g_dsp_proc == nullptr) {
-        QsGlobal::g_dsp_proc = std::make_unique<QsDspProcessor>();
-    }
-    _debug() << "Starting dac writer thread...";
-    QsGlobal::g_dac_writer->init(false);
-    _debug() << "Starting dsp processor thread...";
-    QsGlobal::g_dsp_proc->init();
-    QsGlobal::g_dsp_proc->start();
-    _debug() << "Sleeping for 5 seconds...";
-    sleep.sleep(5);
-    _debug() << "Stopping dsp processor thread...";
-    QsGlobal::g_dsp_proc->stop();
-    return 0;
-}
 
 // ------------------------------------------------------------
 // Sets the encode clock correction for all rx

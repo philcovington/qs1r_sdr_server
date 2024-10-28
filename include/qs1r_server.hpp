@@ -43,13 +43,7 @@ class QS1RServer {
 
     unsigned int controlRegister0Value();
     unsigned int controlRegister1Value();
-
-    // For Testing
-    int startAllThreads();
-    int startDataReader();
-    int startDACWriter();
-    int startDSPProcessor();
-
+  
     bool pgaMode();
     bool randMode();
     bool ditherMode();
@@ -79,8 +73,7 @@ class QS1RServer {
     void boostTicks();
 
     void initQsAudio(double rate);
-    int initQS1RHardware();
-    int initRingBuffers();
+    int initQS1RHardware();    
     int initThreads();
     void initQsMemory();
     void initSMeterCorrectionMap();
