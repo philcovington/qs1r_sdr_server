@@ -33,14 +33,12 @@
 // #include "../include/qs_blk_nb.hpp"
 // #include "../include/qs_debugloggerclass.hpp"
 // #include "../include/qs_defines.hpp"
-// #include "../include/qs_downcnv.hpp"
 // #include "../include/qs_globals.hpp"
 // #include "../include/qs_iir_filter.hpp"
 // #include "../include/qs_io_libusb.hpp"
 // #include "../include/qs_main_rx_filter.hpp"
 // #include "../include/qs_nr_filter.hpp"
 // #include "../include/qs_post_rx_filter.hpp"
-// #include "../include/qs_resampler.hpp"
 // #include "../include/qs_sam_demod.hpp"
 // #include "../include/qs_signalops.hpp"
 // #include "../include/qs_sleep.hpp"
@@ -56,7 +54,6 @@ class QsAMDemodulator;
 class QsToneGenerator;
 class QsAveragingNoiseBlanker;
 class QsBlockNoiseBlanker;
-class QsDownConvertor;
 class QsMainRxFilter;
 class QsPostRxFilter;
 class QsSAMDemodulator;
@@ -67,7 +64,6 @@ class QsSMeter;
 class QsSquelch;
 class QsVolume;
 class QS_IIR;
-class Resampler;
 class QsSleep;
 
 #include <atomic>
@@ -83,7 +79,6 @@ class QsDspProcessor {
     std::unique_ptr<QsToneGenerator> p_tg0;
     std::unique_ptr<QsAveragingNoiseBlanker> p_anb;
     std::unique_ptr<QsBlockNoiseBlanker> p_bnb;
-    std::unique_ptr<QsDownConvertor> p_downconv;
     std::unique_ptr<QsToneGenerator> p_tg1;
     std::unique_ptr<QsAgc> p_agc;
     std::unique_ptr<QsMainRxFilter> p_main_filter;
@@ -104,8 +99,7 @@ class QsDspProcessor {
     std::unique_ptr<QS_IIR> p_iir5;
     std::unique_ptr<QS_IIR> p_iir6;
     std::unique_ptr<QS_IIR> p_iir7;
-    std::unique_ptr<Resampler> resampler;
-
+   
     explicit QsDspProcessor();
     ~QsDspProcessor();
 
@@ -123,35 +117,31 @@ class QsDspProcessor {
     unsigned int m_rx_num;
     unsigned int m_bsize;
     unsigned int m_bsizeX2;
-    unsigned int m_sd_buffer_size;
-    unsigned int m_ps_size;
     unsigned int m_req_outframes;
     unsigned int m_outframesX2;
 
     std::atomic<bool> m_thread_go;
     std::atomic<bool> m_is_running;
-    bool m_dac_bypass;
-    bool m_rt_audio_bypass;
-
+    
     double m_processing_rate;
-    double m_post_processing_rate;
-    double m_rs_rate;
+    double m_post_processing_rate;   
 
     qs_vect_cpx in_cpx;
-    qs_vect_cpx rs_cpx;
     qs_vect_f re_f;
-    qs_vect_f im_f;
-    qs_vect_cpx rs_cpx_n;
+    qs_vect_f im_f; 
+
+    qs_vect_f in_re_f;
+    qs_vect_f in_im_f;
 
     QsSleep sleep;
 
-    double m_rs_output_rate;
-    double m_rs_input_rate;
-    int m_rs_quality;
-    qs_vect_f rs_in_interleaved;
-    qs_vect_f rs_out_interleaved;
+    qs_vect_f in_interleaved_f;
+    qs_vect_f out_interleaved_f;
+    qs_vect_i in_interleaved_i;
+    qs_vect_f in_interleaved_f;
 
-    std::thread m_thread;
-    void initResampler(int size);
+    qs_vect_s out_s;
+
+    std::thread m_thread;    
     void initManualNotch();
 };
