@@ -56,5 +56,6 @@ class QsToneGenerator {
     double m_tg_osc_im;
     double m_tg_amplitude;    
     double m_load_freq;
+    bool m_is_init = false;
 };
 

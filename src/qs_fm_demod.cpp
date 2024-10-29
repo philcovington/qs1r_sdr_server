@@ -23,7 +23,7 @@ void QsFMCombinedDemodulator::init(DemodMode mode) {
         m_zeta = QS_DEFAULT_FMW_ZETA;
     }
 
-    m_norm = TWO_PI / QsGlobal::g_memory->getDataPostProcRate();
+    m_norm = TWO_PI / QsGlobal::g_memory->getDataProcRate();
     m_ncoPhase = 0.0;
     m_ncoFreq = 0.0;
     m_ncoHighLimit = m_limit * m_norm;
@@ -31,8 +31,8 @@ void QsFMCombinedDemodulator::init(DemodMode mode) {
     m_alpha = 2.0 * m_zeta * m_bw * m_norm;
     m_beta = (m_alpha * m_alpha) / (4.0 * m_zeta * m_zeta);
     m_freqDcError = 0.0;
-    m_dc_alpha = 1.0 - exp(-1.0 / (QsGlobal::g_memory->getDataPostProcRate() * 0.01));
-    m_outgain = 0.45 * QsGlobal::g_memory->getDataPostProcRate() / (ONE_PI * m_bw);
+    m_dc_alpha = 1.0 - exp(-1.0 / (QsGlobal::g_memory->getDataProcRate() * 0.01));
+    m_outgain = 0.45 * QsGlobal::g_memory->getDataProcRate() / (ONE_PI * m_bw);
 }
 
 void QsFMCombinedDemodulator::process(qs_vect_cpx &src_dst, DemodMode mode) {

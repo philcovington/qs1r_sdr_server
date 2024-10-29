@@ -1,35 +1,35 @@
 /**
  * @file    qs_main_rx_filter.hpp
  * @brief   Main receive filter class for complex signal processing.
- * 
- * This class implements a bandpass FIR filter for processing complex input signals 
- * in a digital signal processing (DSP) system. It provides methods to create window 
- * functions and filter taps, as well as functions for applying the filter to incoming 
- * signals. The filter supports various window types and can generate both real and 
+ *
+ * This class implements a bandpass FIR filter for processing complex input signals
+ * in a digital signal processing (DSP) system. It provides methods to create window
+ * functions and filter taps, as well as functions for applying the filter to incoming
+ * signals. The filter supports various window types and can generate both real and
  * complex window functions.
- * 
+ *
  * Features:
  * - Initialize and apply a bandpass FIR filter on complex signals.
  * - Generate real and complex window functions (e.g., Blackman-Harris).
  * - Dynamic filter creation based on input parameters such as frequency range and sample rate.
- * 
+ *
  * Usage:
  * - Initialize the filter with a specified size.
  * - Use `process()` to filter complex signals.
  * - Generate real or complex windows with static methods like `MakeWindow()`.
- * 
+ *
  * @note This class is used in digital signal processing applications within the QS system.
- * 
+ *
  * @author  Philip A Covington
  * @date    2024-10-17
  */
 
 #pragma once
 
-#include "../include/qs_signalops.hpp"
 #include "../include/qs_defines.hpp"
 #include "../include/qs_fft.hpp"
 #include "../include/qs_globals.hpp"
+#include "../include/qs_signalops.hpp"
 #include "../include/qs_stringclass.hpp"
 
 #include <algorithm>
@@ -57,6 +57,7 @@ class QsMainRxFilter {
     int m_filter_lo;
     int m_filter_hi;
     float m_one_over_norm;
+    bool m_is_init = false;
 
     std::unique_ptr<QsFFT> p_ovlpfft;
     std::unique_ptr<QsFFT> p_filtfft;

@@ -84,7 +84,7 @@ class QsDspProcessor {
     std::unique_ptr<QsToneGenerator> p_tg_test;
     std::unique_ptr<QsAgc> p_agc;
     std::unique_ptr<QsMainRxFilter> p_main_filter;
-    std::unique_ptr<QsPostRxFilter> p_post_filter;
+    std::unique_ptr<QsMainRxFilter> p_post_filter;
     std::unique_ptr<QsAMDemodulator> p_am;
     std::unique_ptr<QsSAMDemodulator> p_sam;
     std::unique_ptr<QsFMCombinedDemodulator> p_fm;

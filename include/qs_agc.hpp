@@ -54,7 +54,7 @@ class QsAgc {
   private:
 
     float update_avg(float avg, float value, float rise_alpha, float fall_alpha);
-    int m_post_processing_rate;
+    int m_processing_rate;
 
     bool m_agc_use_hang;
 

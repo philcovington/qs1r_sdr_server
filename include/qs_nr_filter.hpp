@@ -42,6 +42,7 @@ class QsNoiseReductionFilter {
     double m_nr_adapt_rate;
     double m_nr_leakage;
     double m_nr_adapt_size;
+    bool m_is_init = false;
 
     qs_vect_f m_nr_delay_line;
     qs_vect_f m_nr_coeff;

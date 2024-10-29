@@ -24,7 +24,7 @@
 //****************************************************//
 //---------------------VOLUME-------------------------//
 //****************************************************//
-#define QS_DEFAULT_VOLUME -60.0
+#define QS_DEFAULT_VOLUME -40.0
 
 //****************************************************//
 //----------------------AGC---------------------------//
@@ -45,11 +45,11 @@
 //---------------------FILTER-------------------------//
 //****************************************************//
 #define QS_DEFAULT_FILTER_LO 100
-#define QS_DEFAULT_FILTER_HI 3000
-#define QS_DEFAULT_MAIN_FILTER_SIZE 1024
-#define QS_DEFAULT_POST_FILTER_SIZE 256
+#define QS_DEFAULT_FILTER_HI 5000
+#define QS_DEFAULT_MAIN_FILTER_SIZE 2048
+#define QS_DEFAULT_POST_FILTER_SIZE 2048
 #define QS_DEFAULT_TX_FILT_LO 100
-#define QS_DEFAULT_TX_FILT_HI 3000
+#define QS_DEFAULT_TX_FILT_HI 5000
 
 //****************************************************//
 //--------------------TONE GEN------------------------//
@@ -60,7 +60,7 @@
 //****************************************************//
 //---------------------DEMOD--------------------------//
 //****************************************************//
-#define QS_DEFAULT_DEMOD_MODE 0 // dmAM
+#define QS_DEFAULT_DEMOD_MODE 0 // dmDSB
 #define QS_DEFAULT_BINAURAL_MODE false
 
 #define QS_DEFAULT_SAM_BW 500.0

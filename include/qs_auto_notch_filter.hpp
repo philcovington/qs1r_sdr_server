@@ -42,6 +42,7 @@ class QsAutoNotchFilter {
     int m_anf_delay;
     int m_anf_dl_indx;
     int m_anf_mask;
+    bool m_is_init = false;
 
     qs_vect_f m_anf_delay_line;
     qs_vect_f m_anf_coeff;

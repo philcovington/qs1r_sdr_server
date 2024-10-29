@@ -39,8 +39,7 @@ QS1RServer::QS1RServer()
     m_is_hardware_init = false;
     QsGlobal::g_is_hardware_init = false;
 
-    initQsMemory();
-    sleep.msleep(500);    
+    initQsMemory();      
 }
 
 QS1RServer::~QS1RServer() { QsGlobal::g_server = nullptr; }

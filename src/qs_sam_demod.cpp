@@ -95,7 +95,7 @@ void QsSAMDemodulator::init() {
     m_sam_beta_constant = QS_DEFAULT_SAM_BETA;
 
     // Precompute normalization factor
-    m_sam_norm = TWO_PI / QsGlobal::g_memory->getDataPostProcRate();
+    m_sam_norm = TWO_PI / QsGlobal::g_memory->getDataProcRate();
 
     // Initialize internal variables
     m_sam_cos = m_sam_sin = m_sam_ncoPhase = m_sam_phaseError = m_sam_ncoFreq = 0.0;

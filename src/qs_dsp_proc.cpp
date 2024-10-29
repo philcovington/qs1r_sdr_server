@@ -22,10 +22,10 @@
 #include "../include/qs_smeter.hpp"
 #include "../include/qs_squelch.hpp"
 #include "../include/qs_state.hpp"
+#include "../include/qs_test_tone.hpp"
 #include "../include/qs_threading.hpp"
 #include "../include/qs_tone_gen.hpp"
 #include "../include/qs_volume.hpp"
-#include "../include/qs_test_tone.hpp"
 #include <cmath>
 #include <pthread.h>
 #include <sched.h>
@@ -46,7 +46,7 @@ void QsDspProcessor::init(int rx_num) {
     p_tg_test = std::make_unique<QsToneGenerator>();
     p_agc = std::make_unique<QsAgc>();
     p_main_filter = std::make_unique<QsMainRxFilter>();
-    p_post_filter = std::make_unique<QsPostRxFilter>();
+    p_post_filter = std::make_unique<QsMainRxFilter>();
     p_am = std::make_unique<QsAMDemodulator>();
     p_sam = std::make_unique<QsSAMDemodulator>();
     p_fm = std::make_unique<QsFMCombinedDemodulator>();
@@ -94,13 +94,13 @@ void QsDspProcessor::init(int rx_num) {
 
     m_thread_go = false;
 
-#ifdef __NOISE_BLANKERS__
+    // #ifdef __NOISE_BLANKERS__
     // ANB
     p_anb->init();
 
     // BNB
     p_bnb->init();
-#endif
+    // #endif
 
     // TONE GEN
     p_tg0->init(QsToneGenerator::rateDataRate);
@@ -125,10 +125,8 @@ void QsDspProcessor::init(int rx_num) {
     // MAIN FIR
     p_main_filter->init(m_bsize);
 
-#ifdef __AUTO_NOTCH__
     // ANF
     p_anf->init(m_bsize);
-#endif
 
     // NR
     p_nr->init(m_bsize);
@@ -149,7 +147,7 @@ void QsDspProcessor::init(int rx_num) {
 #endif
 
     // For testing
-    p_test_tone->init(1000, 0.1, m_processing_rate);
+    p_test_tone->init(2000, 0.5, m_processing_rate);
     _debug() << "QsDSPProcessor init end...";
 }
 
@@ -175,27 +173,27 @@ void QsDspProcessor::run() {
 
     m_is_running = true;
     m_thread_go = true;
-
-    QsGlobal::g_memory->setVolume(-1);
-
+    
     while (m_thread_go) {
         if (QsGlobal::g_io->readEP6(reinterpret_cast<unsigned char *>(&in_interleaved_i[0]), m_bsizeX2 * sizeof(int)) >
             0) {
 
             // Convert interleaved integers into floats
-            QsSignalOps::Convert(&in_interleaved_i[0], &in_interleaved_f[0], m_bsizeX2);
+            QsSignalOps::Convert(in_interleaved_i, in_interleaved_f, m_bsizeX2);
 
-            //     // Deinterleave into in_re_f and in_im_f
-            //     if (!QsGlobal::g_swap_iq) {
-            //         QsSignalOps::DeInterleave(&in_interleaved_f[0], &in_re_f[0], &in_im_f[0], m_bsize);
-            //     } else {
-            //         QsSignalOps::DeInterleave(&in_interleaved_f[0], &in_im_f[0], &in_re_f[0], m_bsize);
-            //     }
+            // p_test_tone->process(in_interleaved_f);
 
-            //     // Convert in_re_f and in_im_f to Complex
-            //     QsSignalOps::RealToComplex(&in_re_f[0], &in_im_f[0], &buf_cpx[0], m_bsize);
+            // Deinterleave into in_re_f and in_im_f
+            if (!QsGlobal::g_swap_iq) {
+                QsSignalOps::DeInterleave(in_interleaved_f, in_re_f, in_im_f, m_bsize);
+            } else {
+                QsSignalOps::DeInterleave(in_interleaved_f, in_im_f, in_re_f, m_bsize);
+            }
 
-#ifdef __NOISE_BLANKERS__
+            // Convert in_re_f and in_im_f to Complex
+            QsSignalOps::RealToComplex(in_re_f, in_im_f, buf_cpx, m_bsize);
+
+            // #ifdef __NOISE_BLANKERS__
             // Do noiseblankers
             // ======== <AVERAGING NOISE BLANKER> ===========
             p_anb->process(buf_cpx);
@@ -204,97 +202,93 @@ void QsDspProcessor::run() {
             // ======== <BLOCK NOISE BLANKER> ===========
             p_bnb->process(buf_cpx);
             // ======== </BLOCK NOISE BLANKER> ===========
-#endif
-            // // apply LO
-            // // ======== <TONE GENERATOR> ===========
-            // p_tg0->process(buf_cpx);
-            // // ======== </TONE GENERATOR> ===========
-
-            // // main filter
-            // // ======== <MAIN FIR> ========
-            // p_main_filter->process(buf_cpx);
-            // // ======== </MAIN FIR> ========
-
-#ifdef __IIR_NOTCH__
-            p_iir0->process(buf_cpx);
-            p_iir1->process(buf_cpx);
-            p_iir2->process(buf_cpx);
-            p_iir3->process(buf_cpx);
-            p_iir4->process(buf_cpx);
-            p_iir5->process(buf_cpx);
-            p_iir6->process(buf_cpx);
-            p_iir7->process(buf_cpx);
-#endif
-
-            //             if (QsGlobal::g_memory->getDemodMode() == dmCW) {
-            //                 // ======== <CW TONE GENERATOR> ===========
-            //                 p_tg1->process(buf_cpx);
-            //                 // ======== </CW TONE GENERATOR> ===========
-            //             }
-
-            //             // process through s meter
-            //             // ======== <S METER> ===========
-            //             p_sm->process(buf_cpx);
-            //             // ======== </S METER> ===========
-
-            //             // Do AGC
-            //             p_agc->process(buf_cpx);
-
-            //             QsSignalOps::Limit(buf_cpx, m_bsize);
-
-            //             // ======== <DEMODULATORS> ===========
-
-            //             switch (QsGlobal::g_memory->getDemodMode()) {
-            //             case dmAM:
-            //                 p_am->process(buf_cpx);
-            //                 p_post_filter->process(buf_cpx);
-            //                 break;
-            //             case dmSAM:
-            //                 p_sam->process(buf_cpx);
-            //                 p_post_filter->process(buf_cpx);
-            //                 break;
-            //             case dmFMN:
-            //                 p_fm->process(buf_cpx, NARROW);
-            //                 p_post_filter->process(buf_cpx);
-            //                 break;
-            //             case dmFMW:
-            //                 p_fm->process(buf_cpx, WIDE);
-            //                 p_post_filter->process(buf_cpx);
-            //                 break;
-            //             default:
-            //                 break;
-            //             }
-
-            //             // ======== </DEMODULATORS> ===========
-
-            // #ifdef __BINAURAL__
-            //             // ======== <BINAURAL> =============
-            //             if (!QsGlobal::g_memory->getBinauralMode()) {
-            //                 QsSignalOps::CopyRealToImag(buf_cpx);
-            //             }
-            //             // ======== </BINAURAL> =============
             // #endif
-            // #ifdef __AUTO_NOTCH__
-            //             // ======== <AUTO NOTCH FILTER> =============
-            //             p_anf->process(buf_cpx);
-            //             // ======== </AUTO NOTCH FILTER> =============
-            // #endif
-            //             // ======== <NOISE REDUCTION FILTER> =============
-            //             p_nr->process(buf_cpx);
-            //             // ======== </NOISE REDUCTION FILTER> =============
+            // apply LO
+            // ======== <TONE GENERATOR> ===========
+            p_tg0->process(buf_cpx);
+            // ======== </TONE GENERATOR> ===========
 
-            //             // ======== <SQUELCH> ===========
-            //             p_sq->process(buf_cpx);
-            //             // ======== </SQUELCH> ===========
+            // main filter
+            // ======== <MAIN FIR> ========
+            p_main_filter->process(buf_cpx);
+            // ======== </MAIN FIR> ========
 
-            // QsSignalOps::Interleave(buf_cpx, out_interleaved_f, m_bsize);
+// #ifdef __IIR_NOTCH__
+//             p_iir0->process(buf_cpx);
+//             p_iir1->process(buf_cpx);
+//             p_iir2->process(buf_cpx);
+//             p_iir3->process(buf_cpx);
+//             p_iir4->process(buf_cpx);
+//             p_iir5->process(buf_cpx);
+//             p_iir6->process(buf_cpx);
+//             p_iir7->process(buf_cpx);
+// #endif
+
+            if (QsGlobal::g_memory->getDemodMode() == dmCW) {
+                // ======== <CW TONE GENERATOR> ===========
+                p_tg1->process(buf_cpx);
+                // ======== </CW TONE GENERATOR> ===========
+            }
+
+            // process through s meter
+            // ======== <S METER> ===========
+            p_sm->process(buf_cpx);
+            // ======== </S METER> ===========
+
+            // Do AGC
+            p_agc->process(buf_cpx);
+
+            QsSignalOps::Limit(buf_cpx, m_bsize);
+
+            // ======== <DEMODULATORS> ===========
+
+            switch (QsGlobal::g_memory->getDemodMode()) {
+            case dmAM:
+                p_am->process(buf_cpx);
+                //p_post_filter->process(buf_cpx);
+                break;
+            case dmSAM:
+                p_sam->process(buf_cpx);
+                // p_post_filter->process(buf_cpx);
+                break;
+            case dmFMN:
+                p_fm->process(buf_cpx, NARROW);
+                // p_post_filter->process(buf_cpx);
+                break;
+            case dmFMW:
+                p_fm->process(buf_cpx, WIDE);
+                // p_post_filter->process(buf_cpx);
+                break;
+            default:
+                break;
+            }
+
+            // ======== </DEMODULATORS> ===========
+
+            // ======== <BINAURAL> =============
+            if (!QsGlobal::g_memory->getBinauralMode()) {
+                QsSignalOps::CopyRealToImag(buf_cpx);
+            }
+            // ======== </BINAURAL> =============
+
+            // ======== <AUTO NOTCH FILTER> =============
+            p_anf->process(buf_cpx);
+            // ======== </AUTO NOTCH FILTER> =============
+
+            // ======== <NOISE REDUCTION FILTER> =============
+            p_nr->process(buf_cpx);
+            // ======== </NOISE REDUCTION FILTER> =============
+
+            // ======== <SQUELCH> ===========
+            p_sq->process(buf_cpx);
+            // ======== </SQUELCH> ===========
+
+            QsSignalOps::Interleave(buf_cpx, out_interleaved_f, m_bsize);
 
             // volume
             // ======== <VOLUME WITH LIMITER> ===========
-            // p_vol->process(in_interleaved_f);
+            p_vol->process(out_interleaved_f);
             // ======== </VOLUME WITH LIMITER> ===========
-
-            p_test_tone->process(out_interleaved_f, m_bsizeX2);
 
             QsSignalOps::Convert(out_interleaved_f, out_s, m_bsizeX2);
 

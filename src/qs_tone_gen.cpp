@@ -79,12 +79,12 @@ void QsToneGenerator::init(QSDSPPOS pos) {
         m_test_mode = false;
         break;
     case ratePostDataRate:
-        m_rate = QsGlobal::g_memory->getDataPostProcRate();
+        m_rate = QsGlobal::g_memory->getDataProcRate();
         m_tg_lo_freq = QsGlobal::g_memory->getOffsetGeneratorFrequency();
         m_test_mode = false;
         break;
     case rateTxDataRate:
-        m_rate = QsGlobal::g_memory->getDataPostProcRate();
+        m_rate = QsGlobal::g_memory->getDataProcRate();
         m_tg_lo_freq = QsGlobal::g_memory->getTxOffsetFrequency();
         m_test_mode = false;
         break;
@@ -113,12 +113,16 @@ void QsToneGenerator::init(QSDSPPOS pos) {
     m_tg_inc = TWO_PI * m_tg_lo_freq / m_rate;
     m_tg_osc_cos = cos(m_tg_inc);
     m_tg_osc_sin = sin(m_tg_inc);
+    m_is_init = true;
 }
 
 void QsToneGenerator::setFrequency(float frequency) { m_load_freq = frequency; }
 void QsToneGenerator::setAmplitude(float amplitude) { m_tg_amplitude = amplitude; }
 
 template <typename T> void QsToneGenerator::process(std::vector<T> &src_dst) {
+    if (!m_is_init) {
+        throw std::runtime_error("QsToneGenerator::process must call init() first!");
+    }
     double new_lo_freq = 0.0;
     switch (m_tg_pos) {
     case rateDataRate:
@@ -134,12 +138,16 @@ template <typename T> void QsToneGenerator::process(std::vector<T> &src_dst) {
         new_lo_freq = m_load_freq;
         break;
     }
-
+    
     if (new_lo_freq != m_tg_lo_freq) {
         m_tg_lo_freq = new_lo_freq;
         m_tg_inc = TWO_PI * m_tg_lo_freq / m_rate;
         m_tg_osc_cos = cos(m_tg_inc);
         m_tg_osc_sin = sin(m_tg_inc);
+    }
+
+    if (m_tg_lo_freq == 0.0) {
+        return;
     }
 
     for (auto &sample : src_dst) {

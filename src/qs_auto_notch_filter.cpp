@@ -103,9 +103,13 @@ void QsAutoNotchFilter::init(unsigned int size) {
     QsSignalOps::Zero(m_anf_delay_line);
     m_anf_coeff.resize(size * 2); // Preallocate larger size for flexibility
     QsSignalOps::Zero(m_anf_coeff);
+    m_is_init = true;
 }
 
 void QsAutoNotchFilter::process(qs_vect_cpx &src_dst) {
+    if (!m_is_init) {
+        throw std::runtime_error("QsAutoNotchFilter::process must call init() first!");
+    }
     // Check if auto-notch filtering is enabled
     m_anf_switch = QsGlobal::g_memory->getAutoNotchOn();
 

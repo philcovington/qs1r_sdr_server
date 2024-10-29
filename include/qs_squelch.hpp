@@ -39,6 +39,7 @@ class QsSquelch {
     bool m_sq_switch;
     double m_sq_thresh;
     double m_sq_hist;
+    bool m_is_init = false;
 
   public:
     QsSquelch();

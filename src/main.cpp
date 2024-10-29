@@ -7,21 +7,30 @@
 #include "../include/qs_bytearray.hpp"
 #include "../include/qs_debugloggerclass.hpp"
 #include "../include/qs_io_libusb.hpp"
+#include "../include/qs_test_tone.hpp"
 
 int main() {
 
     // Enable debug logging
     DebugLogger::DEBUG = true;
+    std::string cmd;
 
     QS1RServer qs1r;
     QsSleep sleep; 
-
-    sleep.sleep(3);
-    qs1r.initialize();
-
-    sleep.sleep(3);
-    qs1r.startIo();
-    sleep.sleep(10);
+        
+    qs1r.initialize(); 
+    
+    while (cmd != "exit") {
+        std::cout << "?:";
+        std::cin >> cmd;
+        std::cout << cmd << std::endl;
+        if (cmd == "start") {
+            qs1r.startIo();
+        } else if (cmd == "stop") {
+            qs1r.stopIo();
+        }  
+    }  
+    
     qs1r.stopIo();   
     
     qs1r.shutdown();

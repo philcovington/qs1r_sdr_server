@@ -37,6 +37,7 @@ class QsAveragingNoiseBlanker {
     float m_anb_avg_magn;
     bool m_anb_switch;
     double m_anb_thres;
+    bool m_is_init = false;
 
     qs_vect_cpx::iterator m_cpx_iterator;
 

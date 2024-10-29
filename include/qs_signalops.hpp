@@ -61,8 +61,8 @@ class QsSignalOps {
         if (a < b)
             return a;
         return b;
-    }    
-    
+    }
+
     template <typename T> inline static T Abs(const T &t) { return t >= 0 ? t : -t; }
 
     inline static int Round(float f) { return f >= 0.0 ? int(f + 0.5) : int(f - int(f - 1) + 0.5) + int(f - 1); }
@@ -169,7 +169,7 @@ class QsSignalOps {
     inline static void Clip(Cpx *src_dst, float clip_level, uint32_t length) {
         for (uint32_t i = 0; i < length; i++) {
             src_dst[i].real(std::clamp(src_dst[i].real(), -clip_level, clip_level));
-            src_dst[i].imag(std::clamp(src_dst[i].imag(), -clip_level, clip_level));            
+            src_dst[i].imag(std::clamp(src_dst[i].imag(), -clip_level, clip_level));
         }
     }
 
@@ -215,6 +215,13 @@ class QsSignalOps {
         }
     }
 
+    inline static void Convert(const qs_vect_i &src, qs_vect_f &dst, uint32_t length) {
+        float scale = INTTOFLOAT; // Cache the scale factor
+        for (uint32_t i = 0; i < length; i++) {
+            dst[i] = static_cast<float>(src[i]) * scale;
+        }
+    }
+
     inline static void Convert(float *src, unsigned char *dst, uint32_t length) {
         for (uint32_t i = 0; i < length; i++) {
             float x = src[i];
@@ -243,9 +250,10 @@ class QsSignalOps {
         }
     }
 
-    inline static void Convert(qs_vect_f &src, qs_vect_s &dst, uint32_t length) {
-        for (uint32_t i = 0; i < length; i++) {
-            dst[i] = static_cast<short>(src[i] * FLOATTOSHORT);
+    inline static void Convert(const qs_vect_f &src, qs_vect_s &dst, uint32_t length) {
+        const float scaleFactor = FLOATTOSHORT;
+        for (uint32_t i = 0; i < length; ++i) {
+            dst[i] = static_cast<short>(src[i] * scaleFactor);
         }
     }
 
@@ -291,30 +299,77 @@ class QsSignalOps {
     }
 
     inline static void DeInterleave(float *src, Cpx *dst, uint32_t length) {
-        for (uint32_t i = 0; i < length; i++) {
-            dst[i].real(src[2 * i]);
-            dst[i].imag(src[2 * i + 1]);
+        const float *src_ptr = src; // Pointer to the source array
+        Cpx *dst_ptr = dst;         // Pointer to the destination array
+
+        uint32_t i = 0;
+
+        // Unroll the loop to process two complex numbers per iteration
+        for (; i + 1 < length; i += 2) {
+            dst_ptr[i].real(src_ptr[2 * i]);               // Load real part
+            dst_ptr[i].imag(src_ptr[2 * i + 1]);           // Load imaginary part
+            dst_ptr[i + 1].real(src_ptr[2 * (i + 1)]);     // Next real part
+            dst_ptr[i + 1].imag(src_ptr[2 * (i + 1) + 1]); // Next imaginary part
+        }
+
+        // Handle remaining element if length is odd
+        if (i < length) {
+            dst_ptr[i].real(src_ptr[2 * i]);     // Load last real part
+            dst_ptr[i].imag(src_ptr[2 * i + 1]); // Load last imaginary part
         }
     }
 
-    inline static void DeInterleave(qs_vect_f &src, qs_vect_cpx &dst, uint32_t length) {
-        for (uint32_t i = 0; i < length; i++) {
-            dst[i].real(src[2 * i]);
-            dst[i].imag(src[2 * i + 1]);
+    inline static void DeInterleave(const qs_vect_f &src, qs_vect_cpx &dst, uint32_t length) {
+        const float *src_ptr = src.data(); // Get the raw pointer to the source vector
+        auto dst_ptr = dst.data();         // Get the raw pointer to the destination vector
+
+        uint32_t i = 0;
+
+        // Unroll loop to process 2 elements per iteration
+        for (; i + 1 < length; i += 2) {
+            dst_ptr[i].real(src_ptr[2 * i]);               // Load real part
+            dst_ptr[i].imag(src_ptr[2 * i + 1]);           // Load imaginary part
+            dst_ptr[i + 1].real(src_ptr[2 * (i + 1)]);     // Next real part
+            dst_ptr[i + 1].imag(src_ptr[2 * (i + 1) + 1]); // Next imaginary part
+        }
+
+        // Handle any remaining element if length is odd
+        if (i < length) {
+            dst_ptr[i].real(src_ptr[2 * i]);     // Load last real part
+            dst_ptr[i].imag(src_ptr[2 * i + 1]); // Load last imaginary part
         }
     }
 
     inline static void DeInterleave(float *src, float *dst_re, float *dst_im, uint32_t length) {
-        for (uint32_t i = 0; i < length; i++) {
-            dst_re[i] = src[2 * i];
-            dst_im[i] = src[2 * i + 1];
+        float *src_ptr = src;       // Temporary pointer to avoid repeated index calculation
+        float *dst_re_ptr = dst_re; // Pointer for real part destination
+        float *dst_im_ptr = dst_im; // Pointer for imaginary part destination
+
+        uint32_t i = 0;
+        // Unroll loop to process 2 elements per iteration
+        for (; i + 1 < length; i += 2) {
+            *dst_re_ptr++ = *src_ptr++; // Load real part
+            *dst_im_ptr++ = *src_ptr++; // Load imaginary part
+            *dst_re_ptr++ = *src_ptr++; // Next real part
+            *dst_im_ptr++ = *src_ptr++; // Next imaginary part
+        }
+
+        // Handle any remaining element if length is odd
+        if (i < length) {
+            *dst_re_ptr = *src_ptr++;
+            *dst_im_ptr = *src_ptr;
         }
     }
 
-    inline static void DeInterleave(qs_vect_f &src, qs_vect_f &dst_re, qs_vect_f &dst_im, uint32_t length) {
-        for (uint32_t i = 0; i < length; i++) {
-            dst_re[i] = src[2 * i];
-            dst_im[i] = src[2 * i + 1];
+    inline static void DeInterleave(const qs_vect_f &src, qs_vect_f &dst_re, qs_vect_f &dst_im, uint32_t length) {
+        // Use iterators to avoid repeated index calculations
+        auto src_it = src.begin();
+        auto re_it = dst_re.begin();
+        auto im_it = dst_im.begin();
+
+        while (re_it != dst_re.end() && im_it != dst_im.end()) {
+            *re_it++ = *src_it++;
+            *im_it++ = *src_it++;
         }
     }
 
@@ -412,38 +467,43 @@ class QsSignalOps {
         }
     }
 
-    inline static void Interleave(float *src1, float *src2, float *dst, uint32_t length) {
+    inline static void Interleave(const float *src1, const float *src2, float *dst, uint32_t length) {
         for (uint32_t i = 0; i < length; i++) {
             dst[2 * i] = src1[i];
             dst[2 * i + 1] = src2[i];
         }
     }
 
-    inline static void Interleave(qs_vect_f &src1, qs_vect_f &src2, qs_vect_f &dst, uint32_t length) {
-        for (uint32_t i = 0; i < length; i++) {
+    inline static void Interleave(const qs_vect_f &src1, const qs_vect_f &src2, qs_vect_f &dst, uint32_t length) {  
+        for (uint32_t i = 0; i < length; ++i) {
             dst[2 * i] = src1[i];
             dst[2 * i + 1] = src2[i];
         }
     }
 
-    inline static void Interleave(Cpx *src, float *dst, uint32_t length) {
+    inline static void Interleave(const Cpx *src, float *dst, uint32_t length) {
         for (uint32_t i = 0; i < length; i++) {
-            dst[2 * i] = src[i].real();
-            dst[2 * i + 1] = src[i].imag();
+            const float real = src[i].real();
+            const float imag = src[i].imag();
+            dst[2 * i] = real;
+            dst[2 * i + 1] = imag;
         }
     }
 
-    inline static void Interleave(qs_vect_cpx &src, qs_vect_f &dst, uint32_t length) {
+    inline static void Interleave(const qs_vect_cpx &src, qs_vect_f &dst, uint32_t length) { 
         for (uint32_t i = 0; i < length; i++) {
-            dst[2 * i] = src[i].real();
-            dst[2 * i + 1] = src[i].imag();
+            const auto &cpx = src[i];    // Access the complex number once
+            dst[2 * i] = cpx.real();     // Store the real part
+            dst[2 * i + 1] = cpx.imag(); // Store the imaginary part
         }
     }
 
     inline static void Interleave(Cpx *src, short *dst, uint32_t length) {
+        const short scaleFactor = static_cast<short>(FLOATTOSHORT); // Pre-compute scale factor
         for (uint32_t i = 0; i < length; i++) {
-            dst[2 * i] = static_cast<short>(src[i].real() * FLOATTOSHORT);
-            dst[2 * i + 1] = static_cast<short>(src[i].imag() * FLOATTOSHORT);
+            const auto &complexNumber = src[i]; // Avoid multiple dereferences
+            dst[2 * i] = static_cast<short>(complexNumber.real() * scaleFactor);
+            dst[2 * i + 1] = static_cast<short>(complexNumber.imag() * scaleFactor);
         }
     }
 
@@ -510,26 +570,23 @@ class QsSignalOps {
         }
     }
 
-    inline static void Limit(qs_vect_cpx &src, uint32_t length) {
-        Cpx maxx(0.0, 0.0);
-        Cpx val(0.0, 0.0);
-        double mmax = 0.0;
-        if (src.size() < length)
-            length = src.size();
-        for (uint32_t i = 0; i < length; i++) {
-            val.real(QsSignalOps::Abs(src[i].real()));
-            val.imag(QsSignalOps::Abs(src[i].imag()));
-            if (val.real() > maxx.real())
-                maxx.real(val.real());
-            if (val.imag() > maxx.imag())
-                maxx.imag(val.imag());
+    inline static void Limit(qs_vect_cpx &src, uint32_t length) { 
+        // Initialize max magnitude to zero
+        double maxMagnitude = 0.0;
+
+        // Find the maximum magnitude across all elements
+        for (uint32_t i = 0; i < length; ++i) {
+            double absReal = std::abs(src[i].real());
+            double absImag = std::abs(src[i].imag());
+            maxMagnitude = std::max({maxMagnitude, absReal, absImag});
         }
-        mmax = QsSignalOps::Max(maxx.real(), maxx.imag());
-        if (mmax > 1.0) {
-            mmax = 0.95 / mmax;
-            for (uint32_t i = 0; i < length; i++) {
-                src[i].real(src[i].real() * mmax);
-                src[i].imag(src[i].imag() * mmax);
+
+        // If scaling is necessary, apply it to each element
+        if (maxMagnitude > 1.0) {
+            double scaleFactor = 0.95 / maxMagnitude;
+            for (uint32_t i = 0; i < length; ++i) {
+                src[i].real(src[i].real() * scaleFactor);
+                src[i].imag(src[i].imag() * scaleFactor);
             }
         }
     }
@@ -553,9 +610,7 @@ class QsSignalOps {
 
     inline static void LimitAndScale(qs_vect_f &src, double volume, uint32_t length) {
         double max = 0.0;
-        double val = 0.0;
-        if (src.size() < length)
-            length = src.size();
+        double val = 0.0;        
         for (uint32_t i = 0; i < length; i++) {
             src[i] *= volume;
             val = QsSignalOps::Abs(src[i]);
@@ -781,10 +836,10 @@ class QsSignalOps {
         }
     }
 
-    inline static void RealToComplex(qs_vect_f &re_src, qs_vect_f &im_src, qs_vect_cpx &dest, uint32_t length) {
+    inline static void RealToComplex(const qs_vect_f &re_src, const qs_vect_f &im_src, qs_vect_cpx &dest,
+                                     uint32_t length) {
         for (uint32_t i = 0; i < length; i++) {
-            dest[i].real(re_src[i]);
-            dest[i].imag(im_src[i]);
+            dest[i] = Cpx(re_src[i], im_src[i]);
         }
     }
 
@@ -843,9 +898,7 @@ class QsSignalOps {
         }
     }
 
-    inline static void Scale(qs_vect_cpx &src_dst, float val, uint32_t length) {
-        if (src_dst.size() < length)
-            length = src_dst.size();
+    inline static void Scale(qs_vect_cpx &src_dst, float val, uint32_t length) {        
         for (uint32_t i = 0; i < length; i++) {
             src_dst[i].real(src_dst[i].real() * val);
             src_dst[i].imag(src_dst[i].imag() * val);
@@ -865,9 +918,7 @@ class QsSignalOps {
         }
     }
 
-    inline static void Scale(qs_vect_f &src_dst, float val, uint32_t length) {
-        if (src_dst.size() < length)
-            length = src_dst.size();
+    inline static void Scale(qs_vect_f &src_dst, float val, uint32_t length) {        
         for (uint32_t i = 0; i < length; i++) {
             src_dst[i] *= val;
         }

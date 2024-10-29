@@ -34,9 +34,13 @@ void QsSquelch::init() {
     m_sq_switch = QsGlobal::g_memory->getSquelchOn();
     m_sq_thresh = QsGlobal::g_memory->getSquelchThreshold();
     m_sq_hist = -120.0; // Initialize squelch history with a low value
+    m_is_init = true;
 }
 
 void QsSquelch::process(qs_vect_cpx &src_dst) {
+    if (!m_is_init) {
+        throw std::runtime_error("QsSquelch::process must call init() first!");
+    }
     m_sq_switch = QsGlobal::g_memory->getSquelchOn();
 
     if (m_sq_switch) {

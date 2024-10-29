@@ -20,16 +20,16 @@ QS_IIR ::QS_IIR() {
 
     switch (m_type) {
     case iirLowPass:
-        initLowPass(m_f0Freq, m_bwHz, QsGlobal::g_memory->getDataPostProcRate());
+        initLowPass(m_f0Freq, m_bwHz, QsGlobal::g_memory->getDataProcRate());
         break;
     case iirHighPass:
-        initHighPass(m_f0Freq, m_bwHz, QsGlobal::g_memory->getDataPostProcRate());
+        initHighPass(m_f0Freq, m_bwHz, QsGlobal::g_memory->getDataProcRate());
         break;
     case iirBandPass:
-        initBandPass(m_f0Freq, m_bwHz, QsGlobal::g_memory->getDataPostProcRate());
+        initBandPass(m_f0Freq, m_bwHz, QsGlobal::g_memory->getDataProcRate());
         break;
     case iirBandReject:
-        initBandReject(m_f0Freq, m_bwHz, QsGlobal::g_memory->getDataPostProcRate());
+        initBandReject(m_f0Freq, m_bwHz, QsGlobal::g_memory->getDataProcRate());
         break;
     case iirTxDcBlock:
         m_f0Freq = QS_DEFAULT_TX_DCBLOCK_F0;
@@ -50,16 +50,16 @@ void QS_IIR ::init(unsigned int notch_num, QSIIRTYPE type) {
 
     switch (m_type) {
     case iirLowPass:
-        initLowPass(m_f0Freq, m_bwHz, QsGlobal::g_memory->getDataPostProcRate());
+        initLowPass(m_f0Freq, m_bwHz, QsGlobal::g_memory->getDataProcRate());
         break;
     case iirHighPass:
-        initHighPass(m_f0Freq, m_bwHz, QsGlobal::g_memory->getDataPostProcRate());
+        initHighPass(m_f0Freq, m_bwHz, QsGlobal::g_memory->getDataProcRate());
         break;
     case iirBandPass:
-        initBandPass(m_f0Freq, m_bwHz, QsGlobal::g_memory->getDataPostProcRate());
+        initBandPass(m_f0Freq, m_bwHz, QsGlobal::g_memory->getDataProcRate());
         break;
     case iirBandReject:
-        initBandReject(m_f0Freq, m_bwHz, QsGlobal::g_memory->getDataPostProcRate());
+        initBandReject(m_f0Freq, m_bwHz, QsGlobal::g_memory->getDataProcRate());
         break;
     case iirTxDcBlock:
         m_f0Freq = QS_DEFAULT_TX_DCBLOCK_F0;
@@ -172,16 +172,16 @@ void QS_IIR ::process(qs_vect_f &src_dst) {
             m_bwHz = QsGlobal::g_memory->getNotchBandwidth(m_notch_num);
             switch (m_type) {
             case iirLowPass:
-                initLowPass(m_f0Freq, m_bwHz, QsGlobal::g_memory->getDataPostProcRate());
+                initLowPass(m_f0Freq, m_bwHz, QsGlobal::g_memory->getDataProcRate());
                 break;
             case iirHighPass:
-                initHighPass(m_f0Freq, m_bwHz, QsGlobal::g_memory->getDataPostProcRate());
+                initHighPass(m_f0Freq, m_bwHz, QsGlobal::g_memory->getDataProcRate());
                 break;
             case iirBandPass:
-                initBandPass(m_f0Freq, m_bwHz, QsGlobal::g_memory->getDataPostProcRate());
+                initBandPass(m_f0Freq, m_bwHz, QsGlobal::g_memory->getDataProcRate());
                 break;
             case iirBandReject:
-                initBandReject(m_f0Freq, m_bwHz, QsGlobal::g_memory->getDataPostProcRate());
+                initBandReject(m_f0Freq, m_bwHz, QsGlobal::g_memory->getDataProcRate());
                 break;
             }
         }
@@ -206,16 +206,16 @@ void QS_IIR ::process(qs_vect_cpx &src_dst) {
             m_bwHz = QsGlobal::g_memory->getNotchBandwidth(m_notch_num);
             switch (m_type) {
             case iirLowPass:
-                initLowPass(m_f0Freq, m_bwHz, QsGlobal::g_memory->getDataPostProcRate());
+                initLowPass(m_f0Freq, m_bwHz, QsGlobal::g_memory->getDataProcRate());
                 break;
             case iirHighPass:
-                initHighPass(m_f0Freq, m_bwHz, QsGlobal::g_memory->getDataPostProcRate());
+                initHighPass(m_f0Freq, m_bwHz, QsGlobal::g_memory->getDataProcRate());
                 break;
             case iirBandPass:
-                initBandPass(m_f0Freq, m_bwHz, QsGlobal::g_memory->getDataPostProcRate());
+                initBandPass(m_f0Freq, m_bwHz, QsGlobal::g_memory->getDataProcRate());
                 break;
             case iirBandReject:
-                initBandReject(m_f0Freq, m_bwHz, QsGlobal::g_memory->getDataPostProcRate());
+                initBandReject(m_f0Freq, m_bwHz, QsGlobal::g_memory->getDataProcRate());
                 break;
             }
         }

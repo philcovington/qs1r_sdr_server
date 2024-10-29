@@ -215,7 +215,7 @@
 using namespace std;
 
 QsAgc::QsAgc()
-    : m_post_processing_rate(0), m_agc_use_hang(false), m_agc_threshold(-90), m_agc_manual_gain(0), m_agc_slope(0),
+    : m_agc_use_hang(false), m_agc_threshold(-90), m_agc_manual_gain(0), m_agc_slope(0),
       m_agc_hang_time(0), m_agc_hang_time_set(0), m_agc_decay(QS_DEFAULT_AGC_LONG_DECAY), m_agc_decay_set(0),
       m_agc_sample_rate(0), m_agc_sigdly_ptr(0), m_agc_hang_timer(0), m_agc_peak(0), m_agc_decay_avg(0),
       m_agc_attack_avg(0), m_agc_magbuffer_pos(0), m_agc_current_gain(0), m_agc_fixed_manual_gain(0), m_agc_knee(0),
@@ -224,18 +224,18 @@ QsAgc::QsAgc()
 
 void QsAgc::init() {
     m_agc_decay = QsGlobal::g_memory->getAgcDecaySpeed();
-    m_post_processing_rate = QsGlobal::g_memory->getDataPostProcRate();
+    m_processing_rate = QsGlobal::g_memory->getDataProcRate();
     m_agc_use_hang = QsGlobal::g_memory->getAgcHangTimeSwitch();
     m_agc_threshold = QsGlobal::g_memory->getAgcThreshold();
     m_agc_manual_gain = QsGlobal::g_memory->getAgcFixedGain();
     m_agc_slope = QsGlobal::g_memory->getAgcSlope();
     m_agc_hang_time = QsGlobal::g_memory->getAgcHangTime();
-    m_agc_hang_time_set = m_post_processing_rate * m_agc_hang_time * 0.001; // Convert to ms
+    m_agc_hang_time_set = m_processing_rate * m_agc_hang_time * 0.001; // Convert to ms
 
     m_agc_decay_set = m_agc_use_hang ? m_agc_decay + m_agc_hang_time : m_agc_decay;
 
-    if (m_agc_sample_rate != m_post_processing_rate) {
-        m_agc_sample_rate = m_post_processing_rate;
+    if (m_agc_sample_rate != m_processing_rate) {
+        m_agc_sample_rate = m_processing_rate;
         m_agc_signalDelayBuffer.resize(AGC_MAX_BUFFER_SZ, cpx_zero);
         m_agc_magBuffer.resize(AGC_MAX_BUFFER_SZ, 0.0);
         m_agc_sigdly_ptr = 0;
@@ -252,16 +252,16 @@ void QsAgc::init() {
     m_agc_gain_slope = m_agc_slope / 100.0;
     m_agc_fixed_gain = AGC_OUTPUT_SCALING * pow(10.0, m_agc_knee * (m_agc_gain_slope - 1.0));
 
-    m_agc_attack_rise_alpha = 1.0 - exp(-1.0 / (m_post_processing_rate * AGC_ATTACK_RISE_TC));
-    m_agc_attack_fall_alpha = 1.0 - exp(-1.0 / (m_post_processing_rate * AGC_ATTACK_FALL_TC));
+    m_agc_attack_rise_alpha = 1.0 - exp(-1.0 / (m_processing_rate * AGC_ATTACK_RISE_TC));
+    m_agc_attack_fall_alpha = 1.0 - exp(-1.0 / (m_processing_rate * AGC_ATTACK_FALL_TC));
 
-    m_agc_decay_rise_alpha = 1.0 - exp(-1.0 / (m_post_processing_rate * m_agc_decay_set * 0.001 * AGC_RISEFALL_RATIO));
+    m_agc_decay_rise_alpha = 1.0 - exp(-1.0 / (m_processing_rate * m_agc_decay_set * 0.001 * AGC_RISEFALL_RATIO));
     m_agc_decay_fall_alpha = m_agc_use_hang
-                                 ? 1.0 - exp(-1.0 / (m_post_processing_rate * AGC_RELEASE_TC))
-                                 : 1.0 - exp(-1.0 / (m_post_processing_rate * m_agc_decay_set * 0.001)); // No hang
+                                 ? 1.0 - exp(-1.0 / (m_processing_rate * AGC_RELEASE_TC))
+                                 : 1.0 - exp(-1.0 / (m_processing_rate * m_agc_decay_set * 0.001)); // No hang
 
-    m_agc_delay_samples = min((int)(m_post_processing_rate * AGC_DELAY_TC), AGC_MAX_BUFFER_SZ - 1);
-    m_agc_window_samples = m_post_processing_rate * AGC_WINDOW_TC;
+    m_agc_delay_samples = min((int)(m_processing_rate * AGC_DELAY_TC), AGC_MAX_BUFFER_SZ - 1);
+    m_agc_window_samples = m_processing_rate * AGC_WINDOW_TC;
 }
 
 float QsAgc::update_avg(float avg, float value, float rise_alpha, float fall_alpha) {
@@ -273,9 +273,9 @@ void QsAgc::process(qs_vect_cpx &src_dst) {
         m_agc_decay = QsGlobal::g_memory->getAgcDecaySpeed();
         m_agc_decay_set = m_agc_use_hang ? m_agc_decay + m_agc_hang_time : m_agc_decay;
         m_agc_decay_rise_alpha =
-            1.0 - exp(-1.0 / (m_post_processing_rate * m_agc_decay_set * 0.001 * AGC_RISEFALL_RATIO));
-        m_agc_decay_fall_alpha = m_agc_use_hang ? 1.0 - exp(-1.0 / (m_post_processing_rate * AGC_RELEASE_TC))
-                                                : 1.0 - exp(-1.0 / (m_post_processing_rate * m_agc_decay_set * 0.001));
+            1.0 - exp(-1.0 / (m_processing_rate * m_agc_decay_set * 0.001 * AGC_RISEFALL_RATIO));
+        m_agc_decay_fall_alpha = m_agc_use_hang ? 1.0 - exp(-1.0 / (m_processing_rate * AGC_RELEASE_TC))
+                                                : 1.0 - exp(-1.0 / (m_processing_rate * m_agc_decay_set * 0.001));
     }
 
     if (m_agc_threshold != QsGlobal::g_memory->getAgcThreshold() ||

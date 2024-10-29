@@ -55,6 +55,7 @@ class QsPostRxFilter {
     int m_filter_lo;
     int m_filter_hi;
     float m_one_over_norm;
+    bool m_is_init = false;
 
     std::unique_ptr<QsFFT> p_ovlpfft;
     std::unique_ptr<QsFFT> p_filtfft;

@@ -136,33 +136,22 @@ class QS1RServer {
     void setRxMode(String mode);
     void scriptDebugPrint(String msg);    
 
-  private:
     bool setFpgaForSampleRate(double samplerate);
-
     String doCommandProcessor(String value, int rx_num);
-
     void setWavFileAtEndFlag();
-
     void updateClockCorrection(double);
-
     void getDisplayFreqOffset(double &, int);
-
     void unregisteredHardwareTimeout();
-
     void initSupportedSampleRatesList();
-
     void sendGUIUpdate(String value, int rxnum);
-
     void qs1rReadFailure();
-
     void initWBPowerSpectrum();
-
     void clearAllBuffers();
-
     void sendHttpRequest();
-
     void processHttpResponse(bool);
-
+    bool getDacOutputDisable();
+    String getModeString(QSDEMODMODE mode);
+    QSDEMODMODE modeStringToMode(String smode);
     Map<int, double> SMETERCORRECTMAP;
     double SMETERCORRECT = 0.0;
 
@@ -199,7 +188,6 @@ class QS1RServer {
 
     UUID readQS1RUuid();
     bool writeQS1RSN(String uuid);
-
     String readQS1REEPROMData();
 
     int m_wb_bsize;
@@ -225,12 +213,8 @@ class QS1RServer {
     std::vector<float> wb_fvPsdBm;
     ByteArray wb_bvPsdBm;
 
-    double estimateDownConvertorRate(double rate, double bandwidth);
-    bool getDacOutputDisable();
-    int frequencyToPhaseIncrement(double freq);
-
-    String getModeString(QSDEMODMODE mode);
-    QSDEMODMODE modeStringToMode(String smode);
+    double estimateDownConvertorRate(double rate, double bandwidth);    
+    int frequencyToPhaseIncrement(double freq);    
 
     int m_status_message_backing_register;
 

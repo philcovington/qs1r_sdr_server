@@ -37,6 +37,7 @@ class QsBlockNoiseBlanker {
     int m_bnb_sig_index;
     int m_bnb_dly_index;
     int m_bnb_hangtime;
+    bool m_is_init = false;
     Cpx m_bnb_avg_sig;
 
     qs_vect_cpx bnb_delay_line;

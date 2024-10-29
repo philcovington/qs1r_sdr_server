@@ -449,10 +449,6 @@ void QsMemory::setDataProcRate(double value) { m_data_proc_rate = value; }
 
 double QsMemory::getDataProcRate() { return m_data_proc_rate; }
 
-void QsMemory::setDataPostProcRate(double value) { m_data_post_proc_rate = value; }
-
-double QsMemory::getDataPostProcRate() { return m_data_post_proc_rate; }
-
 void QsMemory::setRtAudioRate(double value) { m_rt_audio_rate = value; }
 
 double QsMemory::getRtAudioRate() { return m_rt_audio_rate; }

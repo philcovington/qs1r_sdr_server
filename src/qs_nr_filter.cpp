@@ -103,9 +103,13 @@ void QsNoiseReductionFilter::init(unsigned int size) {
     QsSignalOps::Zero(m_nr_delay_line);
     m_nr_coeff.resize(m_nr_lms_sz * 2); // Allocating twice the size for future flexibility
     QsSignalOps::Zero(m_nr_coeff);
+    m_is_init = true;
 }
 
 void QsNoiseReductionFilter::process(qs_vect_cpx &src_dst) {
+    if (!m_is_init) {
+        throw std::runtime_error("QsNoiseReductionFilter::process must call init() first!");
+    }
     // Fetch updated noise reduction switch state
     m_nr_switch = QsGlobal::g_memory->getNoiseReductionOn();
 

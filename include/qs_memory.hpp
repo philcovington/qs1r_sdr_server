@@ -166,11 +166,7 @@ class QsMemory {
     // DATA PROCESSING RATE
     void setDataProcRate(double value);
     double getDataProcRate();
-
-    // DATA POST-PROCESSING RATE
-    void setDataPostProcRate(double value);
-    double getDataPostProcRate();
-
+    
     void setRtAudioRate(double value);
     double getRtAudioRate();
 
