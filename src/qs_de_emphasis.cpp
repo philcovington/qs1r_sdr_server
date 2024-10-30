@@ -1,4 +1,5 @@
 #include "../include/qs_de_emphasis.hpp"
+#include "../include/qs_globals.hpp"
 
 DeEmphasis::DeEmphasis() : m_prev_output(0.0f) {}
 
@@ -17,6 +18,9 @@ void DeEmphasis::process(qs_vect_cpx &src_dst) {
 	if (!m_is_init) {
         throw std::runtime_error("DeEmphasis::process must call init() first!");
     }
+	if (!QsGlobal::g_memory->getDeEmphasisOn()) {
+		return;
+	}
     for (auto &sample : src_dst) {
         // Separate real and imaginary parts
         float input_real = sample.real();

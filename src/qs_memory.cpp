@@ -36,6 +36,12 @@ QsMemory::QsMemory() {
         // BINAURAL
         m_binaural_mode[i] = QS_DEFAULT_BINAURAL_MODE;
 
+        // AM POST FILTER
+        m_am_post_filt_alpha[i] = QS_DEFAULT_AM_FILT_ALPHA;
+
+        // FM DE-EMPHASIS
+        m_fm_demp_on[i] = QS_DEFAULT_FM_DEMPH_ON;
+
         // AVG NOISE BLANKER
         m_avg_nb_threshold[i] = QS_DEFAULT_ANB_THRESH;
         m_avg_nb_switch[i] = QS_DEFAULT_ANB_ON;
@@ -413,6 +419,20 @@ float QsMemory::getNotchBandwidth(int number, int rx_num) { return m_notch_bandw
 void QsMemory::setNotchEnabled(int number, bool value, int rx_num) { m_notch_enabled[rx_num][number] = value; }
 
 bool QsMemory::getNotchEnabled(int number, int rx_num) { return m_notch_enabled[rx_num][number]; }
+
+//***************************************************//
+//-------------------AM POST FILTER------------------//
+//***************************************************//
+
+float QsMemory::getAMPostFilterAlpha(int rx_num) { return m_am_post_filt_alpha[rx_num]; };
+void QsMemory::setAMPostFilterAlpha(float alpha, int rx_num) { m_am_post_filt_alpha[rx_num] = alpha; }
+
+//***************************************************//
+//-------------------FM DE-EMPHASIS------------------//
+//***************************************************//
+
+bool QsMemory::getDeEmphasisOn(int rx_num) { return m_fm_demp_on[rx_num]; }
+void QsMemory::setDeEmphasisOn(bool on, int rx_num) { m_fm_demp_on[rx_num] = on; }
 
 //***************************************************//
 //-------------------PS CORRECTIONS------------------//

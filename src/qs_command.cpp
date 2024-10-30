@@ -30,18 +30,22 @@ void CommandProcessor::process() {
         {"set.freq",
          [this](const std::string &param) {
              try {
-                 int frequency = std::stoi(param);
+                 double frequency = std::stod(param);
                  m_p_server->setRxFrequency(frequency);
-                 std::cout << "Frequency set to " << frequency << std::endl;
+                 std::cout << "Frequency set to " << static_cast<int>(frequency) << std::endl;
              } catch (const std::invalid_argument &) {
                  std::cerr << "Invalid frequency parameter" << std::endl;
              }
          }},
+        // Alias for set.freq
+        {"set.f", [this, &commands](const std::string &param) { commands["set.freq"](param); }},
         {"get.freq",
          [this](const std::string &) {
              double frequency = QsGlobal::g_memory->getRxLOFrequency();
-             std::cout << "Frequency set to " << frequency << std::endl;
+             std::cout << "Frequency set to " << static_cast<int>(frequency) << std::endl;
          }},
+		 // Alias for get.freq
+		{"get.f", [this, &commands](const std::string &param) { commands["get.freq"](param); }},
         {"set.mode",
          [this](const std::string &mode) {
              if (mode.empty()) {
@@ -55,6 +59,35 @@ void CommandProcessor::process() {
          [this](const std::string &) {
              std::string mode = m_p_server->getRxMode().toStdString();
              std::cout << "Mode set to " << mode << std::endl;
+         }},
+        {"set.demph",
+         [this](const std::string &param) {
+             try {
+                 int intVal = std::stoi(param);
+                 if (intVal != 0 && intVal != 1) {
+                     throw std::invalid_argument("Only 0 or 1 is allowed.");
+                 }
+                 bool on = static_cast<bool>(intVal);
+                 QsGlobal::g_memory->setDeEmphasisOn(on);
+                 std::cout << "De-emphasis set to " << (on ? "on" : "off") << std::endl;
+             } catch (const std::invalid_argument &) {
+                 std::cerr << "Invalid De-emphasis parameter. Use 0 or 1." << std::endl;
+             }
+         }},
+        {"get.demph",
+         [this](const std::string &param) {
+             int on = QsGlobal::g_memory->getDeEmphasisOn();
+             std::cout << "De-emphasis is " << (on ? "on" : "off") << std::endl;
+         }},
+        {"set.ampref",
+         [this](const std::string &param) {
+             try {
+                 float alpha = std::stof(param);
+                 QsGlobal::g_memory->setAMPostFilterAlpha(alpha);
+                 std::cout << "AM post filter alpha set to " << alpha << std::endl;
+             } catch (const std::invalid_argument &) {
+                 std::cerr << "Invalid AM post filter alpha parameter" << std::endl;
+             }
          }},
         {"set.squelch",
          [this](const std::string &param) {
@@ -70,11 +103,13 @@ void CommandProcessor::process() {
                  std::cerr << "Invalid squelch parameter. Use 0 or 1." << std::endl;
              }
          }},
+		{"set.sq", [this, &commands](const std::string &param) { commands["set.squelch"](param); }},
         {"get.squelch",
          [this](const std::string &) {
              bool on = QsGlobal::g_memory->getSquelchOn();
              std::cout << "Squelch is " << (on ? "on" : "off") << std::endl;
          }},
+		{"get.sq", [this, &commands](const std::string &param) { commands["get.squelch"](param); }},
         {"set.squelchthr",
          [this](const std::string &param) {
              try {
@@ -85,11 +120,13 @@ void CommandProcessor::process() {
                  std::cerr << "Invalid squelch threshold parameter" << std::endl;
              }
          }},
+		{"set.sqt", [this, &commands](const std::string &param) { commands["set.squelchthr"](param); }},
         {"get.squelchthr",
          [this](const std::string &) {
              double thresh = QsGlobal::g_memory->getSquelchThreshold();
              std::cout << "Squelch threshold is " << thresh << std::endl;
          }},
+		{"get.sqt", [this, &commands](const std::string &param) { commands["get.squelchthr"](param); }},
         {"set.filter",
          [this](const std::string &param) {
              try {
@@ -121,7 +158,7 @@ void CommandProcessor::process() {
              double volume = QsGlobal::g_memory->getVolume();
              std::cout << "Volume is " << volume << std::endl;
          }},
-		{"get.smeter",
+        {"get.smeter",
          [this](const std::string &) {
              double smeter = QsGlobal::g_memory->getSMeterCurrentValue();
              std::cout << "Signal level is " << smeter << std::endl;

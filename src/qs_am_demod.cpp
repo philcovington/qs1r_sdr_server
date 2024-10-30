@@ -19,8 +19,8 @@
 // }
 
 #include "../include/qs_am_demod.hpp"
-#include <complex>
 #include <cmath>
+#include <complex>
 
 QsAMDemodulator::QsAMDemodulator() : m_am_mag(0.0), m_am_z0(0.0), m_am_z1(0.0), m_am_dc_alpha(0.999) {}
 
@@ -28,21 +28,38 @@ void QsAMDemodulator::init() {
     m_am_mag = 0.0;
     m_am_z0 = 0.0;
     m_am_z1 = 0.0;
+    m_alpha = 0.1f;
+    m_is_init = true;
 }
 
 void QsAMDemodulator::process(qs_vect_cpx &src_dst) {
+    if (!m_is_init) {
+        throw std::runtime_error("QsAMDemodulator::process must call init() first!");
+    }
+    m_alpha = QsGlobal::g_memory->getAMPostFilterAlpha();
+    // Initialize previous output for the low-pass filter state
+    float prev_output = 0.0f;
+
     for (auto &sample : src_dst) {
-        // Compute the magnitude using std::norm() to avoid recalculating real/imaginary parts
-        m_am_mag = std::sqrt(std::norm(sample));
-        
+        // Calculate the magnitude of the complex sample manually
+        float real_part = sample.real();
+        float imag_part = sample.imag();
+        m_am_mag = std::sqrt(real_part * real_part + imag_part * imag_part);
+
         // Apply the DC removal filter
-        m_am_z0 = m_am_mag + m_am_dc_alpha * m_am_z1;
-        
-        // Update the sample in place
+        m_am_z0 = m_am_mag + (m_am_z1 * m_am_dc_alpha);
+
+        // Update the sample with the demodulated value
         float demodulated_value = m_am_z0 - m_am_z1;
-        sample = Cpx(demodulated_value, demodulated_value);
-        
-        // Update filter state
+
+        // Apply low-pass filter after demodulation        
+        float output = m_alpha * demodulated_value + (1.0f - m_alpha) * prev_output;
+        prev_output = output;
+
+        // Update sample with filtered output
+        sample = Cpx(output, output);
+
+        // Update the state for the next iteration
         m_am_z1 = m_am_z0;
     }
 }

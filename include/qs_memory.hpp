@@ -152,6 +152,15 @@ class QsMemory {
     void setNotchEnabled(int number, bool value, int rx_num = 0);
     bool getNotchEnabled(int number, int rx_num = 0);
 
+    // AM Post filter
+    float getAMPostFilterAlpha(int rx_num = 0);
+    void setAMPostFilterAlpha(float alpha, int rx_num = 0); 
+
+    // FM De-emphasis
+
+    bool getDeEmphasisOn(int rx_num = 0);
+    void setDeEmphasisOn(bool on, int rx_num = 0);
+
     // not based on number of receivers follows:
 
     void setSMeterCorrection(double value);
@@ -336,6 +345,12 @@ class QsMemory {
     double m_notch_frequency[MAX_RECEIVERS][MAX_MAN_NOTCHES];
     double m_notch_bandwidth[MAX_RECEIVERS][MAX_MAN_NOTCHES];
     bool m_notch_enabled[MAX_RECEIVERS][MAX_MAN_NOTCHES];
+
+    // AM Post filter
+    float m_am_post_filt_alpha[MAX_RECEIVERS];
+
+    // FM De-emphasis
+    bool m_fm_demp_on[MAX_RECEIVERS];
 
     double m_smeter_correction;
     double m_ps_correction;
