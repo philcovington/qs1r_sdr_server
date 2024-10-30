@@ -39,11 +39,14 @@ class QsSquelch {
     bool m_sq_switch;
     double m_sq_thresh;
     double m_sq_hist;
+    double m_sq_hysteresis;
+    double m_attack;
+    double m_decay;
     bool m_is_init = false;
 
   public:
     QsSquelch();
 
-    void init();
+    void init(double attack=0.7, double decay=0.7);
     void process(qs_vect_cpx &src_dst);
 };

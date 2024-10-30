@@ -65,6 +65,8 @@ QsMemory::QsMemory() {
         // SQUELCH
         m_squelch_switch[i] = QS_DEFAULT_SQUELCH_ON;
         m_squelch_threshold[i] = QS_DEFAULT_SQUELCH_THRESH;
+        m_squelch_hysteresis[i] = QS_DEFAULT_SQUELCH_HYST;
+
         m_rx_frequency[i] = QS_DEFAULT_FREQ;
 
         for (int j = 0; j < MAX_MAN_NOTCHES; j++) {
@@ -373,6 +375,13 @@ bool QsMemory::getSquelchOn(int rx_num) { return m_squelch_switch[rx_num]; }
 void QsMemory::setSquelchThreshold(double value, int rx_num) { m_squelch_threshold[rx_num] = value; }
 
 double QsMemory::getSquelchThreshold(int rx_num) { return m_squelch_threshold[rx_num]; }
+
+void QsMemory::setSquelchHysteresis(double value, int rx_num) { m_squelch_hysteresis[rx_num] = value; }
+
+double QsMemory::getSquelchHysteresis(int rx_num) { return m_squelch_hysteresis[rx_num]; }
+
+void QsMemory::setSquelchOpened(bool opened, int rx_num) { m_squelch_opened[rx_num] = opened; }
+bool QsMemory::getSquelchOpened(int rx_num) { return m_squelch_opened[rx_num]; }
 
 //***************************************************//
 //-----------------RX LO TUNED FREQ------------------//

@@ -5,6 +5,7 @@
 #include "../include/qs_auto_notch_filter.hpp"
 #include "../include/qs_avg_nb.hpp"
 #include "../include/qs_blk_nb.hpp"
+#include "../include/qs_de_emphasis.hpp"
 #include "../include/qs_debugloggerclass.hpp"
 #include "../include/qs_defines.hpp"
 #include "../include/qs_downcnv.hpp"
@@ -50,6 +51,7 @@ void QsDspProcessor::init(int rx_num) {
     p_am = std::make_unique<QsAMDemodulator>();
     p_sam = std::make_unique<QsSAMDemodulator>();
     p_fm = std::make_unique<QsFMCombinedDemodulator>();
+    p_fm_demph = std::make_unique<DeEmphasis>();
     p_nr = std::make_unique<QsNoiseReductionFilter>();
     p_anf = std::make_unique<QsAutoNotchFilter>();
     p_sm = std::make_unique<QsSMeter>();
@@ -118,6 +120,7 @@ void QsDspProcessor::init(int rx_num) {
     p_am->init();
     p_sam->init();
     p_fm->init(NARROW);
+    p_fm_demph->init(m_processing_rate);
 
     // POST FILTER
     p_post_filter->init(m_bsize);
@@ -173,7 +176,7 @@ void QsDspProcessor::run() {
 
     m_is_running = true;
     m_thread_go = true;
-    
+
     while (m_thread_go) {
         if (QsGlobal::g_io->readEP6(reinterpret_cast<unsigned char *>(&in_interleaved_i[0]), m_bsizeX2 * sizeof(int)) >
             0) {
@@ -213,16 +216,16 @@ void QsDspProcessor::run() {
             p_main_filter->process(buf_cpx);
             // ======== </MAIN FIR> ========
 
-// #ifdef __IIR_NOTCH__
-//             p_iir0->process(buf_cpx);
-//             p_iir1->process(buf_cpx);
-//             p_iir2->process(buf_cpx);
-//             p_iir3->process(buf_cpx);
-//             p_iir4->process(buf_cpx);
-//             p_iir5->process(buf_cpx);
-//             p_iir6->process(buf_cpx);
-//             p_iir7->process(buf_cpx);
-// #endif
+            // #ifdef __IIR_NOTCH__
+            //             p_iir0->process(buf_cpx);
+            //             p_iir1->process(buf_cpx);
+            //             p_iir2->process(buf_cpx);
+            //             p_iir3->process(buf_cpx);
+            //             p_iir4->process(buf_cpx);
+            //             p_iir5->process(buf_cpx);
+            //             p_iir6->process(buf_cpx);
+            //             p_iir7->process(buf_cpx);
+            // #endif
 
             if (QsGlobal::g_memory->getDemodMode() == dmCW) {
                 // ======== <CW TONE GENERATOR> ===========
@@ -245,7 +248,7 @@ void QsDspProcessor::run() {
             switch (QsGlobal::g_memory->getDemodMode()) {
             case dmAM:
                 p_am->process(buf_cpx);
-                //p_post_filter->process(buf_cpx);
+                // p_post_filter->process(buf_cpx);
                 break;
             case dmSAM:
                 p_sam->process(buf_cpx);
@@ -253,10 +256,12 @@ void QsDspProcessor::run() {
                 break;
             case dmFMN:
                 p_fm->process(buf_cpx, NARROW);
+                p_fm_demph->process(buf_cpx);
                 // p_post_filter->process(buf_cpx);
                 break;
             case dmFMW:
                 p_fm->process(buf_cpx, WIDE);
+                p_fm_demph->process(buf_cpx);
                 // p_post_filter->process(buf_cpx);
                 break;
             default:

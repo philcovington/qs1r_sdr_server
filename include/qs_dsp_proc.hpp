@@ -58,6 +58,7 @@ class QsMainRxFilter;
 class QsPostRxFilter;
 class QsSAMDemodulator;
 class QsFMCombinedDemodulator;
+class DeEmphasis;
 class QsNoiseReductionFilter;
 class QsAutoNotchFilter;
 class QsSMeter;
@@ -88,6 +89,7 @@ class QsDspProcessor {
     std::unique_ptr<QsAMDemodulator> p_am;
     std::unique_ptr<QsSAMDemodulator> p_sam;
     std::unique_ptr<QsFMCombinedDemodulator> p_fm;
+    std::unique_ptr<DeEmphasis> p_fm_demph;
     std::unique_ptr<QsNoiseReductionFilter> p_nr;
     std::unique_ptr<QsAutoNotchFilter> p_anf;
     std::unique_ptr<QsSMeter> p_sm;

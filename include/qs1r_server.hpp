@@ -58,20 +58,12 @@ class QS1RServer {
 
     void PttState(bool);
 
-    void receiveAppMessage(String);
-
     void showStartupMessage(); 
     void showStartupMessageWithReady();  
-    void parseLocalCommand();
     void quit();
 
     void setStatusText(String text);
-
-    void hideWindow();
-    void showWindow();
-
-    void boostTicks();
-
+  
     void initQsAudio(double rate);
     int initQS1RHardware();    
     int initThreads();
@@ -100,6 +92,7 @@ class QS1RServer {
     void setupIo();
     void startIo(bool iswav = false);
     void stopIo();
+    bool isDspProcessorRunning();
 
     void setRxFrequency(double value, int rx_num, bool force = false);
     void getRxFrequency(double &value, int rx_num);
@@ -113,9 +106,7 @@ class QS1RServer {
     void setSMeterCorrection(double value);
     void getSMeterCorrection(double &value);
 
-    void setFilter(double width, int rx_num);
-
-    void setWavInputFile(String name, int rx_num, bool &ok);
+    void setFilter(double width, int rx_num=0);    
 
     // Board Initialization and Tests
     void findQS1RDevice();
@@ -124,36 +115,32 @@ class QS1RServer {
     void writeQS1REEPROM();
     void readQS1REEPROM();
 
-    void setOpenAudioSetupDirect();
-
     void setSampleRateDirect(int value);
     void setTxPttDirect(bool value);
 
-    // For Scripting
     double getRxFrequency();
     void setRxFrequency(double freq);
     String getRxMode();
     void setRxMode(String mode);
-    void scriptDebugPrint(String msg);    
-
-    bool setFpgaForSampleRate(double samplerate);
-    String doCommandProcessor(String value, int rx_num);
-    void setWavFileAtEndFlag();
-    void updateClockCorrection(double);
-    void getDisplayFreqOffset(double &, int);
+    
+    bool setFpgaForSampleRate(double samplerate);    
+    void updateClockCorrection(double);    
     void unregisteredHardwareTimeout();
-    void initSupportedSampleRatesList();
-    void sendGUIUpdate(String value, int rxnum);
+    void initSupportedSampleRatesList();    
     void qs1rReadFailure();
     void initWBPowerSpectrum();
-    void clearAllBuffers();
-    void sendHttpRequest();
-    void processHttpResponse(bool);
+    void clearAllBuffers();    
     bool getDacOutputDisable();
+
     String getModeString(QSDEMODMODE mode);
     QSDEMODMODE modeStringToMode(String smode);
     Map<int, double> SMETERCORRECTMAP;
     double SMETERCORRECT = 0.0;
+
+    void setSquelchOn(bool on);
+    void setSquelchThreshold(double threshold);
+
+    void setVolume(double volume);    
 
   private:
     bool error_flag;
