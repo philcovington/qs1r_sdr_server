@@ -8,6 +8,8 @@
 #include "../include/qs_debugloggerclass.hpp"
 #include "../include/qs_io_libusb.hpp"
 #include "../include/qs_test_tone.hpp"
+#include "../include/qs_command.hpp"
+#include "../include/qs_globals.hpp"
 
 int main() {
 
@@ -16,21 +18,14 @@ int main() {
     std::string cmd;
 
     QS1RServer qs1r;
+    CommandProcessor cmd_proc;
     QsSleep sleep; 
         
     qs1r.initialize(); 
     
-    while (cmd != "exit") {
-        std::cout << "?:";
-        std::cin >> cmd;
-        std::cout << cmd << std::endl;
-        if (cmd == "start") {
-            qs1r.startIo();
-        } else if (cmd == "stop") {
-            qs1r.stopIo();
-        }  
-    }  
-    
+    cmd_proc.init(&qs1r);
+    cmd_proc.process();
+        
     qs1r.stopIo();   
     
     qs1r.shutdown();
