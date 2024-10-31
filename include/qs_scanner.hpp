@@ -5,6 +5,8 @@
 #include <atomic>
 #include <thread>
 #include <vector>
+#include <unordered_map>
+#include <string>
 
 class QsScanner {
   public:
@@ -24,7 +26,7 @@ class QsScanner {
     std::atomic<bool> m_thread_go;
     std::atomic<bool> m_is_running;
 
-	std::vector<int> m_frequencies;
+	std::unordered_map<int, std::string> m_frequencies;
 
 	bool m_is_init = false;
 	int m_holdTime = 2000;

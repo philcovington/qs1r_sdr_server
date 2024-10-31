@@ -1,6 +1,11 @@
 #include "../include/qs_scanner.hpp"
 #include "../include/qs_debugloggerclass.hpp"
 #include "../include/qs_globals.hpp"
+#include "../include/json.hpp"
+#include <fstream>
+#include <iostream>
+
+using nlohmann::json;
 
 // Constructor and destructor remain the same
 QsScanner::QsScanner() : m_thread_go(false), m_is_running(false) {}
@@ -16,12 +21,26 @@ void QsScanner::reinit() { init(); }
 
 void QsScanner::init() {
     QsGlobal::g_memory->setSquelchOn(true);
-	QsGlobal::g_memory->setSquelchThreshold(-70.0);
+    QsGlobal::g_memory->setSquelchThreshold(-70.0);
     QsGlobal::g_memory->setDemodMode(QSDEMODMODE::dmFMN);
     QsGlobal::g_memory->setDeEmphasisOn(true);
-	QsGlobal::g_server->setFilter(10000);
+    QsGlobal::g_server->setFilter(10000);
 
-    m_frequencies = {39640000, 39800000, 39880000};
+	std::ifstream file("qs1r_scan.json"); // Open the JSON file
+    if (!file.is_open()) {
+        throw std::runtime_error("Could not open qs1r_scan.json");
+    }
+
+    json jsonData;
+    file >> jsonData; // Parse JSON data
+    file.close();
+
+    // Clear m_frequencies and populate it from JSON data
+    m_frequencies.clear();
+    for (auto& [freqStr, channelName] : jsonData.items()) {
+        int frequency = std::stoi(freqStr); // Convert key to int
+        m_frequencies[frequency] = channelName;
+    }
     m_is_init = true;
 }
 
@@ -37,32 +56,39 @@ void QsScanner::run() {
         throw std::runtime_error("QsScanner::run must call init() first!");
     }
     m_is_running = true;
-    
+
     size_t freqIndex = 0;
 
-	_debug() << "Scanning...";
+    _debug() << "Scanning...";
 
+    auto freqIt = m_frequencies.begin(); // Iterator to current frequency
     while (m_thread_go) {
         if (!QsGlobal::g_server->isDspProcessorRunning()) {
             sleep.msleep(500);
         } else {
-			int currentFreq = m_frequencies[freqIndex];
-			QsGlobal::g_server->setRxFrequency(currentFreq);
-			if (QsGlobal::g_memory->getSquelchOpened()) {
-				// Squelch is open, so hold on the current frequency
-				_debug() << "Current frequency: " << currentFreq;
-				while (QsGlobal::g_memory->getSquelchOpened() && m_thread_go) {
-					sleep.msleep(100); // Check every 100 ms while squelch is open
-				}
-				// After squelch closes, hold on the frequency for a specified delay
-				sleep.msleep(m_holdTime);
-				_debug() << "resuming...";
-			} else {
-				// If squelch is not open, move to the next frequency
-				freqIndex = (freqIndex + 1) % m_frequencies.size();
-			}
-			sleep.msleep(m_settleTime);
-		}
+            // Set current frequency and get channel name
+            int currentFreq = freqIt->first;
+            std::string channelName = freqIt->second;
+
+            QsGlobal::g_server->setRxFrequency(currentFreq);
+            if (QsGlobal::g_memory->getSquelchOpened()) {
+                // Squelch is open, so hold on the current frequency
+                _debug() << "Current frequency: " << currentFreq << " (" << channelName << ")";
+                while (QsGlobal::g_memory->getSquelchOpened() && m_thread_go) {
+                    sleep.msleep(100); // Check every 100 ms while squelch is open
+                }
+                // After squelch closes, hold on the frequency for a specified delay
+                sleep.msleep(m_holdTime);
+                _debug() << "Resuming scan...";
+            } else {
+                // If squelch is not open, move to the next frequency
+                ++freqIt;
+                if (freqIt == m_frequencies.end()) {
+                    freqIt = m_frequencies.begin(); // Wrap around to the start
+                }
+            }
+            sleep.msleep(m_settleTime);
+        }
     }
 
     m_is_running = false;
