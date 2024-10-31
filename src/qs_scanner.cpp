@@ -26,9 +26,11 @@ void QsScanner::init() {
     QsGlobal::g_memory->setDeEmphasisOn(true);
     QsGlobal::g_server->setFilter(10000);
 
-	std::ifstream file("qs1r_scan.json"); // Open the JSON file
+	std::ifstream file("qs1r_scanlist.json"); // Open the JSON file
     if (!file.is_open()) {
-        throw std::runtime_error("Could not open qs1r_scan.json");
+        std::cerr << "Could not open qs1r_scanlist.json! Scanning disabled." << std::endl;
+		m_is_init = false;
+		return;
     }
 
     json jsonData;
@@ -45,7 +47,7 @@ void QsScanner::init() {
 }
 
 void QsScanner::start() {
-    if (!m_is_running && !m_thread_go) {
+    if (!m_is_running && !m_thread_go && m_is_init) {
         m_thread_go = true;
         m_thread = std::thread(&QsScanner::run, this); // Launch the run() method in a new thread
     }
@@ -71,9 +73,10 @@ void QsScanner::run() {
             std::string channelName = freqIt->second;
 
             QsGlobal::g_server->setRxFrequency(currentFreq);
+			sleep.msleep(m_settleTime);
             if (QsGlobal::g_memory->getSquelchOpened()) {
                 // Squelch is open, so hold on the current frequency
-                _debug() << "Current frequency: " << currentFreq << " (" << channelName << ")";
+                _debug() << "Current frequency: " << currentFreq << " (" << channelName << ") [" << QsGlobal::g_memory->getSMeterCurrentValue() << "]";
                 while (QsGlobal::g_memory->getSquelchOpened() && m_thread_go) {
                     sleep.msleep(100); // Check every 100 ms while squelch is open
                 }
@@ -86,8 +89,7 @@ void QsScanner::run() {
                 if (freqIt == m_frequencies.end()) {
                     freqIt = m_frequencies.begin(); // Wrap around to the start
                 }
-            }
-            sleep.msleep(m_settleTime);
+            }            
         }
     }
 

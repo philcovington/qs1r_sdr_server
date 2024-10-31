@@ -162,12 +162,18 @@ void CommandProcessor::process() {
                  }
                  bool on = static_cast<bool>(intVal);
                  if (on) {
-                    std::cout << "Starting scanner..." << std::endl;
-                    if (QsGlobal::g_scanner != nullptr) QsGlobal::g_scanner->start();
+                     std::cout << "Starting scanner..." << std::endl;
+                     if (QsGlobal::g_scanner != nullptr) {
+                         if (!QsGlobal::g_scanner->isRunning()) {
+                             QsGlobal::g_scanner->start();
+                         }
+                     }
                  } else {
-                    std::cout << "Stopping scanner..." << std::endl;
-                    if (QsGlobal::g_scanner != nullptr) QsGlobal::g_scanner->stop();
-                 }                 
+                     std::cout << "Stopping scanner..." << std::endl;
+                     if (QsGlobal::g_scanner != nullptr) {
+                         QsGlobal::g_scanner->stop();
+                     }
+                 }
              } catch (const std::invalid_argument &) {
                  std::cerr << "Invalid parameter. Use 0 or 1." << std::endl;
              }
