@@ -62,14 +62,14 @@ pkg_check_modules(LIBSAMPLERATE REQUIRED samplerate)
 pkg_check_modules(ALSA REQUIRED alsa)
 
 # Check for Readline
-find_package(Readline REQUIRED)
+pkg_check_modules(READLINE REQUIRED readline)
 
 # Include directories for the found packages
 include_directories(${LIBUSB_INCLUDE_DIRS} ${LIBSAMPLERATE_INCLUDE_DIRS} ${ALSA_INCLUDE_DIRS} ${READLINE_INCLUDE_DIRS})
 
 # Link libraries
 link_directories(${LIBUSB_LIBRARY_DIRS})
-target_link_libraries(qs1r_server ${LIBUSB_LIBRARIES} ${LIBSAMPLERATE_LIBRARIES} ${ALSA_LIBRARIES} Readline::Readline)
+target_link_libraries(qs1r_server ${LIBUSB_LIBRARIES} ${LIBSAMPLERATE_LIBRARIES} ${ALSA_LIBRARIES} ${READLINE_LIBRARIES})
 
 # Add messages for debugging purposes
 message(STATUS "Found libusb: ${LIBUSB_LIBRARIES}")

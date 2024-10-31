@@ -942,7 +942,7 @@ void QS1RServer::setDacClockSelect(DACCLKSEL value) {
 // Sets the filters appropriately by mode
 // ------------------------------------------------------------
 void QS1RServer::setFilter(double width, int rx_num) {
-    QSDEMODMODE mode = QsGlobal::g_memory->getDemodMode(rx_num - 1);
+    QSDEMODMODE mode = QsGlobal::g_memory->getDemodMode(rx_num);
 
     double send_width_lo = 0.0;
     double send_width_hi = 0.0;
@@ -985,7 +985,7 @@ void QS1RServer::setFilter(double width, int rx_num) {
         send_width_hi = width;
         break;
     default:
-        break;
+        return;
     }
 
     QsGlobal::g_memory->setFilterHi(send_width_hi);
