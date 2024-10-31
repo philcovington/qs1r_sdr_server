@@ -153,6 +153,25 @@ void CommandProcessor::process() {
                  std::cerr << "Invalid volume parameter" << std::endl;
              }
          }},
+        {"set.scan",
+         [this](const std::string &param) {
+             try {
+                 int intVal = std::stoi(param);
+                 if (intVal != 0 && intVal != 1) {
+                     throw std::invalid_argument("Only 0 or 1 is allowed.");
+                 }
+                 bool on = static_cast<bool>(intVal);
+                 if (on) {
+                    std::cout << "Starting scanner..." << std::endl;
+                    if (QsGlobal::g_scanner != nullptr) QsGlobal::g_scanner->start();
+                 } else {
+                    std::cout << "Stopping scanner..." << std::endl;
+                    if (QsGlobal::g_scanner != nullptr) QsGlobal::g_scanner->stop();
+                 }                 
+             } catch (const std::invalid_argument &) {
+                 std::cerr << "Invalid parameter. Use 0 or 1." << std::endl;
+             }
+         }},
         {"get.volume",
          [this](const std::string &) {
              double volume = QsGlobal::g_memory->getVolume();

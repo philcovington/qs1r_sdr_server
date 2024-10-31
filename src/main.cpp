@@ -19,18 +19,10 @@ int main() {
     QsScanner scanner;
     QsSleep sleep;
 
-    qs1r.initialize();
-    scanner.init();
-
-    _debug() << "starting scanner...";
-    scanner.start();
-
+    qs1r.initialize();    
+        
     cmd_proc.init(&qs1r);
-    cmd_proc.process();
-
-    if (scanner.isRunning()) {
-        scanner.stop();
-    }
+    cmd_proc.process();    
 
     if (qs1r.isDspProcessorRunning()) {
         qs1r.stopIo();

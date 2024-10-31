@@ -27,6 +27,8 @@ class QsScanner {
 	std::vector<int> m_frequencies;
 
 	bool m_is_init = false;
+	int m_holdTime = 2000;
+	int m_settleTime = 20;
 
     QsSleep sleep;
 

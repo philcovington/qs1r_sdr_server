@@ -19,6 +19,7 @@
 #include "../include/qs_state.hpp"
 #include "../include/qs_stringclass.hpp"
 #include "../include/qs_uuid.hpp"
+#include "../include/qs_scanner.hpp"
 #include "qs1r_server.hpp"
 #include <algorithm>
 #include <array>
@@ -112,6 +113,8 @@ void QS1RServer::initSupportedSampleRatesList() {
 int QS1RServer::initThreads() {
     _debug() << "initializing threads...";   
     QsGlobal::g_dsp_proc->init();
+    QsGlobal::g_scanner = make_unique<QsScanner>();
+    QsGlobal::g_scanner->init();
     return 0;
 }
 

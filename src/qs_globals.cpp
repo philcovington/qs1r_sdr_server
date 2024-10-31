@@ -5,6 +5,7 @@ QS1RServer* QsGlobal::g_server = nullptr;
 std::unique_ptr<QsMemory> QsGlobal::g_memory = std::make_unique<QsMemory>();
 std::unique_ptr<QsDspProcessor> QsGlobal::g_dsp_proc = std::make_unique<QsDspProcessor>();
 std::unique_ptr<QsIOLib_LibUSB> QsGlobal::g_io = std::make_unique<QsIOLib_LibUSB>();
+std::unique_ptr<QsScanner> QsGlobal::g_scanner = nullptr;
 std::unique_ptr<QsCircularBuffer<std::complex<float>>> QsGlobal::g_cpx_readin_ring = nullptr;
 std::unique_ptr<QsCircularBuffer<float>> QsGlobal::g_float_rt_ring = nullptr;
 std::unique_ptr<QsCircularBuffer<float>> QsGlobal::g_float_dac_ring = nullptr;

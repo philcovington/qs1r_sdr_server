@@ -16,12 +16,12 @@ void QsScanner::reinit() { init(); }
 
 void QsScanner::init() {
     QsGlobal::g_memory->setSquelchOn(true);
-	QsGlobal::g_memory->setSquelchThreshold(-75.0);
+	QsGlobal::g_memory->setSquelchThreshold(-70.0);
     QsGlobal::g_memory->setDemodMode(QSDEMODMODE::dmFMN);
     QsGlobal::g_memory->setDeEmphasisOn(true);
 	QsGlobal::g_server->setFilter(10000);
 
-    std::vector<int> m_frequencies = {39640000, 39800000, 39880000};
+    m_frequencies = {39640000, 39800000, 39880000};
     m_is_init = true;
 }
 
@@ -37,9 +37,10 @@ void QsScanner::run() {
         throw std::runtime_error("QsScanner::run must call init() first!");
     }
     m_is_running = true;
-
-    int holdTime = 1000; // Hold time in ms if squelch closes after opening
+    
     size_t freqIndex = 0;
+
+	_debug() << "Scanning...";
 
     while (m_thread_go) {
         if (!QsGlobal::g_server->isDspProcessorRunning()) {
@@ -54,17 +55,18 @@ void QsScanner::run() {
 					sleep.msleep(100); // Check every 100 ms while squelch is open
 				}
 				// After squelch closes, hold on the frequency for a specified delay
-				sleep.msleep(holdTime);
-				_debug() << "resuming..." << currentFreq;
+				sleep.msleep(m_holdTime);
+				_debug() << "resuming...";
 			} else {
 				// If squelch is not open, move to the next frequency
 				freqIndex = (freqIndex + 1) % m_frequencies.size();
 			}
+			sleep.msleep(m_settleTime);
 		}
     }
 
     m_is_running = false;
-    _debug() << "DataReader thread stopped.";
+    _debug() << "QsScanner thread stopped.";
 }
 
 void QsScanner::stop() {
