@@ -3,6 +3,8 @@
 #include "../include/qs_defaults.hpp"
 #include "../include/qs_defines.hpp"
 #include "../include/qs_globals.hpp"
+#include <readline/history.h>
+#include <readline/readline.h>
 #include <string>
 
 class QS1RServer;
@@ -12,7 +14,7 @@ class CommandProcessor {
     CommandProcessor();
     ~CommandProcessor();
 
-    void init(QS1RServer* server);
+    void init(QS1RServer *server);
     void process();
 
   private:

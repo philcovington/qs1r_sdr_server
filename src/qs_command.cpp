@@ -44,8 +44,8 @@ void CommandProcessor::process() {
              double frequency = QsGlobal::g_memory->getRxLOFrequency();
              std::cout << "Frequency set to " << static_cast<int>(frequency) << std::endl;
          }},
-		 // Alias for get.freq
-		{"get.f", [this, &commands](const std::string &param) { commands["get.freq"](param); }},
+        // Alias for get.freq
+        {"get.f", [this, &commands](const std::string &param) { commands["get.freq"](param); }},
         {"set.mode",
          [this](const std::string &mode) {
              if (mode.empty()) {
@@ -103,13 +103,13 @@ void CommandProcessor::process() {
                  std::cerr << "Invalid squelch parameter. Use 0 or 1." << std::endl;
              }
          }},
-		{"set.sq", [this, &commands](const std::string &param) { commands["set.squelch"](param); }},
+        {"set.sq", [this, &commands](const std::string &param) { commands["set.squelch"](param); }},
         {"get.squelch",
          [this](const std::string &) {
              bool on = QsGlobal::g_memory->getSquelchOn();
              std::cout << "Squelch is " << (on ? "on" : "off") << std::endl;
          }},
-		{"get.sq", [this, &commands](const std::string &param) { commands["get.squelch"](param); }},
+        {"get.sq", [this, &commands](const std::string &param) { commands["get.squelch"](param); }},
         {"set.squelchthr",
          [this](const std::string &param) {
              try {
@@ -120,13 +120,13 @@ void CommandProcessor::process() {
                  std::cerr << "Invalid squelch threshold parameter" << std::endl;
              }
          }},
-		{"set.sqt", [this, &commands](const std::string &param) { commands["set.squelchthr"](param); }},
+        {"set.sqt", [this, &commands](const std::string &param) { commands["set.squelchthr"](param); }},
         {"get.squelchthr",
          [this](const std::string &) {
              double thresh = QsGlobal::g_memory->getSquelchThreshold();
              std::cout << "Squelch threshold is " << thresh << std::endl;
          }},
-		{"get.sqt", [this, &commands](const std::string &param) { commands["get.squelchthr"](param); }},
+        {"get.sqt", [this, &commands](const std::string &param) { commands["get.squelchthr"](param); }},
         {"set.filter",
          [this](const std::string &param) {
              try {
@@ -167,8 +167,17 @@ void CommandProcessor::process() {
 
     std::string line;
     while (true) {
-        std::cout << "?: ";
-        std::getline(std::cin, line);
+        char *input = readline("?: "); // Use readline for input
+        if (!input) {
+            break; // Handle EOF or error
+        }
+
+        if (*input) {
+            add_history(input); // Add to history if the input is not empty
+        }
+
+        line = input; // Assign the input to the line variable
+        free(input);  // Free the allocated memory
 
         std::istringstream iss(line);
         std::string cmd, param;
