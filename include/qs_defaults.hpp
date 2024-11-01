@@ -119,7 +119,7 @@
 #define QS_DEFAULT_SQUELCH_ON false
 #define QS_DEFAULT_SQUELCH_THRESH -120.0
 #define QS_DEFAULT_SQUELCH_HYST 3.0
-#define QS_DEFAULT_CTCSS_THRESH 0.9
+#define QS_DEFAULT_CTCSS_THRESH 0.02
 
 //****************************************************//
 //----------------POWER SPECTRUM----------------------//

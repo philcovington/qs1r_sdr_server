@@ -55,8 +55,7 @@ void QsDspProcessor::init(int rx_num) {
     p_nr = std::make_unique<QsNoiseReductionFilter>();
     p_anf = std::make_unique<QsAutoNotchFilter>();
     p_sm = std::make_unique<QsSMeter>();
-    p_sq_norm = std::make_unique<QsSquelch>();
-    p_sq_ctcss = std::make_unique<QsSquelch>();
+    p_sq = std::make_unique<QsSquelch>();
     p_vol = std::make_unique<QsVolume>();
     p_iir0 = std::make_unique<QS_IIR>();
     p_iir1 = std::make_unique<QS_IIR>();
@@ -112,8 +111,7 @@ void QsDspProcessor::init(int rx_num) {
     p_sm->init();
 
     // SQUELCH
-    p_sq_norm->init(0.3, 0.7);
-    p_sq_ctcss->init(CtcssTone::TONE_162_2);    
+    p_sq->init(0.7, 0.7, CtcssTone::TONE_162_2);       
 
     // AGC
     p_agc->init();
@@ -152,7 +150,7 @@ void QsDspProcessor::init(int rx_num) {
 #endif
 
     // For testing
-    p_test_tone->init(2000, 0.5, m_processing_rate);
+    p_test_tone->init(162.2, 0.75, m_processing_rate);
     _debug() << "QsDSPProcessor init end...";
 }
 
@@ -185,9 +183,7 @@ void QsDspProcessor::run() {
 
             // Convert interleaved integers into floats
             QsSignalOps::Convert(in_interleaved_i, in_interleaved_f, m_bsizeX2);
-
-            // p_test_tone->process(in_interleaved_f);
-
+            
             // Deinterleave into in_re_f and in_im_f
             if (!QsGlobal::g_swap_iq) {
                 QsSignalOps::DeInterleave(in_interleaved_f, in_re_f, in_im_f, m_bsize);
@@ -286,8 +282,10 @@ void QsDspProcessor::run() {
             p_nr->process(buf_cpx);
             // ======== </NOISE REDUCTION FILTER> =============
 
+            // p_test_tone->process(buf_cpx);
+
             // ======== <SQUELCH> ===========
-            p_sq_ctcss->process(buf_cpx);
+            p_sq->process(buf_cpx);
             // ======== </SQUELCH> ===========
 
             QsSignalOps::Interleave(buf_cpx, out_interleaved_f, m_bsize);

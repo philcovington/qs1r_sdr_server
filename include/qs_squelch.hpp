@@ -85,7 +85,48 @@ enum class CtcssTone {
     TONE_233_6,
     TONE_241_8,
     TONE_250_3,
-    TONE_254_1
+    TONE_254_1,
+    TONE_NONE = 9999
+};
+
+// Butterworth low-pass filter for prefiltering
+class ButterworthLowPass {
+  private:
+    double a0, a1, a2, b1, b2;
+    double z1, z2;
+
+  public:
+    ButterworthLowPass() : z1(0.0), z2(0.0) {}
+
+    void init(double cutoffFreq, double sampleRate) {
+        double omega = 2.0 * M_PI * cutoffFreq / sampleRate;
+        double cos_omega = std::cos(omega);
+        double sin_omega = std::sin(omega);
+        double alpha = sin_omega / std::sqrt(2.0);
+
+        double norm = 1.0 / (1.0 + alpha);
+        a0 = (1.0 - cos_omega) * 0.5 * norm;
+        a1 = (1.0 - cos_omega) * norm;
+        a2 = a0;
+        b1 = -2.0 * cos_omega * norm;
+        b2 = (1.0 - alpha) * norm;
+    }
+
+    double processSample(double sample) {
+        double output = a0 * sample + a1 * z1 + a2 * z2 - b1 * z1 - b2 * z2;
+        z2 = z1;
+        z1 = output;
+        return output;
+    }
+
+    qs_vect_cpx applyToData(qs_vect_cpx &data) {
+        qs_vect_cpx output(data.size());
+        for (auto &sample : output) {
+            sample.real(processSample(sample.real()));
+            sample.imag(processSample(sample.imag()));
+        }
+        return output;
+    }
 };
 
 class QsSquelch {
@@ -100,13 +141,15 @@ class QsSquelch {
     double m_attack;
     double m_decay;
 
-    double m_sampleRate; // Sample rate of the audio (e.g., 48000 Hz)
-    double m_ctcss_tone; // CTCSS tone frequency to detect
-    bool m_squelchOpen;  // Current squelch state
-    double m_tone_threshold;  // Detection threshold
+    ButterworthLowPass m_lowPassFilter;
+
+    double m_sampleRate;     // Sample rate of the audio (e.g., 48000 Hz)
+    double m_ctcss_tone;     // CTCSS tone frequency to detect
+    bool m_squelchOpen;      // Current squelch state
+    double m_tone_threshold; // Detection threshold
+    double m_magnitude;
 
     bool m_is_init = false;
-    bool m_is_ctcss = false;
 
   public:
     QsSquelch();
@@ -128,18 +171,20 @@ class QsSquelch {
         {CtcssTone::TONE_199_5, 199.5}, {CtcssTone::TONE_203_5, 203.5}, {CtcssTone::TONE_206_5, 206.5},
         {CtcssTone::TONE_210_7, 210.7}, {CtcssTone::TONE_218_1, 218.1}, {CtcssTone::TONE_225_7, 225.7},
         {CtcssTone::TONE_229_1, 229.1}, {CtcssTone::TONE_233_6, 233.6}, {CtcssTone::TONE_241_8, 241.8},
-        {CtcssTone::TONE_250_3, 250.3}, {CtcssTone::TONE_254_1, 254.1}};
+        {CtcssTone::TONE_250_3, 250.3}, {CtcssTone::TONE_254_1, 254.1}, {CtcssTone::TONE_NONE, 0}};
 
-    void init(double attack, double decay);
-    void init(CtcssTone tone);
-    void init(double ctcss_frequency);
-    void reset(double attack, double decay);
-    void reset(CtcssTone ton);
-    void reset(double ctcss_frequency);
+    void init(double attack, double decay, CtcssTone tone = CtcssTone::TONE_NONE);
+    void init(double attack, double decay, double ctcss_frequency = 0);
+    void reset(double attack, double decay, CtcssTone tone = CtcssTone::TONE_NONE);
+    void reset(double attack, double decay, double ctcss_frequency = 0);
     void process(qs_vect_cpx &src_dst);
 
     void setToneFrequency(double frequency);
     void setToneFrequency(CtcssTone tone);
+    double getToneFrequency();
     void setThreshold(double threshold);
     bool isSquelchOpen() const;
+    double getCTCSSMagnitude() const;
+
+    double estimateSquelchLevel();
 };

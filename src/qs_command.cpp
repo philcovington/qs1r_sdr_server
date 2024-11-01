@@ -1,4 +1,5 @@
 #include "../include/qs_command.hpp"
+#include "../include/qs_squelch.hpp"
 #include <functional>
 #include <iostream>
 #include <sstream>
@@ -141,7 +142,16 @@ void CommandProcessor::process() {
          [this](const std::string &) {
              double thresh = QsGlobal::g_memory->getCTCSSThreshold();
              std::cout << "CTCSS threshold is " << thresh << std::endl;
-         }},        
+         }},
+        {"get.ctcssm",
+         [this](const std::string &) {
+             if (QsGlobal::g_dsp_proc != nullptr) {
+                 double magnitude = QsGlobal::g_dsp_proc->p_sq->getCTCSSMagnitude();
+                 std::cout << "CTCSS magnitude is " << magnitude << std::endl;
+             } else {
+                 std::cout << "CTCSS magnitude is N/A!" << std::endl;
+             }
+         }},
         {"set.filter",
          [this](const std::string &param) {
              try {
@@ -166,6 +176,29 @@ void CommandProcessor::process() {
                  std::cout << "Volume set to " << volume << std::endl;
              } catch (const std::invalid_argument &) {
                  std::cerr << "Invalid volume parameter" << std::endl;
+             }
+         }},
+        {"set.ctcsstone",
+         [this](const std::string &param) {
+             try {
+                 if (QsGlobal::g_dsp_proc != nullptr) {
+                     double ctcss_tone = std::stod(param);
+                     QsGlobal::g_dsp_proc->p_sq->setToneFrequency(ctcss_tone);
+                     std::cout << "CTCSS tone set to " << ctcss_tone << std::endl;
+                 } else {
+                     std::cout << "DSP process not available!" << std::endl;
+                 }
+             } catch (const std::invalid_argument &) {
+                 std::cerr << "Invalid CTCSS tone parameter" << std::endl;
+             }
+         }},
+        {"get.ctcsstone",
+         [this](const std::string &) {
+             if (QsGlobal::g_dsp_proc != nullptr) {
+                 double ctcss_tone = QsGlobal::g_dsp_proc->p_sq->getToneFrequency();
+                 std::cout << "CTCSS tone is " << ctcss_tone << std::endl;
+             } else {
+                 std::cout << "CTCSS tone is N/A!" << std::endl;
              }
          }},
         {"set.scan",
@@ -203,13 +236,14 @@ void CommandProcessor::process() {
              double smeter = QsGlobal::g_memory->getSMeterCurrentValue();
              std::cout << "Signal level is " << smeter << std::endl;
          }},
-         // Add the help command
-        {"get.help", [&commands](const std::string &) {
-            std::cout << "Available commands:\n";
-            for (const auto &command : commands) {
-                std::cout << " - " << command.first << '\n';
-            }
-        }},
+        // Add the help command
+        {"get.help",
+         [&commands](const std::string &) {
+             std::cout << "Available commands:\n";
+             for (const auto &command : commands) {
+                 std::cout << " - " << command.first << '\n';
+             }
+         }},
     };
 
     std::string line;

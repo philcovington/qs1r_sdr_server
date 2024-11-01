@@ -93,8 +93,7 @@ class QsDspProcessor {
     std::unique_ptr<QsNoiseReductionFilter> p_nr;
     std::unique_ptr<QsAutoNotchFilter> p_anf;
     std::unique_ptr<QsSMeter> p_sm;
-    std::unique_ptr<QsSquelch> p_sq_norm;
-    std::unique_ptr<QsSquelch> p_sq_ctcss;
+    std::unique_ptr<QsSquelch> p_sq;
     std::unique_ptr<QsVolume> p_vol;
     std::unique_ptr<QS_IIR> p_iir0;
     std::unique_ptr<QS_IIR> p_iir1;

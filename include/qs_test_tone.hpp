@@ -37,6 +37,7 @@ class QsTestTone {
     void setFrequency(float frequency);
     void setAmplitude(float amplitude);
     void process(qs_vect_f &src_dst);
+    void process(qs_vect_cpx &src_dst);
 
   private:
     float m_tt_amplitude = 0.1f;
@@ -45,4 +46,5 @@ class QsTestTone {
     float m_tt_phaseIncrement = 0;
     uint32_t m_tt_samplerate = 50000;
     qs_vect_f::iterator f_itr;
+    qs_vect_cpx::iterator cpx_itr;
 };
