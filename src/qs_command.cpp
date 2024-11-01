@@ -188,6 +188,13 @@ void CommandProcessor::process() {
              double smeter = QsGlobal::g_memory->getSMeterCurrentValue();
              std::cout << "Signal level is " << smeter << std::endl;
          }},
+         // Add the help command
+        {"get.help", [&commands](const std::string &) {
+            std::cout << "Available commands:\n";
+            for (const auto &command : commands) {
+                std::cout << " - " << command.first << '\n';
+            }
+        }},
     };
 
     std::string line;
@@ -212,6 +219,13 @@ void CommandProcessor::process() {
 
         if (cmd == "exit")
             break;
+
+        // Translation of "g." to "get." and "s." to "set."
+        if (cmd.rfind("g.", 0) == 0) {
+            cmd.replace(0, 2, "get.");
+        } else if (cmd.rfind("s.", 0) == 0) {
+            cmd.replace(0, 2, "set.");
+        }
 
         auto it = commands.find(cmd);
         if (it != commands.end()) {
