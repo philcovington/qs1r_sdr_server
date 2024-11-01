@@ -127,6 +127,21 @@ void CommandProcessor::process() {
              std::cout << "Squelch threshold is " << thresh << std::endl;
          }},
         {"get.sqt", [this, &commands](const std::string &param) { commands["get.squelchthr"](param); }},
+        {"set.ctcsst",
+         [this](const std::string &param) {
+             try {
+                 double threshold = std::stod(param);
+                 QsGlobal::g_memory->setCTCSSThreshold(threshold);
+                 std::cout << "CTCSS threshold set to " << threshold << std::endl;
+             } catch (const std::invalid_argument &) {
+                 std::cerr << "Invalid CTCSS threshold parameter" << std::endl;
+             }
+         }},
+        {"get.ctcsst",
+         [this](const std::string &) {
+             double thresh = QsGlobal::g_memory->getCTCSSThreshold();
+             std::cout << "CTCSS threshold is " << thresh << std::endl;
+         }},        
         {"set.filter",
          [this](const std::string &param) {
              try {

@@ -137,6 +137,9 @@ class QsMemory {
     void setSquelchOpened(bool opened, int rx_num = 0);
     bool getSquelchOpened(int rx_num = 0);
 
+    void setCTCSSThreshold(double threshold, int rx_num = 0);
+    double getCTCSSThreshold(int rx_num = 0);
+
     // RX FREQ
 
     void setRxLOFrequency(double value, int rx_num = 0);
@@ -334,7 +337,8 @@ class QsMemory {
     double m_squelch_threshold[MAX_RECEIVERS];
     double m_squelch_hysteresis[MAX_RECEIVERS];
     bool m_squelch_opened[MAX_RECEIVERS];
-
+    double m_ctcss_threshold[MAX_RECEIVERS];
+;
     // RX FREQ
     double m_rx_frequency[MAX_RECEIVERS];
 

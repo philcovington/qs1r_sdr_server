@@ -20,6 +20,7 @@ void QsSquelch::init(CtcssTone tone) {
     if (it != CtcssToneFrequencies.end()) {
         m_ctcss_tone = it->second;
         m_sampleRate = QsGlobal::g_memory->getDataProcRate();
+        m_tone_threshold = QsGlobal::g_memory->getCTCSSThreshold();
         m_is_ctcss = true;
         m_is_init = true;
     } else {
@@ -87,6 +88,7 @@ bool QsSquelch::detectTone(qs_vect_cpx &src_dst) {
     double coeff = 2.0 * cosine;
     double q0 = 0.0, q1 = 0.0, q2 = 0.0;
     size_t length = src_dst.size();
+    m_tone_threshold = QsGlobal::g_memory->getCTCSSThreshold();
 
     // Iterate over src_dst and apply the Goertzel algorithm
     for (size_t i = 0; i < length; ++i) {
@@ -128,13 +130,4 @@ void QsSquelch::setToneFrequency(CtcssTone tone) {
         throw std::runtime_error("QsSquelch::process must call init() first!");
     }
 }
-
-void QsSquelch::setThreshold(double threshold) {
-    if (m_is_init) {
-        m_tone_threshold = threshold;
-    } else {
-        throw std::runtime_error("QsSquelch::process must call init() first!");
-    }
-}
-
 bool QsSquelch::isSquelchOpen() const { return m_squelchOpen; }

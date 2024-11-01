@@ -55,7 +55,8 @@ void QsDspProcessor::init(int rx_num) {
     p_nr = std::make_unique<QsNoiseReductionFilter>();
     p_anf = std::make_unique<QsAutoNotchFilter>();
     p_sm = std::make_unique<QsSMeter>();
-    p_sq = std::make_unique<QsSquelch>();
+    p_sq_norm = std::make_unique<QsSquelch>();
+    p_sq_ctcss = std::make_unique<QsSquelch>();
     p_vol = std::make_unique<QsVolume>();
     p_iir0 = std::make_unique<QS_IIR>();
     p_iir1 = std::make_unique<QS_IIR>();
@@ -111,7 +112,8 @@ void QsDspProcessor::init(int rx_num) {
     p_sm->init();
 
     // SQUELCH
-    p_sq->init();
+    p_sq_norm->init(0.3, 0.7);
+    p_sq_ctcss->init(CtcssTone::TONE_162_2);    
 
     // AGC
     p_agc->init();
@@ -285,7 +287,7 @@ void QsDspProcessor::run() {
             // ======== </NOISE REDUCTION FILTER> =============
 
             // ======== <SQUELCH> ===========
-            p_sq->process(buf_cpx);
+            p_sq_ctcss->process(buf_cpx);
             // ======== </SQUELCH> ===========
 
             QsSignalOps::Interleave(buf_cpx, out_interleaved_f, m_bsize);

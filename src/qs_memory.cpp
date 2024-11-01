@@ -72,6 +72,7 @@ QsMemory::QsMemory() {
         m_squelch_switch[i] = QS_DEFAULT_SQUELCH_ON;
         m_squelch_threshold[i] = QS_DEFAULT_SQUELCH_THRESH;
         m_squelch_hysteresis[i] = QS_DEFAULT_SQUELCH_HYST;
+        m_ctcss_threshold[i] = QS_DEFAULT_CTCSS_THRESH;
 
         m_rx_frequency[i] = QS_DEFAULT_FREQ;
 
@@ -385,6 +386,9 @@ double QsMemory::getSquelchThreshold(int rx_num) { return m_squelch_threshold[rx
 void QsMemory::setSquelchHysteresis(double value, int rx_num) { m_squelch_hysteresis[rx_num] = value; }
 
 double QsMemory::getSquelchHysteresis(int rx_num) { return m_squelch_hysteresis[rx_num]; }
+
+void QsMemory::setCTCSSThreshold(double threshold, int rx_num) { m_ctcss_threshold[rx_num] = threshold; }
+double QsMemory::getCTCSSThreshold(int rx_num) { return m_ctcss_threshold[rx_num]; }
 
 void QsMemory::setSquelchOpened(bool opened, int rx_num) { m_squelch_opened[rx_num] = opened; }
 bool QsMemory::getSquelchOpened(int rx_num) { return m_squelch_opened[rx_num]; }
