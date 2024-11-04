@@ -78,7 +78,7 @@ void QsScanner::run() {
                 // Squelch is open, so hold on the current frequency
                 _debug() << "Current frequency: " << currentFreq << " (" << channelName << ") [" << QsGlobal::g_memory->getSMeterCurrentValue() << "]";
                 while (QsGlobal::g_memory->getSquelchOpened() && m_thread_go) {
-                    sleep.msleep(100); // Check every 100 ms while squelch is open
+                    sleep.msleep(200); // Check every 100 ms while squelch is open
                 }
                 // After squelch closes, hold on the frequency for a specified delay
                 sleep.msleep(m_holdTime);

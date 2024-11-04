@@ -33,7 +33,7 @@ void QsSMeter::init() {
     m_sm_value = 0.0;
 }
 
-void QsSMeter::process(qs_vect_cpx &src_dst) {
+void QsSMeter::process(const qs_vect_cpx &src_dst) {
     // Reset temporary value for new calculation
     m_sm_tmp_val = 0.0;
 

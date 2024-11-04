@@ -18,7 +18,7 @@
 //-----------------------DAC--------------------------//
 //****************************************************//
 #define QS_DEFAULT_DAC_BYPASS false
-#define QS_DEFAULT_DAC_BLOCKSIZE 1024
+#define QS_DEFAULT_DAC_BLOCKSIZE 2048
 #define QS_DEFAULT_EXT_MUTE_ENABLE false
 
 //****************************************************//
@@ -117,7 +117,7 @@
 //--------------------SQUELCH-------------------------//
 //****************************************************//
 #define QS_DEFAULT_SQUELCH_ON false
-#define QS_DEFAULT_SQUELCH_THRESH -120.0
+#define QS_DEFAULT_SQUELCH_THRESH -75.0
 #define QS_DEFAULT_SQUELCH_HYST 3.0
 #define QS_DEFAULT_CTCSS_THRESH 0.02
 

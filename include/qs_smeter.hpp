@@ -36,5 +36,5 @@ class QsSMeter {
     QsSMeter();
 
     void init();
-    void process(qs_vect_cpx &src_dst);
+    void process(const qs_vect_cpx &src_dst);
 };

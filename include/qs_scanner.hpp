@@ -30,7 +30,7 @@ class QsScanner {
 
 	bool m_is_init = false;
 	int m_holdTime = 2000;
-	int m_settleTime = 20;
+	int m_settleTime = 250;
 
     QsSleep sleep;
 
