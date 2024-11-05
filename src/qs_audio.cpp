@@ -4,7 +4,7 @@
 #include "../include/qs_signalops.hpp"
 #include "../include/qs_globals.hpp"
 
-QsAudio ::QsAudio() : p_rta(new RtAudio()), stop_stream_request(0) {}
+QsAudio ::QsAudio() : p_rta(new RtAudio(RtAudio::LINUX_ALSA)), stop_stream_request(0) {}
 
 bool QsAudio ::initAudio(int frames, double sample_rate, int in_dev_id, int out_dev_id, bool &ok) {
     stop_stream_request = 0;
@@ -74,7 +74,7 @@ bool QsAudio ::initAudio(int frames, double sample_rate, int in_dev_id, int out_
 
         m_sample_rate = rate;
         // _debug()() << "frames: " << frames_;
-    } catch (RtError &e) {
+    } catch (RtAudioError &e) {
         _debug() << std::string("Audio Error: ") << String(e.what());
         return ok;
     }
