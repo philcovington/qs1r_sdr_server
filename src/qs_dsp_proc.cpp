@@ -295,9 +295,8 @@ void QsDspProcessor::run() {
             p_vol->process(out_interleaved_f);
             // ======== </VOLUME WITH LIMITER> ===========
 
-            QsSignalOps::Convert(out_interleaved_f, out_s, m_bsizeX2);
-
             // ======== <WRITE TO DAC> ===========
+            QsSignalOps::Convert(out_interleaved_f, out_s, m_bsizeX2);            
             int result =
                 QsGlobal::g_io->writeEP2(reinterpret_cast<unsigned char *>(&out_s[0]), m_bsizeX2 * sizeof(short));
             if (result == -1) {

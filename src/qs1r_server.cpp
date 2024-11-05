@@ -86,6 +86,7 @@ void QS1RServer::initialize() {
     showStartupMessage();
     initSMeterCorrectionMap();    
     initThreads();
+    initCircBuffers();
     if (initQS1RHardware() != 0) {
         shutdown();
     }
@@ -93,6 +94,7 @@ void QS1RServer::initialize() {
     setFpgaForSampleRate(50000);
     setDacOutputDisable(false);
     setDacClockSelect(CLK_50k);
+    initQsAudio(QsGlobal::g_memory->getRtAudioRate());
     _debug() << "Qs1r server initialization complete.";
 }
 
@@ -118,6 +120,11 @@ int QS1RServer::initThreads() {
     return 0;
 }
 
+void QS1RServer::initCircBuffers() {
+    _debug() << "initializing circular buffers...";
+    QsGlobal::g_float_rt_ring->init(QsGlobal::g_memory->getReadBlockSize() * 4);
+}
+
 // ------------------------------------------------------------
 // Initialize QsAudio here
 //
@@ -135,7 +142,7 @@ void QS1RServer::initQsAudio(double rate) {
 
     int frames = QsGlobal::g_memory->getRtAudioFrames();
     int out_dev_id = p_qsState->rtAudioOutDevId();
-    int in_dev_id = p_qsState->rtAudioInDevId();
+    int in_dev_id = -1;
 
     bool ok = false;
 

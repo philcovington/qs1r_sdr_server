@@ -70,7 +70,7 @@ class QsAudio {
         stop_stream_request = 1;
         if (p_rta->isStreamRunning())
             p_rta->stopStream();
-    }
+    }    
 
     StringList getOutputDevices();
     StringList getInputDevices();

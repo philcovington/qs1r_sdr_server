@@ -67,6 +67,7 @@ class QS1RServer {
     void initQsAudio(double rate);
     int initQS1RHardware();    
     int initThreads();
+    void initCircBuffers();
     void initQsMemory();
     void initSMeterCorrectionMap();
 

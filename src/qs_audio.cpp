@@ -4,7 +4,7 @@
 #include "../include/qs_signalops.hpp"
 #include "../include/qs_globals.hpp"
 
-QsAudio ::QsAudio() : p_rta(new RtAudio(RtAudio::LINUX_ALSA)), stop_stream_request(0) {}
+QsAudio ::QsAudio() : p_rta(std::make_unique<RtAudio>(RtAudio::LINUX_ALSA)), stop_stream_request(0) {}
 
 bool QsAudio ::initAudio(int frames, double sample_rate, int in_dev_id, int out_dev_id, bool &ok) {
     stop_stream_request = 0;
@@ -21,8 +21,7 @@ bool QsAudio ::initAudio(int frames, double sample_rate, int in_dev_id, int out_
         return ok;
     }
 
-    rtaOutputDeviceMap.clear();
-    rtaInputDeviceMap.clear();
+    rtaOutputDeviceMap.clear();    
 
     RtAudio::DeviceInfo info;
     List<unsigned int> rates;
@@ -32,20 +31,11 @@ bool QsAudio ::initAudio(int frames, double sample_rate, int in_dev_id, int out_
         if (info.outputChannels > 0) {
             rtaOutputDeviceMap[i] = String::fromStdString(info.name);
             rates = List<unsigned int>::fromVector(info.sampleRates);
-        } else if (info.inputChannels > 0) {
-            rtaInputDeviceMap[i] = String::fromStdString(info.name);
-            rates = List<unsigned int>::fromVector(info.sampleRates);
-        }
+        } 
     }
 
     RtAudio::StreamParameters out_rta_parameters;
-    RtAudio::StreamParameters in_rta_parameters;
-
-    if ((in_dev_id == -1) | (in_dev_id > devcount - 1)) {
-        in_dev_id = p_rta->getDefaultInputDevice();
-    } else {
-        in_rta_parameters.deviceId = in_dev_id;
-    }
+    
     if ((out_dev_id == -1) | (out_dev_id > devcount - 1)) {
         out_dev_id = p_rta->getDefaultOutputDevice();
     } else {
@@ -53,9 +43,7 @@ bool QsAudio ::initAudio(int frames, double sample_rate, int in_dev_id, int out_
     }
 
     out_rta_parameters.nChannels = 2;
-    out_rta_parameters.firstChannel = 0;
-    in_rta_parameters.nChannels = 2;
-    in_rta_parameters.firstChannel = 0;
+    out_rta_parameters.firstChannel = 0;    
 
     RtAudio::StreamOptions rta_options;
 #ifdef Q_OS_WIN
@@ -69,7 +57,7 @@ bool QsAudio ::initAudio(int frames, double sample_rate, int in_dev_id, int out_
     unsigned int rate = (unsigned int)sample_rate;
 
     try {
-        p_rta->openStream(&out_rta_parameters, NULL, RTAUDIO_FLOAT32, rate, &frames_, sta_rt_callback, this,
+        p_rta->openStream(&out_rta_parameters, nullptr, RTAUDIO_FLOAT32, rate, &frames_, sta_rt_callback, this,
                           &rta_options);
 
         m_sample_rate = rate;
@@ -86,7 +74,7 @@ bool QsAudio ::initAudio(int frames, double sample_rate, int in_dev_id, int out_
 // ------------------------------------------------------------
 // This is the RtAudio callback
 // ------------------------------------------------------------
-int QsAudio ::RtCallback(void *outputBuffer, void *inputBuffer, unsigned int nBufferFrames, double streamTime,
+int QsAudio::RtCallback(void *outputBuffer, void *inputBuffer, unsigned int nBufferFrames, double streamTime,
                          RtAudioStreamStatus status) {
     int size = nBufferFrames * 2;
 

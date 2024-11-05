@@ -49,10 +49,10 @@ public:
 	static std::unique_ptr<QsDspProcessor> g_dsp_proc;
 	static std::unique_ptr<QsIOLib_LibUSB> g_io;
 	static std::unique_ptr<QsMemory> g_memory;	
-	static std::unique_ptr<QsScanner> g_scanner;
-	static std::unique_ptr<QsCircularBuffer<std::complex<float>>> g_cpx_readin_ring;
-	static std::unique_ptr<QsCircularBuffer<float>> g_float_rt_ring;
+	static std::unique_ptr<QsScanner> g_scanner;	
+	static std::unique_ptr<QsCircularBuffer<float>> g_float_rt_ring;	
 	static std::unique_ptr<QsCircularBuffer<float>> g_float_dac_ring;
+	static std::unique_ptr<QsCircularBuffer<std::complex<float>>> g_cpx_readin_ring;
 	static bool g_swap_iq;
 	static bool g_is_hardware_init;
 }; 
