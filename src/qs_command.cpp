@@ -61,6 +61,41 @@ void CommandProcessor::process() {
              std::string mode = m_p_server->getRxMode().toStdString();
              std::cout << "Mode set to " << mode << std::endl;
          }},
+        {"set.agct",
+         [this](const std::string &param) {
+             try {
+                 int intVal = std::stoi(param);
+                 QsGlobal::g_memory->setAgcThreshold(intVal);
+                 std::cout << "set AGC threshold to " << intVal << std::endl;
+             } catch (const std::invalid_argument &) {
+                 std::cerr << "Invalid AGC threshold parameter" << std::endl;
+             }
+         }}, 
+        {"get.agct",
+         [this](const std::string &) {
+             int agcThresh = static_cast<int>(QsGlobal::g_memory->getAgcThreshold());
+             std::cout << "AGC threshold " << agcThresh << std::endl;
+         }},
+        {"set.agcs",
+         [this](const std::string &param) {
+             try {
+                 int intVal = std::stoi(param);
+                 QsGlobal::g_memory->setAgcDecaySpeed(intVal);
+                 std::cout << "set AGC decay speed to " << intVal << std::endl;
+             } catch (const std::invalid_argument &) {
+                 std::cerr << "Invalid AGC decay speed parameter" << std::endl;
+             }
+         }},
+        {"get.agcs",
+         [this](const std::string &) {
+             int agcThresh = static_cast<int>(QsGlobal::g_memory->getAgcDecaySpeed());
+             std::cout << "AGC decay speed is " << agcThresh << std::endl;
+         }},
+        {"get.agcc",
+         [this](const std::string &) {
+             int agcGain = static_cast<int>(QsGlobal::g_memory->getAgcCurrentGain());
+             std::cout << "AGC current gain is " << agcGain << std::endl;
+         }},
         {"set.demph",
          [this](const std::string &param) {
              try {
@@ -236,6 +271,32 @@ void CommandProcessor::process() {
              double smeter = QsGlobal::g_memory->getSMeterCurrentValue();
              std::cout << "Signal level is " << smeter << std::endl;
          }},
+        {"get.status",
+         [this](const std::string &) {
+             // Retrieve values
+             int frequency = static_cast<int>(QsGlobal::g_server->getRxFrequency());
+             int smeter = static_cast<int>(QsGlobal::g_memory->getSMeterCurrentValue());
+             int volume = static_cast<int>(QsGlobal::g_memory->getVolume());
+             std::string mode = m_p_server->getRxMode().toStdString();
+             int filterHi = static_cast<int>(QsGlobal::g_memory->getFilterHi());
+             int filterLo = static_cast<int>(QsGlobal::g_memory->getFilterLo());
+             bool squelchOn = static_cast<bool>(QsGlobal::g_memory->getSquelchOn());
+             int sqThresh = static_cast<int>(QsGlobal::g_memory->getSquelchThreshold());
+             int agcThresh = static_cast<int>(QsGlobal::g_memory->getAgcThreshold());
+             int agcSpeed = static_cast<int>(QsGlobal::g_memory->getAgcDecaySpeed());
+
+             // Format output
+             std::ostringstream output;
+             output << "F:[" << frequency << "] SM:[" << smeter << "] V:[" << volume << "] M:[" << mode << "] FHL:["
+                    << filterHi << ", " << filterLo << "] SQ:[" << squelchOn << "] SQT:[" << sqThresh << "] AGCT:["
+                    << agcThresh << "] AGCS:[" << agcSpeed << "]";
+
+             // Print to console
+             std::cout << output.str() << std::endl;
+         }},
+
+        {"get.stat", [this, &commands](const std::string &param) { commands["get.status"](param); }},
+        {"?", [this, &commands](const std::string &param) { commands["get.status"](param); }},
         // Add the help command
         {"get.help",
          [&commands](const std::string &) {
@@ -266,7 +327,8 @@ void CommandProcessor::process() {
         std::getline(iss, param);                     // Capture the rest of the line as the parameter
         param.erase(0, param.find_first_not_of(" ")); // Trim leading whitespace
 
-        if (cmd == "exit")
+        // exit (quit) program
+        if (cmd == "exit" || cmd == "q")
             break;
 
         // Translation of "g." to "get." and "s." to "set."

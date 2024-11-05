@@ -73,6 +73,7 @@ void QsScanner::run() {
             std::string channelName = freqIt->second;
 
             QsGlobal::g_server->setRxFrequency(currentFreq);
+            // std::cout << "Scanning: " << currentFreq << std::endl;
 			sleep.msleep(m_settleTime);
             if (QsGlobal::g_memory->getSquelchOpened()) {
                 // Squelch is open, so hold on the current frequency

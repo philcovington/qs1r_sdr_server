@@ -81,6 +81,9 @@ void QsSquelch::process(qs_vect_cpx &src_dst) {
                     m_squelchOpen = false;
                     QsGlobal::g_memory->setSquelchOpened(false);
                 }
+            } else {
+                m_squelchOpen = true;
+                QsGlobal::g_memory->setSquelchOpened(true);    
             }
         } else {
             QsSignalOps::Zero(src_dst); // Close squelch below threshold
@@ -88,9 +91,8 @@ void QsSquelch::process(qs_vect_cpx &src_dst) {
             QsGlobal::g_memory->setSquelchOpened(false);
         }
     } else {
-        QsSignalOps::Zero(src_dst); // Close squelch if switch is off
-        m_squelchOpen = false;
-        QsGlobal::g_memory->setSquelchOpened(false);
+        m_squelchOpen = true;
+        QsGlobal::g_memory->setSquelchOpened(true);
     }
 }
 

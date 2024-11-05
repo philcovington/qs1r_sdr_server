@@ -111,7 +111,7 @@ void QsDspProcessor::init(int rx_num) {
     p_sm->init();
 
     // SQUELCH
-    p_sq->init(0.7, 0.7, CtcssTone::TONE_162_2);       
+    p_sq->init(0.7, 0.7, CtcssTone::TONE_NONE);       
 
     // AGC
     p_agc->init();
