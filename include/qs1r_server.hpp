@@ -35,9 +35,8 @@ class QS1RServer {
 
   public:
     QS1RServer();
-    ~QS1RServer();
+    ~QS1RServer();    
     
-    std::unique_ptr<QsAudio> p_rta;
     std::unique_ptr<QsState> p_qsState;    
     std::unique_ptr<QsIoThread> p_io_thread;
 

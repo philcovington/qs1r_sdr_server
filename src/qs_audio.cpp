@@ -57,6 +57,7 @@ bool QsAudio ::initAudio(int frames, double sample_rate, int in_dev_id, int out_
     unsigned int rate = (unsigned int)sample_rate;
 
     try {
+        _debug() << "Opening rtaudio stream";
         p_rta->openStream(&out_rta_parameters, nullptr, RTAUDIO_FLOAT32, rate, &frames_, sta_rt_callback, this,
                           &rta_options);
 

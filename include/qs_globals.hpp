@@ -34,6 +34,7 @@
 #include "../include/qs_dsp_proc.hpp"
 #include "../include/qs_circ_buf.hpp"
 #include "../include/qs_scanner.hpp"
+#include "../include/qs_audio.hpp"
 #include <libusb-1.0/libusb.h>
 
 #include <memory>
@@ -50,6 +51,7 @@ public:
 	static std::unique_ptr<QsIOLib_LibUSB> g_io;
 	static std::unique_ptr<QsMemory> g_memory;	
 	static std::unique_ptr<QsScanner> g_scanner;	
+	static std::unique_ptr<QsAudio> g_audio;
 	static std::unique_ptr<QsCircularBuffer<float>> g_float_rt_ring;	
 	static std::unique_ptr<QsCircularBuffer<float>> g_float_dac_ring;
 	static std::unique_ptr<QsCircularBuffer<std::complex<float>>> g_cpx_readin_ring;
