@@ -176,7 +176,7 @@
 
 template <typename T> class QsCircularBuffer {
   public:
-    QsCircularBuffer() : _size(0), _readPtr(0), _writePtr(0), _writeAvail(0), m_blocksize(0) {}
+    QsCircularBuffer() : _size(0), _readPtr(0), _writePtr(0), _writeAvail(0) {}
 
     void init(unsigned int size) {
         MX.lock();
@@ -186,7 +186,6 @@ template <typename T> class QsCircularBuffer {
         _writeAvail = size;
         _buffer.resize(size);
         std::fill(_buffer.begin(), _buffer.end(), T());
-        m_blocksize = 0;
         MX.unlock();
     }
 
@@ -285,18 +284,12 @@ template <typename T> class QsCircularBuffer {
         _writeAvail = _size;
         std::fill(_buffer.begin(), _buffer.end(), T());
         MX.unlock();
-    }
-
-    void setBlockSize(unsigned int value) { m_blocksize = value; }
-
-    unsigned int blockSize() const { return m_blocksize; }
-
+    }    
   private:
     unsigned int _size;
     unsigned int _readPtr;
     unsigned int _writePtr;
-    unsigned int _writeAvail;
-    unsigned int m_blocksize;
+    unsigned int _writeAvail;    
     std::vector<T> _buffer;
     std::mutex MX;
 };

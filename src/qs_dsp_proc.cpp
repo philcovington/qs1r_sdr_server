@@ -27,6 +27,7 @@
 #include "../include/qs_threading.hpp"
 #include "../include/qs_tone_gen.hpp"
 #include "../include/qs_volume.hpp"
+#include "../include/qs_butterworth_bandpass.hpp"
 #include <cmath>
 #include <pthread.h>
 #include <sched.h>
@@ -47,14 +48,13 @@ void QsDspProcessor::init(int rx_num) {
     p_tg_test = std::make_unique<QsToneGenerator>();
     p_agc = std::make_unique<QsAgc>();
     p_main_filter = std::make_unique<QsMainRxFilter>();
-    p_post_filter = std::make_unique<QsMainRxFilter>();
     p_am = std::make_unique<QsAMDemodulator>();
     p_sam = std::make_unique<QsSAMDemodulator>();
     p_fm = std::make_unique<QsFMCombinedDemodulator>();
     p_fm_demph = std::make_unique<DeEmphasis>();
     p_nr = std::make_unique<QsNoiseReductionFilter>();
     p_anf = std::make_unique<QsAutoNotchFilter>();
-    p_sm = std::make_unique<QsSMeter>();
+    p_sm = std::make_unique<QsSMeter>();    
     p_sq = std::make_unique<QsSquelch>();
     p_vol = std::make_unique<QsVolume>();
     p_iir0 = std::make_unique<QS_IIR>();
@@ -65,7 +65,7 @@ void QsDspProcessor::init(int rx_num) {
     p_iir5 = std::make_unique<QS_IIR>();
     p_iir6 = std::make_unique<QS_IIR>();
     p_iir7 = std::make_unique<QS_IIR>();    
-    p_test_tone = std::make_unique<QsTestTone>();
+    p_test_tone = std::make_unique<QsTestTone>();    
 
     m_rx_num = rx_num;
     m_bsize = QsGlobal::g_memory->getReadBlockSize();
@@ -95,12 +95,8 @@ void QsDspProcessor::init(int rx_num) {
 
     out_s.resize(m_bsizeX2);
     QsSignalOps::Zero(out_s);
-
-    m_req_outframes = std::ceil( (double)m_bsize * 48000/50000 );
-    m_outframesX2 = m_req_outframes * 2;
-
-    QsGlobal::g_float_rt_ring->init(m_outframesX2 * 4);
-    QsGlobal::g_float_rt_ring->setBlockSize(m_outframesX2);
+    
+    QsGlobal::g_float_rt_ring->init(m_bsize * 16);
     QsGlobal::g_float_rt_ring->empty();
 
     p_rs = std::make_unique<Resampler>(50000, 48000);
@@ -132,10 +128,7 @@ void QsDspProcessor::init(int rx_num) {
     p_sam->init();
     p_fm->init(NARROW);
     p_fm_demph->init(m_processing_rate);
-
-    // POST FILTER
-    p_post_filter->init(m_bsize);
-
+   
     // MAIN FIR
     p_main_filter->init(m_bsize);
 
@@ -147,7 +140,7 @@ void QsDspProcessor::init(int rx_num) {
 
     // CW TONE GEN
     p_tg1->init(QsToneGenerator::ratePostDataRate);
-
+    
 #ifdef __IIR_NOTCH__
     // Instantiate 8 manual notch filters
     p_iir0->init(1, QS_IIR::iirBandReject);
@@ -162,6 +155,7 @@ void QsDspProcessor::init(int rx_num) {
 
     // For testing
     p_test_tone->init(162.2, 0.75, m_processing_rate);
+    
     _debug() << "QsDSPProcessor init end...";
 }
 
@@ -256,22 +250,18 @@ void QsDspProcessor::run() {
 
             switch (QsGlobal::g_memory->getDemodMode()) {
             case dmAM:
-                p_am->process(buf_cpx);
-                // p_post_filter->process(buf_cpx);
+                p_am->process(buf_cpx);                
                 break;
             case dmSAM:
-                p_sam->process(buf_cpx);
-                // p_post_filter->process(buf_cpx);
+                p_sam->process(buf_cpx);                
                 break;
             case dmFMN:
                 p_fm->process(buf_cpx, NARROW);
                 p_fm_demph->process(buf_cpx);
-                // p_post_filter->process(buf_cpx);
                 break;
             case dmFMW:
                 p_fm->process(buf_cpx, WIDE);
                 p_fm_demph->process(buf_cpx);
-                // p_post_filter->process(buf_cpx);
                 break;
             default:
                 break;
@@ -306,13 +296,15 @@ void QsDspProcessor::run() {
             p_vol->process(out_interleaved_f);
             // ======== </VOLUME WITH LIMITER> ===========
 
-            size_t out_frames = m_req_outframes;
-            p_rs->process(&out_interleaved_f[0], m_bsize, &rs_interleaved_f[0], &out_frames);
-            m_outframesX2 = out_frames * 2;
+            // ======== <RESAMPLE> ===========            
+            p_rs->process(out_interleaved_f, rs_interleaved_f);            
+            // ======== </RESAMPLE> ===========
 
-            if (QsGlobal::g_float_rt_ring->writeAvail() >= m_outframesX2) {
-                QsGlobal::g_float_rt_ring->write(rs_interleaved_f, m_outframesX2);
+            // ======== <WRITE TO RA RING> ===========
+            if (QsGlobal::g_float_rt_ring->writeAvail() >= rs_interleaved_f.size()) {
+                QsGlobal::g_float_rt_ring->write(rs_interleaved_f, rs_interleaved_f.size());
             }
+            // ======== </WRITE TO RA RING> ===========
 
             // ======== <WRITE TO DAC> ===========
             QsSignalOps::Convert(out_interleaved_f, out_s, m_bsizeX2);

@@ -30,10 +30,9 @@
 
 QS1RServer::QS1RServer()
     : p_qsState(std::make_unique<QsState>()), p_io_thread(std::make_unique<QsIoThread>()), m_is_fpga_loaded(false),
-      m_is_io_setup(false), m_is_factory_init_enabled(false), m_is_was_factory_init(false),
-      m_gui_rx1_is_connected(false), m_gui_rx2_is_connected(false), m_driver_type("None"), m_local_rx_num_selector(1),
-      m_freq_offset_rx1(0.0), m_freq_offset_rx2(0.0), m_proc_samplerate(50000.0), m_step_size(500.0),
-      m_status_message_backing_register(0), m_prev_vol_val(0) {
+      m_is_io_setup(false), m_is_factory_init_enabled(false), m_is_was_factory_init(false), m_driver_type("None"),
+      m_local_rx_num_selector(1), m_freq_offset_rx1(0.0), m_freq_offset_rx2(0.0), m_proc_samplerate(50000.0),
+      m_step_size(500.0), m_status_message_backing_register(0), m_prev_vol_val(0) {
 
     QsGlobal::g_server = this;
 
@@ -84,7 +83,7 @@ void QS1RServer::shutdown() {
 int QS1RServer::initialize() {
     error_flag = false;
     // initQsAudio(QsGlobal::g_memory->getRtAudioRate());
-    initQsAudio(50000);
+    initQsAudio(48000);
     initSupportedSampleRatesList();
     showStartupMessage();
     initSMeterCorrectionMap();
@@ -98,7 +97,7 @@ int QS1RServer::initialize() {
     setFpgaForSampleRate(50000);
     setDacOutputDisable(false);
     setDacClockSelect(CLK_50k);
-    
+
     _debug() << "Qs1r server initialization complete.";
     return 0;
 }
@@ -613,6 +612,7 @@ void QS1RServer::startIo(bool iswav) {
     m_is_io_running = true;
 
     setRxFrequency(QsGlobal::g_memory->getRxLOFrequency(), 1, true);
+    QsGlobal::g_memory->setBinauralMode(true);
 }
 
 // ------------------------------------------------------------

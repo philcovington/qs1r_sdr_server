@@ -55,7 +55,6 @@ class QsToneGenerator;
 class QsAveragingNoiseBlanker;
 class QsBlockNoiseBlanker;
 class QsMainRxFilter;
-class QsPostRxFilter;
 class QsSAMDemodulator;
 class QsFMCombinedDemodulator;
 class DeEmphasis;
@@ -68,6 +67,7 @@ class QS_IIR;
 class QsTestTone;
 class QsSleep;
 class Resampler;
+class ButterworthBandPassFilter;
 
 #include <atomic>
 #include <memory>
@@ -86,11 +86,10 @@ class QsDspProcessor {
     std::unique_ptr<QsToneGenerator> p_tg1;
     std::unique_ptr<QsToneGenerator> p_tg_test;
     std::unique_ptr<QsAgc> p_agc;
-    std::unique_ptr<QsMainRxFilter> p_main_filter;
-    std::unique_ptr<QsMainRxFilter> p_post_filter;
+    std::unique_ptr<QsMainRxFilter> p_main_filter;    
     std::unique_ptr<QsAMDemodulator> p_am;
     std::unique_ptr<QsSAMDemodulator> p_sam;
-    std::unique_ptr<QsFMCombinedDemodulator> p_fm;
+    std::unique_ptr<QsFMCombinedDemodulator> p_fm;    
     std::unique_ptr<DeEmphasis> p_fm_demph;
     std::unique_ptr<QsNoiseReductionFilter> p_nr;
     std::unique_ptr<QsAutoNotchFilter> p_anf;
@@ -107,7 +106,7 @@ class QsDspProcessor {
     std::unique_ptr<QS_IIR> p_iir7;
     std::unique_ptr<Resampler> p_rs;
     std::unique_ptr<QsTestTone> p_test_tone;
-   
+       
     explicit QsDspProcessor();
     ~QsDspProcessor();
 

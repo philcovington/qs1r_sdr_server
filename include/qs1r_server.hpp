@@ -152,9 +152,7 @@ class QS1RServer {
     bool m_is_was_factory_init;
 
     bool hardware_is_registered;
-    bool m_is_fpga_loaded;    
-    bool m_gui_rx1_is_connected;
-    bool m_gui_rx2_is_connected;
+    bool m_is_fpga_loaded; 
 
     double m_proc_samplerate;
     double m_freq_offset_rx1;
