@@ -1,5 +1,6 @@
 #include "../include/qs_command.hpp"
 #include "../include/qs_squelch.hpp"
+#include "../include/config.h"
 #include <functional>
 #include <iostream>
 #include <sstream>
@@ -297,7 +298,19 @@ void CommandProcessor::process() {
 
         {"get.stat", [this, &commands](const std::string &param) { commands["get.status"](param); }},
         {"?", [this, &commands](const std::string &param) { commands["get.status"](param); }},
-        // Add the help command
+        {"get.outdevices",
+         [this](const std::string &) {
+            freopen("/dev/null", "w", stderr);
+            StringList device_list = QsGlobal::g_audio->getOutputDevices(); 
+            freopen("/dev/tty", "w", stderr);
+            for (int i = 0; i < device_list.size(); i++){           
+                std::cout << "Device " << i << ": " << device_list[i] << std::endl;
+            }
+         }},
+        {"get.version",
+         [this](const std::string &) {             
+             std::cout << "Version " << VERSION << std::endl;
+         }},
         {"get.help",
          [&commands](const std::string &) {
              std::cout << "Available commands:\n";

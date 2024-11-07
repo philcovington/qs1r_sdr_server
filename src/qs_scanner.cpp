@@ -28,7 +28,7 @@ void QsScanner::init() {
 
 	std::ifstream file("qs1r_scanlist.json"); // Open the JSON file
     if (!file.is_open()) {
-        std::cerr << "Could not open qs1r_scanlist.json! Scanning disabled." << std::endl;
+        _debug() << "Could not open qs1r_scanlist.json! Scanning disabled.";
 		m_is_init = false;
 		return;
     }

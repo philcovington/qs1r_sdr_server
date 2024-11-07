@@ -64,7 +64,7 @@ void QsDspProcessor::init(int rx_num) {
     p_iir4 = std::make_unique<QS_IIR>();
     p_iir5 = std::make_unique<QS_IIR>();
     p_iir6 = std::make_unique<QS_IIR>();
-    p_iir7 = std::make_unique<QS_IIR>();
+    p_iir7 = std::make_unique<QS_IIR>();    
     p_test_tone = std::make_unique<QsTestTone>();
 
     m_rx_num = rx_num;
@@ -90,9 +90,20 @@ void QsDspProcessor::init(int rx_num) {
     QsSignalOps::Zero(in_interleaved_f);
     out_interleaved_f.resize(m_bsizeX2);
     QsSignalOps::Zero(out_interleaved_f);
+    rs_interleaved_f.resize(m_bsizeX2);
+    QsSignalOps::Zero(rs_interleaved_f);
 
     out_s.resize(m_bsizeX2);
     QsSignalOps::Zero(out_s);
+
+    m_req_outframes = std::ceil( (double)m_bsize * 48000/50000 );
+    m_outframesX2 = m_req_outframes * 2;
+
+    QsGlobal::g_float_rt_ring->init(m_outframesX2 * 4);
+    QsGlobal::g_float_rt_ring->setBlockSize(m_outframesX2);
+    QsGlobal::g_float_rt_ring->empty();
+
+    p_rs = std::make_unique<Resampler>(50000, 48000);
 
     m_thread_go = false;
 
@@ -111,7 +122,7 @@ void QsDspProcessor::init(int rx_num) {
     p_sm->init();
 
     // SQUELCH
-    p_sq->init(0.7, 0.7, CtcssTone::TONE_NONE);       
+    p_sq->init(0.7, 0.7, CtcssTone::TONE_NONE);
 
     // AGC
     p_agc->init();
@@ -172,7 +183,7 @@ void QsDspProcessor::run() {
     QsSignalOps::Zero(in_re_f);
     QsSignalOps::Zero(in_im_f);
 
-    QsSignalOps::Zero(out_s);
+    QsSignalOps::Zero(out_s);    
 
     m_is_running = true;
     m_thread_go = true;
@@ -183,7 +194,7 @@ void QsDspProcessor::run() {
 
             // Convert interleaved integers into floats
             QsSignalOps::Convert(in_interleaved_i, in_interleaved_f, m_bsizeX2);
-            
+
             // Deinterleave into in_re_f and in_im_f
             if (!QsGlobal::g_swap_iq) {
                 QsSignalOps::DeInterleave(in_interleaved_f, in_re_f, in_im_f, m_bsize);
@@ -295,8 +306,16 @@ void QsDspProcessor::run() {
             p_vol->process(out_interleaved_f);
             // ======== </VOLUME WITH LIMITER> ===========
 
+            size_t out_frames = m_req_outframes;
+            p_rs->process(&out_interleaved_f[0], m_bsize, &rs_interleaved_f[0], &out_frames);
+            m_outframesX2 = out_frames * 2;
+
+            if (QsGlobal::g_float_rt_ring->writeAvail() >= m_outframesX2) {
+                QsGlobal::g_float_rt_ring->write(rs_interleaved_f, m_outframesX2);
+            }
+
             // ======== <WRITE TO DAC> ===========
-            QsSignalOps::Convert(out_interleaved_f, out_s, m_bsizeX2);            
+            QsSignalOps::Convert(out_interleaved_f, out_s, m_bsizeX2);
             int result =
                 QsGlobal::g_io->writeEP2(reinterpret_cast<unsigned char *>(&out_s[0]), m_bsizeX2 * sizeof(short));
             if (result == -1) {

@@ -81,8 +81,10 @@ void QS1RServer::shutdown() {
 // ************************************************************
 // ------------------------------------------------------------
 
-void QS1RServer::initialize() {
+int QS1RServer::initialize() {
     error_flag = false;
+    // initQsAudio(QsGlobal::g_memory->getRtAudioRate());
+    initQsAudio(50000);
     initSupportedSampleRatesList();
     showStartupMessage();
     initSMeterCorrectionMap();
@@ -90,13 +92,15 @@ void QS1RServer::initialize() {
     initCircBuffers();
     if (initQS1RHardware() != 0) {
         shutdown();
+        return -1;
     }
     updateFPGARegisters();
     setFpgaForSampleRate(50000);
     setDacOutputDisable(false);
     setDacClockSelect(CLK_50k);
-    initQsAudio(QsGlobal::g_memory->getRtAudioRate());
+    
     _debug() << "Qs1r server initialization complete.";
+    return 0;
 }
 
 void QS1RServer::initSupportedSampleRatesList() {
@@ -209,7 +213,7 @@ int QS1RServer::initQS1RHardware() {
     ret = QsGlobal::g_io->findQsDevice(QS1R_VID, QS1R_PID, index);
 
     if (ret != 0) {
-        _debug() << "Could not find any QS1R devices!";
+        _debug() << "+++Could not find any QS1R devices!+++";
         return -1;
     }
 
@@ -230,7 +234,7 @@ int QS1RServer::initQS1RHardware() {
                 sleep.msleep(5000);
                 ret = QsGlobal::g_io->findQsDevice(QS1R_VID, QS1R_PID, index);
                 if (ret != 0) {
-                    _debug() << "Could not find any QS1R devices!";
+                    _debug() << "+++Could not find any QS1R devices!+++";
                     return -1;
                 } else {
                     ret = QsGlobal::g_io->open();
@@ -599,6 +603,8 @@ void QS1RServer::startIo(bool iswav) {
     // do a master reset of DDC in FPGA
     setDdcMasterReset(true);
     setDdcMasterReset(false);
+
+    QsGlobal::g_audio->startStream();
 
     // start the dsp processor thread
     if (!QsGlobal::g_dsp_proc->isRunning())

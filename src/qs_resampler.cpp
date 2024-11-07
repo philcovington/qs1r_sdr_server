@@ -1,4 +1,5 @@
 #include "../include/qs_resampler.hpp" // Include the header file for the class
+#include "../include/qs_signalops.hpp"
 
 Resampler::Resampler(int src_rate, int dest_rate) {
     int error;
@@ -23,10 +24,12 @@ void Resampler::process(const float *input, size_t input_frames, float *output, 
     src_data.output_frames = *output_frames; // Maximum number of output frames
     src_data.src_ratio = src_ratio;          // Resampling ratio
 
-    int error = src_process(src_state, &src_data);
-    if (error != 0) {
-        throw std::runtime_error("Error during resampling: " + std::string(src_strerror(error)));
-    }
+    // int error = src_process(src_state, &src_data);
+    std::copy(input, input + input_frames * 2, output);
+    // if (error != 0) {
+    //     throw std::runtime_error("Error during resampling: " + std::string(src_strerror(error)));
+    // }
 
-    *output_frames = src_data.output_frames_gen; // Update output frames count
+    // *output_frames = src_data.output_frames_gen; // Update output frames count
+    *output_frames = input_frames;
 }

@@ -87,7 +87,7 @@ class QS1RServer {
 
     void clearFpgaControlRegisters();
 
-    void initialize();
+    int initialize();
 
     void setupIo();
     void startIo(bool iswav = false);

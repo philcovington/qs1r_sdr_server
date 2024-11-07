@@ -67,6 +67,7 @@ class QsVolume;
 class QS_IIR;
 class QsTestTone;
 class QsSleep;
+class Resampler;
 
 #include <atomic>
 #include <memory>
@@ -74,6 +75,7 @@ class QsSleep;
 
 #include "../include/qs_types.hpp"
 #include "../include/qs_sleep.hpp"
+#include "../include/qs_circ_buf.hpp"
 
 class QsDspProcessor {
   public:
@@ -103,6 +105,7 @@ class QsDspProcessor {
     std::unique_ptr<QS_IIR> p_iir5;
     std::unique_ptr<QS_IIR> p_iir6;
     std::unique_ptr<QS_IIR> p_iir7;
+    std::unique_ptr<Resampler> p_rs;
     std::unique_ptr<QsTestTone> p_test_tone;
    
     explicit QsDspProcessor();
@@ -122,6 +125,8 @@ class QsDspProcessor {
     unsigned int m_rx_num;
     unsigned int m_bsize;
     unsigned int m_bsizeX2;
+    unsigned int m_req_outframes;
+    unsigned int m_outframesX2;
     
     std::atomic<bool> m_thread_go;
     std::atomic<bool> m_is_running;
@@ -139,6 +144,7 @@ class QsDspProcessor {
 
     qs_vect_f in_interleaved_f;
     qs_vect_f out_interleaved_f;
+    qs_vect_f rs_interleaved_f;
     qs_vect_i in_interleaved_i;
   
     qs_vect_s out_s;

@@ -78,18 +78,13 @@ bool QsAudio ::initAudio(int frames, double sample_rate, int in_dev_id, int out_
 int QsAudio::RtCallback(void *outputBuffer, void *inputBuffer, unsigned int nBufferFrames, double streamTime,
                          RtAudioStreamStatus status) {
     int size = nBufferFrames * 2;
-
-    if (QsGlobal::g_float_rt_ring->readAvail() >= size) {
+    // _debug() << "callback!";
+    size_t available = QsGlobal::g_float_rt_ring->readAvail();
+    if ( available >= size) {
         QsGlobal::g_float_rt_ring->read((float *)outputBuffer, size);
     } else {
         QsSignalOps::Zero((float *)outputBuffer, size);
-    }
-
-    // if (QsTx::g_qs1e_present == true) {
-    //     if (QsGlobal::g_float_tx_ring->writeAvail() >= size) {
-    //         QsGlobal::g_float_tx_ring->write((float *)inputBuffer, size);
-    //     }
-    // }
+    }   
 
     return stop_stream_request;
 }
