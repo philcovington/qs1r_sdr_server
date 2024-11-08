@@ -19,6 +19,9 @@ class QsScanner {
     void init();         // Method to initialize the scanner
     bool isRunning();
 
+    void setScanSpeed(unsigned int settle);
+    unsigned int getScanSpeed();
+
   private:
     void run();            // Method containing the main logic for the thread    
 

@@ -97,6 +97,29 @@ void CommandProcessor::process() {
              int agcGain = static_cast<int>(QsGlobal::g_memory->getAgcCurrentGain());
              std::cout << "AGC current gain is " << agcGain << std::endl;
          }},
+        {"set.speed",
+         [this](const std::string &param) {
+             try {
+                if (QsGlobal::g_scanner) {
+                 int intVal = std::stoi(param);
+                 QsGlobal::g_scanner->setScanSpeed(intVal);
+                 std::cout << "Scan speed set to " << intVal << std::endl;
+                } else {
+                 std::cout << "Scan speed is N/A" << std::endl;    
+                }
+             } catch (const std::invalid_argument &) {
+                 std::cerr << "Invalid scan speed parameter" << std::endl;
+             }
+         }},
+        {"get.speed",
+         [this](const std::string &) {
+            if (QsGlobal::g_scanner) {
+                int speed = static_cast<int>(QsGlobal::g_scanner->getScanSpeed());
+                std::cout << "Scan speed is " << speed << std::endl;
+            } else {
+                std::cout << "Scan speed is N/A" << std::endl;    
+            }
+         }},
         {"set.demph",
          [this](const std::string &param) {
              try {
@@ -214,6 +237,13 @@ void CommandProcessor::process() {
                  std::cerr << "Invalid volume parameter" << std::endl;
              }
          }},
+        {"set.v", [this, &commands](const std::string &param) { commands["set.volume"](param); }},
+        {"get.volume",
+         [this](const std::string &) {
+             double volume = QsGlobal::g_memory->getVolume();
+             std::cout << "Volume is " << volume << std::endl;
+         }},
+        {"get.v", [this, &commands](const std::string &param) { commands["get.volume"](param); }}, 
         {"set.ctcsstone",
          [this](const std::string &param) {
              try {
@@ -261,12 +291,7 @@ void CommandProcessor::process() {
              } catch (const std::invalid_argument &) {
                  std::cerr << "Invalid parameter. Use 0 or 1." << std::endl;
              }
-         }},
-        {"get.volume",
-         [this](const std::string &) {
-             double volume = QsGlobal::g_memory->getVolume();
-             std::cout << "Volume is " << volume << std::endl;
-         }},
+         }},        
         {"get.smeter",
          [this](const std::string &) {
              double smeter = QsGlobal::g_memory->getSMeterCurrentValue();
@@ -295,7 +320,6 @@ void CommandProcessor::process() {
              // Print to console
              std::cout << output.str() << std::endl;
          }},
-
         {"get.stat", [this, &commands](const std::string &param) { commands["get.status"](param); }},
         {"?", [this, &commands](const std::string &param) { commands["get.status"](param); }},
         {"get.outdevices",

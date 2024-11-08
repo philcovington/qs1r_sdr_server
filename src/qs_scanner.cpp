@@ -46,6 +46,13 @@ void QsScanner::init() {
     m_is_init = true;
 }
 
+void QsScanner::setScanSpeed(unsigned int settle) {
+    m_settleTime = settle;
+}
+unsigned int QsScanner::getScanSpeed() {
+    return m_settleTime;
+}
+
 void QsScanner::start() {
     if (!m_is_running && !m_thread_go && m_is_init) {
         m_thread_go = true;
