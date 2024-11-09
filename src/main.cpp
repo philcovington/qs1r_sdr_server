@@ -14,8 +14,7 @@
 int main() {
 
     // Enable debug logging
-    DebugLogger::DEBUG = true;
-    std::string cmd;
+    DebugLogger::DEBUG = true;   
 
     QS1RServer qs1r;
     CommandProcessor cmd_proc;

@@ -78,14 +78,12 @@ bool QsAudio ::initAudio(int frames, double sample_rate, int in_dev_id, int out_
 int QsAudio::RtCallback(void *outputBuffer, void *inputBuffer, unsigned int nBufferFrames, double streamTime,
                          RtAudioStreamStatus status) {
     int size = nBufferFrames * 2;
-    // _debug() << "callback!";
     size_t available = QsGlobal::g_float_rt_ring->readAvail();
     if ( available >= size) {
         QsGlobal::g_float_rt_ring->read((float *)outputBuffer, size);
     } else {
         QsSignalOps::Zero((float *)outputBuffer, size);
-    }   
-
+    } 
     return stop_stream_request;
 }
 
@@ -155,6 +153,8 @@ bool QsAudio ::isInputDeviceValid(int id, String &descr) {
     return result;
 }
 
-int QsAudio ::getDefaultOutputDevice() { return p_rta->getDefaultOutputDevice(); }
+int QsAudio::getDefaultOutputDevice() { return p_rta->getDefaultOutputDevice(); }
 
-int QsAudio ::getDefaultInputDevice() { return p_rta->getDefaultInputDevice(); }
+int QsAudio::getDefaultInputDevice() { return p_rta->getDefaultInputDevice(); }
+
+bool QsAudio::isStreamRunning() { return p_rta->isStreamRunning(); }

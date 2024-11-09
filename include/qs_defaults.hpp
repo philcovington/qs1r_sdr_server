@@ -176,7 +176,7 @@
 //--------------RT AUDIO DEVID------------------------//
 //****************************************************//
 #define QS_DEFAULT_RTA_IN_DEVID -1
-#define QS_DEFAULT_RTA_OUT_DEVID 1
+#define QS_DEFAULT_RTA_OUT_DEVID 3
 
 //****************************************************//
 //--------------RT AUDIO USE DEFAULT------------------//

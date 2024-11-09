@@ -73,28 +73,27 @@ void QsDspProcessor::init(int rx_num) {
     m_processing_rate = QsGlobal::g_memory->getDataProcRate();
 
     buf_cpx.resize(m_bsize);
-    QsSignalOps::Zero(buf_cpx);
     re_f.resize(m_bsize);
-    QsSignalOps::Zero(re_f);
     im_f.resize(m_bsize);
-    QsSignalOps::Zero(im_f);
-
     in_re_f.resize(m_bsize);
-    QsSignalOps::Zero(in_re_f);
-    in_im_f.resize(m_bsize);
-    QsSignalOps::Zero(in_im_f);
+    in_im_f.resize(m_bsize);    
 
     in_interleaved_i.resize(m_bsizeX2);
-    QsSignalOps::Zero(in_interleaved_i);
     in_interleaved_f.resize(m_bsizeX2);
-    QsSignalOps::Zero(in_interleaved_f);
     out_interleaved_f.resize(m_bsizeX2);
-    QsSignalOps::Zero(out_interleaved_f);
-    rs_interleaved_f.resize(m_bsizeX2);
-    QsSignalOps::Zero(rs_interleaved_f);
+    rs_interleaved_f.resize(m_bsizeX2);    
 
-    out_s.resize(m_bsizeX2);
-    QsSignalOps::Zero(out_s);
+    out_s.resize(m_bsizeX2);    
+
+    std::fill(buf_cpx.begin(), buf_cpx.end(), std::complex<float>(0.0f, 0.0f));
+    std::fill(in_interleaved_i.begin(), in_interleaved_i.end(), 0);
+    std::fill(in_interleaved_f.begin(), in_interleaved_f.end(), 0.0f);
+    std::fill(out_interleaved_f.begin(), out_interleaved_f.end(), 0.0f);
+    std::fill(re_f.begin(), re_f.end(), 0.0f);
+    std::fill(im_f.begin(), im_f.end(), 0.0f); 
+    std::fill(in_re_f.begin(), in_re_f.end(), 0.0f);
+    std::fill(in_im_f.begin(), in_im_f.end(), 0.0f);
+    std::fill(out_s.begin(), out_s.end(), 0);
     
     QsGlobal::g_float_rt_ring->init(m_bsize * 16);
     QsGlobal::g_float_rt_ring->empty();
@@ -118,7 +117,7 @@ void QsDspProcessor::init(int rx_num) {
     p_sm->init();
 
     // SQUELCH
-    p_sq->init(0.7, 0.7, CtcssTone::TONE_NONE);
+    p_sq->init(0.95, 0.7, CtcssTone::TONE_NONE);
 
     // AGC
     p_agc->init();
@@ -164,20 +163,22 @@ void QsDspProcessor::reinit() { init(m_rx_num); }
 void QsDspProcessor::run() {
     _debug() << "QsDSPProcessor process begin...";
     m_thread_go = true;
-    QsSignalOps::Zero(buf_cpx);
-    QsSignalOps::Zero(in_interleaved_i);
-    QsSignalOps::Zero(in_interleaved_f);
-    QsSignalOps::Zero(out_interleaved_f);
+
+    std::fill(buf_cpx.begin(), buf_cpx.end(), std::complex<float>(0.0f, 0.0f));
+    std::fill(in_interleaved_i.begin(), in_interleaved_i.end(), 0);
+    std::fill(in_interleaved_f.begin(), in_interleaved_f.end(), 0.0f);
+    std::fill(out_interleaved_f.begin(), out_interleaved_f.end(), 0.0f);
 
     int dstlen = 0;
 
-    QsSignalOps::Zero(re_f);
-    QsSignalOps::Zero(im_f);
+    std::fill(re_f.begin(), re_f.end(), 0.0f);
+    std::fill(im_f.begin(), im_f.end(), 0.0f); 
+    std::fill(in_re_f.begin(), in_re_f.end(), 0.0f);
+    std::fill(in_im_f.begin(), in_im_f.end(), 0.0f);
 
-    QsSignalOps::Zero(in_re_f);
-    QsSignalOps::Zero(in_im_f);
+    std::fill(out_s.begin(), out_s.end(), 0);
 
-    QsSignalOps::Zero(out_s);    
+    QsGlobal::g_float_rt_ring->empty();  
 
     m_is_running = true;
     m_thread_go = true;

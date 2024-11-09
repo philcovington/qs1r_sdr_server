@@ -1,6 +1,7 @@
 #include "../include/qs_command.hpp"
-#include "../include/qs_squelch.hpp"
 #include "../include/config.h"
+#include "../include/qs_squelch.hpp"
+#include "../include/qs_state.hpp"
 #include <functional>
 #include <iostream>
 #include <sstream>
@@ -71,7 +72,7 @@ void CommandProcessor::process() {
              } catch (const std::invalid_argument &) {
                  std::cerr << "Invalid AGC threshold parameter" << std::endl;
              }
-         }}, 
+         }},
         {"get.agct",
          [this](const std::string &) {
              int agcThresh = static_cast<int>(QsGlobal::g_memory->getAgcThreshold());
@@ -97,28 +98,63 @@ void CommandProcessor::process() {
              int agcGain = static_cast<int>(QsGlobal::g_memory->getAgcCurrentGain());
              std::cout << "AGC current gain is " << agcGain << std::endl;
          }},
+        {"set.scan",
+         [this](const std::string &param) {
+             try {
+                 int intVal = std::stoi(param);
+                 if (intVal != 0 && intVal != 1) {
+                     throw std::invalid_argument("Only 0 or 1 is allowed.");
+                 }
+                 bool on = static_cast<bool>(intVal);
+                 if (on) {
+                     std::cout << "Starting scanner..." << std::endl;
+                     if (QsGlobal::g_scanner != nullptr) {
+                         if (!QsGlobal::g_scanner->isRunning()) {
+                             QsGlobal::g_scanner->start();
+                         }
+                     }
+                 } else {
+                     std::cout << "Stopping scanner..." << std::endl;
+                     if (QsGlobal::g_scanner != nullptr) {
+                         QsGlobal::g_scanner->stop();
+                     }
+                 }
+             } catch (const std::invalid_argument &) {
+                 std::cerr << "Invalid parameter. Use 0 or 1." << std::endl;
+             }
+         }},
+        {"scan",
+         [this, &commands](const std::string &) {
+             // Call "set.scan" with "1" as the parameter to start the scanner
+             commands["set.scan"]("1");
+         }},
+        {"hold",
+         [this, &commands](const std::string &) {
+             // Call "set.scan" with "0" as the parameter to start the scanner
+             commands["set.scan"]("0");
+         }},
         {"set.speed",
          [this](const std::string &param) {
              try {
-                if (QsGlobal::g_scanner) {
-                 int intVal = std::stoi(param);
-                 QsGlobal::g_scanner->setScanSpeed(intVal);
-                 std::cout << "Scan speed set to " << intVal << std::endl;
-                } else {
-                 std::cout << "Scan speed is N/A" << std::endl;    
-                }
+                 if (QsGlobal::g_scanner) {
+                     int intVal = std::stoi(param);
+                     QsGlobal::g_scanner->setScanSpeed(intVal);
+                     std::cout << "Scan speed set to " << intVal << std::endl;
+                 } else {
+                     std::cout << "Scan speed is N/A" << std::endl;
+                 }
              } catch (const std::invalid_argument &) {
                  std::cerr << "Invalid scan speed parameter" << std::endl;
              }
          }},
         {"get.speed",
          [this](const std::string &) {
-            if (QsGlobal::g_scanner) {
-                int speed = static_cast<int>(QsGlobal::g_scanner->getScanSpeed());
-                std::cout << "Scan speed is " << speed << std::endl;
-            } else {
-                std::cout << "Scan speed is N/A" << std::endl;    
-            }
+             if (QsGlobal::g_scanner) {
+                 int speed = static_cast<int>(QsGlobal::g_scanner->getScanSpeed());
+                 std::cout << "Scan speed is " << speed << std::endl;
+             } else {
+                 std::cout << "Scan speed is N/A" << std::endl;
+             }
          }},
         {"set.demph",
          [this](const std::string &param) {
@@ -243,7 +279,7 @@ void CommandProcessor::process() {
              double volume = QsGlobal::g_memory->getVolume();
              std::cout << "Volume is " << volume << std::endl;
          }},
-        {"get.v", [this, &commands](const std::string &param) { commands["get.volume"](param); }}, 
+        {"get.v", [this, &commands](const std::string &param) { commands["get.volume"](param); }},
         {"set.ctcsstone",
          [this](const std::string &param) {
              try {
@@ -267,31 +303,6 @@ void CommandProcessor::process() {
                  std::cout << "CTCSS tone is N/A!" << std::endl;
              }
          }},
-        {"set.scan",
-         [this](const std::string &param) {
-             try {
-                 int intVal = std::stoi(param);
-                 if (intVal != 0 && intVal != 1) {
-                     throw std::invalid_argument("Only 0 or 1 is allowed.");
-                 }
-                 bool on = static_cast<bool>(intVal);
-                 if (on) {
-                     std::cout << "Starting scanner..." << std::endl;
-                     if (QsGlobal::g_scanner != nullptr) {
-                         if (!QsGlobal::g_scanner->isRunning()) {
-                             QsGlobal::g_scanner->start();
-                         }
-                     }
-                 } else {
-                     std::cout << "Stopping scanner..." << std::endl;
-                     if (QsGlobal::g_scanner != nullptr) {
-                         QsGlobal::g_scanner->stop();
-                     }
-                 }
-             } catch (const std::invalid_argument &) {
-                 std::cerr << "Invalid parameter. Use 0 or 1." << std::endl;
-             }
-         }},        
         {"get.smeter",
          [this](const std::string &) {
              double smeter = QsGlobal::g_memory->getSMeterCurrentValue();
@@ -324,17 +335,46 @@ void CommandProcessor::process() {
         {"?", [this, &commands](const std::string &param) { commands["get.status"](param); }},
         {"get.outdevices",
          [this](const std::string &) {
-            freopen("/dev/null", "w", stderr);
-            StringList device_list = QsGlobal::g_audio->getOutputDevices(); 
-            freopen("/dev/tty", "w", stderr);
-            for (int i = 0; i < device_list.size(); i++){           
-                std::cout << "Device " << i << ": " << device_list[i] << std::endl;
-            }
+             freopen("/dev/null", "w", stderr);
+             StringList device_list = QsGlobal::g_audio->getOutputDevices();
+             freopen("/dev/tty", "w", stderr);
+             for (int i = 0; i < device_list.size(); i++) {
+                 std::cout << "Device " << i << ": " << device_list[i] << std::endl;
+             }
          }},
-        {"get.version",
-         [this](const std::string &) {             
-             std::cout << "Version " << VERSION << std::endl;
+        {"set.outdevice",
+         [this](const std::string &param) {
+             try {
+                 int device_id = std::stod(param);
+
+                 if (QsGlobal::g_audio->isStreamRunning()) {
+                     QsGlobal::g_audio->stopStream();
+                 }
+
+                 int frames = QsGlobal::g_memory->getRtAudioFrames();
+                 int rate = QsGlobal::g_memory->getRtAudioRate();
+                 int out_dev_id = device_id;
+                 int in_dev_id = -1;
+
+                 bool ok = false;
+                 freopen("/dev/null", "w", stderr);
+                 QsGlobal::g_audio->initAudio(frames, rate, in_dev_id, out_dev_id, ok);
+                 if (!QsGlobal::g_audio->isStreamRunning()) {
+                     QsGlobal::g_audio->startStream();
+                 }
+                 std::cout << "Out device set to " << device_id << std::endl;
+                 freopen("/dev/tty", "w", stderr);
+             } catch (const std::invalid_argument &) {
+                 std::cerr << "Invalid out device parameter" << std::endl;
+                 freopen("/dev/tty", "w", stderr);
+             }
          }},
+        {"get.outdevice",
+         [this](const std::string &) {
+             int dev_id = QsGlobal::g_server->p_qsState->rtAudioOutDevId();
+             std::cout << "Device ID is " << dev_id << std::endl;
+         }},
+        {"get.version", [this](const std::string &) { std::cout << "Version " << VERSION << std::endl; }},
         {"get.help",
          [&commands](const std::string &) {
              std::cout << "Available commands:\n";
@@ -383,7 +423,27 @@ void CommandProcessor::process() {
                 std::cerr << "Error executing command: " << e.what() << '\n';
             }
         } else {
-            std::cout << "Unknown command: " << cmd << '\n';
+            // By default just return the status
+            int frequency = static_cast<int>(QsGlobal::g_server->getRxFrequency());
+            int smeter = static_cast<int>(QsGlobal::g_memory->getSMeterCurrentValue());
+            int volume = static_cast<int>(QsGlobal::g_memory->getVolume());
+            std::string mode = m_p_server->getRxMode().toStdString();
+            int filterHi = static_cast<int>(QsGlobal::g_memory->getFilterHi());
+            int filterLo = static_cast<int>(QsGlobal::g_memory->getFilterLo());
+            bool squelchOn = static_cast<bool>(QsGlobal::g_memory->getSquelchOn());
+            int sqThresh = static_cast<int>(QsGlobal::g_memory->getSquelchThreshold());
+            int agcThresh = static_cast<int>(QsGlobal::g_memory->getAgcThreshold());
+            int agcSpeed = static_cast<int>(QsGlobal::g_memory->getAgcDecaySpeed());
+
+            // Format output
+            std::ostringstream output;
+            output << "F:[" << frequency << "] SM:[" << smeter << "] V:[" << volume << "] M:[" << mode << "] FHL:["
+                   << filterHi << ", " << filterLo << "] SQ:[" << squelchOn << "] SQT:[" << sqThresh << "] AGCT:["
+                   << agcThresh << "] AGCS:[" << agcSpeed << "]";
+
+            // Print to console
+            std::cout << "Unknown command!" << std::endl;
+            std::cout << output.str() << std::endl;
         }
     }
 }

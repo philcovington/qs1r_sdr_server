@@ -80,4 +80,6 @@ class QsAudio {
 
     bool isOutputDeviceValid(int id, String &descr);
     bool isInputDeviceValid(int id, String &descr);
+
+    bool isStreamRunning();
 };
