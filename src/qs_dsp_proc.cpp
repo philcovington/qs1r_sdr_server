@@ -27,7 +27,7 @@
 #include "../include/qs_threading.hpp"
 #include "../include/qs_tone_gen.hpp"
 #include "../include/qs_volume.hpp"
-#include "../include/qs_butterworth_bandpass.hpp"
+#include "../include/qs_liquid_post_filter.hpp"
 #include <cmath>
 #include <pthread.h>
 #include <sched.h>
@@ -66,6 +66,7 @@ void QsDspProcessor::init(int rx_num) {
     p_iir6 = std::make_unique<QS_IIR>();
     p_iir7 = std::make_unique<QS_IIR>();    
     p_test_tone = std::make_unique<QsTestTone>();    
+    p_fm_post_filter = std::make_unique<DemodPostFilter>();
 
     m_rx_num = rx_num;
     m_bsize = QsGlobal::g_memory->getReadBlockSize();
@@ -154,6 +155,8 @@ void QsDspProcessor::init(int rx_num) {
 
     // For testing
     p_test_tone->init(162.2, 0.75, m_processing_rate);
+
+    p_fm_post_filter->create_filter(QsGlobal::g_memory->getDataProcRate(), 300, 3500);
     
     _debug() << "QsDSPProcessor init end...";
 }
@@ -259,6 +262,7 @@ void QsDspProcessor::run() {
             case dmFMN:
                 p_fm->process(buf_cpx, NARROW);
                 p_fm_demph->process(buf_cpx);
+                p_fm_post_filter->process(buf_cpx);
                 break;
             case dmFMW:
                 p_fm->process(buf_cpx, WIDE);

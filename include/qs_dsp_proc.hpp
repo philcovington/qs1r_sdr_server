@@ -67,7 +67,7 @@ class QS_IIR;
 class QsTestTone;
 class QsSleep;
 class Resampler;
-class ButterworthBandPassFilter;
+class DemodPostFilter;
 
 #include <atomic>
 #include <memory>
@@ -106,6 +106,7 @@ class QsDspProcessor {
     std::unique_ptr<QS_IIR> p_iir7;
     std::unique_ptr<Resampler> p_rs;
     std::unique_ptr<QsTestTone> p_test_tone;
+    std::unique_ptr<DemodPostFilter> p_fm_post_filter;
        
     explicit QsDspProcessor();
     ~QsDspProcessor();
