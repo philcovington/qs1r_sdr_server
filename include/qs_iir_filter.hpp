@@ -32,9 +32,16 @@ class QS_IIR {
     QS_IIR();
 
     void init(unsigned int notch_num, QSIIRTYPE type);
+    void init(float f0freq, float bw_hz, float rate, QSIIRTYPE type);
+
+    void initLowPass(float f0freq, float bw_hz, float rate);
+    void initHighPass(float f0freq, float bw_hz, float rate);
+    void initBandPass(float f0freq, float bw_hz, float rate);
+    void initBandReject(float f0freq, float bw_hz, float rate);
 
     void process(qs_vect_f &);
     void process(qs_vect_cpx &);
+    void process_d(qs_vect_cpx &);
 
   private:
     int m_notch_num;
@@ -55,12 +62,7 @@ class QS_IIR {
 
     float m_f0Freq;
     float m_bwHz;
-
-    void initLowPass(float f0freq, float bw_hz, float rate);
-    void initHighPass(float f0freq, float bw_hz, float rate);
-    void initBandPass(float f0freq, float bw_hz, float rate);
-    void initBandReject(float f0freq, float bw_hz, float rate);
-
+    
     qs_vect_cpx::iterator cpx_itr;
     qs_vect_f::iterator f_itr;
 };

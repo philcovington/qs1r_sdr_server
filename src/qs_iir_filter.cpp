@@ -69,6 +69,31 @@ void QS_IIR ::init(unsigned int notch_num, QSIIRTYPE type) {
     }
 }
 
+void QS_IIR::init(float f0freq, float bw_hz, float rate, QSIIRTYPE type)
+{
+    m_type = type;   
+
+    switch (m_type) {
+    case iirLowPass:
+        initLowPass(m_f0Freq, m_bwHz, rate);
+        break;
+    case iirHighPass:
+        initHighPass(m_f0Freq, m_bwHz, rate);
+        break;
+    case iirBandPass:
+        initBandPass(m_f0Freq, m_bwHz, rate);
+        break;
+    case iirBandReject:
+        initBandReject(m_f0Freq, m_bwHz, rate);
+        break;
+    case iirTxDcBlock:
+        m_f0Freq = 10;
+        m_bwHz = 20;
+        initHighPass(m_f0Freq, m_bwHz, rate);
+        break;
+    }
+}
+
 void QS_IIR ::initLowPass(float f0freq, float bw_hz, float rate) {
     m_f0Freq = f0freq;
     m_bwHz = bw_hz;
@@ -221,6 +246,22 @@ void QS_IIR ::process(qs_vect_cpx &src_dst) {
         }
     }
 
+    for (cpx_itr = src_dst.begin(); cpx_itr != src_dst.end(); ++cpx_itr) {
+        // Process real part
+        float w0a = cpx_itr->real() - m_A1 * m_w1a - m_A2 * m_w2a;
+        cpx_itr->real(m_B0 * w0a + m_B1 * m_w1a + m_B2 * m_w2a);
+        m_w2a = m_w1a;
+        m_w1a = w0a;
+
+        // Process imaginary part
+        float w0b = cpx_itr->imag() - m_A1 * m_w1b - m_A2 * m_w2b;
+        cpx_itr->imag(m_B0 * w0b + m_B1 * m_w1b + m_B2 * m_w2b);
+        m_w2b = m_w1b;
+        m_w1b = w0b;
+    }
+}
+
+void QS_IIR::process_d(qs_vect_cpx &src_dst) {
     for (cpx_itr = src_dst.begin(); cpx_itr != src_dst.end(); ++cpx_itr) {
         // Process real part
         float w0a = cpx_itr->real() - m_A1 * m_w1a - m_A2 * m_w2a;

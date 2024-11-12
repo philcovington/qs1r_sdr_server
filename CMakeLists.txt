@@ -58,6 +58,14 @@ if (NOT RTAUDIO_FOUND)
     set(RTAUDIO_LIBRARIES "/usr/lib/librtaudio.so")
 endif()
 
+# # Check for LiquidDSP (use pkg-config or fallback path if necessary)
+# pkg_check_modules(LIQUIDDSP liquiddsp)
+# if (NOT LIQUIDDSP_FOUND)
+#     message(WARNING "LiquidDSP not found with pkg-config. Adding fallback path.")
+#     set(LIQUIDDSP_INCLUDE_DIRS "/usr/local/include")
+#     set(LIQUIDDSP_LIBRARIES "/usr/local/lib/libliquid.so")
+# endif()
+
 # Include directories for the found packages
 include_directories(
     ${LIBUSB_INCLUDE_DIRS}
@@ -65,6 +73,7 @@ include_directories(
     ${ALSA_INCLUDE_DIRS}
     ${READLINE_INCLUDE_DIRS}
     ${RTAUDIO_INCLUDE_DIRS}
+    # ${LIQUIDDSP_INCLUDE_DIRS}
 )
 
 # Link libraries
@@ -75,6 +84,7 @@ target_link_libraries(qs1r_server
     ${ALSA_LIBRARIES}
     ${READLINE_LIBRARIES}
     ${RTAUDIO_LIBRARIES}
+    # ${LIQUIDDSP_LIBRARIES}
 )
 
 # Add messages for debugging purposes
@@ -83,3 +93,5 @@ message(STATUS "Found libsamplerate: ${LIBSAMPLERATE_LIBRARIES}")
 message(STATUS "Found ALSA: ${ALSA_LIBRARIES}")
 message(STATUS "Found Readline: ${READLINE_LIBRARIES}")
 message(STATUS "Found RtAudio: ${RTAUDIO_LIBRARIES}")
+# message(STATUS "Found LiquidDSP: ${LIQUIDDSP_LIBRARIES}")
+
