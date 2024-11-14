@@ -47,6 +47,7 @@ void QsDspProcessor::init(int rx_num) {
     p_tg_test = std::make_unique<QsToneGenerator>();
     p_agc = std::make_unique<QsAgc>();
     p_main_filter = std::make_unique<QsMainRxFilter>();
+    p_post_filter = std::make_unique<QsPostRxFilter>();
     p_am = std::make_unique<QsAMDemodulator>();
     p_sam = std::make_unique<QsSAMDemodulator>();
     p_fm = std::make_unique<QsFMCombinedDemodulator>();
@@ -127,8 +128,11 @@ void QsDspProcessor::init(int rx_num) {
     p_fm->init(NARROW);
     p_fm_demph->init(m_processing_rate);
    
-    // MAIN FIR
+    // MAIN FILTER
     p_main_filter->init(m_bsize);
+
+    // POST DEMOD FILTER
+    p_post_filter->init(300, 3500, 50000, m_bsize);
 
     // ANF
     p_anf->init(m_bsize);
@@ -257,7 +261,8 @@ void QsDspProcessor::run() {
                 break;
             case dmFMN:
                 p_fm->process(buf_cpx, NARROW);
-                p_fm_demph->process(buf_cpx); 
+                p_fm_demph->process(buf_cpx);
+                
                 break;
             case dmFMW:
                 p_fm->process(buf_cpx, WIDE);
@@ -266,7 +271,6 @@ void QsDspProcessor::run() {
             default:
                 break;
             }
-
             // ======== </DEMODULATORS> ===========
 
             // ======== <BINAURAL> =============
@@ -274,6 +278,10 @@ void QsDspProcessor::run() {
                 QsSignalOps::CopyRealToImag(buf_cpx);
             }
             // ======== </BINAURAL> =============
+
+            // ======== <POST DEMOD FILTER> =============
+            p_post_filter->process(buf_cpx);
+            // ======== </POST DEMOD FILTER> =============
 
             // ======== <AUTO NOTCH FILTER> =============
             p_anf->process(buf_cpx);

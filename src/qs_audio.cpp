@@ -1,8 +1,8 @@
 #include "../include/qs_audio.hpp"
-#include "../include/qs_debugloggerclass.hpp"
 #include "../include/qs1r_server.hpp"
-#include "../include/qs_signalops.hpp"
+#include "../include/qs_debugloggerclass.hpp"
 #include "../include/qs_globals.hpp"
+#include "../include/qs_signalops.hpp"
 
 QsAudio ::QsAudio() : p_rta(std::make_unique<RtAudio>(RtAudio::LINUX_ALSA)), stop_stream_request(0) {}
 
@@ -21,21 +21,21 @@ bool QsAudio ::initAudio(int frames, double sample_rate, int in_dev_id, int out_
         return ok;
     }
 
-    rtaOutputDeviceMap.clear();    
+    rtaOutputDeviceMap.clear();
 
     RtAudio::DeviceInfo info;
-    List<unsigned int> rates;
+    std::vector<unsigned int> rates;
 
     for (unsigned int i = 0; i < devcount; i++) {
         info = p_rta->getDeviceInfo(i);
         if (info.outputChannels > 0) {
-            rtaOutputDeviceMap[i] = String::fromStdString(info.name);
-            rates = List<unsigned int>::fromVector(info.sampleRates);
-        } 
+            rtaOutputDeviceMap[i] = info.name;
+            rates = info.sampleRates;
+        }
     }
 
     RtAudio::StreamParameters out_rta_parameters;
-    
+
     if ((out_dev_id == -1) | (out_dev_id > devcount - 1)) {
         out_dev_id = p_rta->getDefaultOutputDevice();
     } else {
@@ -43,7 +43,7 @@ bool QsAudio ::initAudio(int frames, double sample_rate, int in_dev_id, int out_
     }
 
     out_rta_parameters.nChannels = 2;
-    out_rta_parameters.firstChannel = 0;    
+    out_rta_parameters.firstChannel = 0;
 
     RtAudio::StreamOptions rta_options;
 #ifdef Q_OS_WIN
@@ -76,85 +76,81 @@ bool QsAudio ::initAudio(int frames, double sample_rate, int in_dev_id, int out_
 // This is the RtAudio callback
 // ------------------------------------------------------------
 int QsAudio::RtCallback(void *outputBuffer, void *inputBuffer, unsigned int nBufferFrames, double streamTime,
-                         RtAudioStreamStatus status) {
+                        RtAudioStreamStatus status) {
     int size = nBufferFrames * 2;
     size_t available = QsGlobal::g_float_rt_ring->readAvail();
-    if ( available >= size) {
+    if (available >= size) {
         QsGlobal::g_float_rt_ring->read((float *)outputBuffer, size);
     } else {
         QsSignalOps::Zero((float *)outputBuffer, size);
-    } 
+    }
     return stop_stream_request;
 }
 
-StringList QsAudio ::getOutputDevices() {
+std::vector<std::string> QsAudio::getOutputDevices() {
     unsigned int devcount = p_rta->getDeviceCount();
     RtAudio::DeviceInfo info;
-    StringList list;
-
-    list.clear();
+    std::vector<std::string> list;
 
     if (devcount < 1) {
-        list.append(std::string("No audio devices found."));
+        list.push_back("No audio devices found.");
     } else {
         rtaOutputDeviceMap.clear();
         for (unsigned int i = 0; i < devcount; i++) {
             info = p_rta->getDeviceInfo(i);
             if (info.outputChannels > 1) {
-                rtaOutputDeviceMap[i] = String::fromStdString(info.name);
-                String str = "id: " + String::number(i) + " -> " + String::fromStdString(info.name); 
-                list.append(str.toStdString());
+                rtaOutputDeviceMap[i] = info.name;
+                std::string str = "id: " + std::to_string(i) + " -> " + info.name;
+                list.push_back(str);
             }
         }
     }
     return list;
 }
 
-StringList QsAudio ::getInputDevices() {
+std::vector<std::string> QsAudio::getInputDevices() {
     unsigned int devcount = p_rta->getDeviceCount();
     RtAudio::DeviceInfo info;
-    StringList list;
-
-    list.clear();
+    std::vector<std::string> list;
 
     if (devcount < 1) {
-        list.append(std::string("No audio devices found."));
+        list.push_back("No audio devices found.");
     } else {
         rtaInputDeviceMap.clear();
         for (unsigned int i = 0; i < devcount; i++) {
             info = p_rta->getDeviceInfo(i);
             if (info.inputChannels > 1) {
-                rtaInputDeviceMap[i] = String::fromStdString(info.name);
-                String str = "id: " + String::number(i) + " -> " + String::fromStdString(info.name);
-                list.append(str.toStdString());
+                rtaInputDeviceMap[i] = info.name;
+                std::string str = "id: " + std::to_string(i) + " -> " + info.name;
+                list.push_back(str);
             }
         }
     }
     return list;
 }
 
-bool QsAudio ::isOutputDeviceValid(int id, String &descr) {
+bool QsAudio::isOutputDeviceValid(int id, std::string &descr) {
     bool result = false;
     descr.clear();
-    if (rtaOutputDeviceMap.contains(id)) {
+    auto it = rtaOutputDeviceMap.find(id);
+    if (it != rtaOutputDeviceMap.end()) {
         result = true;
-        descr.append(rtaOutputDeviceMap[id]);
+        descr = it->second;
     }
     return result;
 }
 
-bool QsAudio ::isInputDeviceValid(int id, String &descr) {
+bool QsAudio::isInputDeviceValid(int id, std::string &descr) {
     bool result = false;
     descr.clear();
-    if (rtaInputDeviceMap.contains(id)) {
+    auto it = rtaInputDeviceMap.find(id);
+    if (it != rtaInputDeviceMap.end()) {
         result = true;
-        descr.append(rtaInputDeviceMap[id]);
+        descr = it->second;
     }
     return result;
 }
 
 int QsAudio::getDefaultOutputDevice() { return p_rta->getDefaultOutputDevice(); }
-
 int QsAudio::getDefaultInputDevice() { return p_rta->getDefaultInputDevice(); }
-
 bool QsAudio::isStreamRunning() { return p_rta->isStreamRunning(); }

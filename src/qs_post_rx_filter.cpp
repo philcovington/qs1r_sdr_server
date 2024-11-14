@@ -4,15 +4,15 @@ QsPostRxFilter::QsPostRxFilter()
     : m_size(2048), m_samplerate(50000), m_filter_lo(100), m_filter_hi(3000.0), m_one_over_norm(1.0 / (m_size * 2.0)),
       p_ovlpfft(new QsFFT()), p_filtfft(new QsFFT()) {}
 
-void QsPostRxFilter::init(int size) {
+void QsPostRxFilter::init(double lo_freq, double hi_freq, int rate, int size) {
     m_size = size;
-    m_samplerate = QsGlobal::g_memory->getDataProcRate();
+    m_samplerate = rate;
 
     p_ovlpfft->resize(m_size * 2);
     p_filtfft->resize(m_size * 2);
 
-    m_filter_lo = QsGlobal::g_memory->getFilterLo();
-    m_filter_hi = QsGlobal::g_memory->getFilterHi();
+    m_filter_lo = lo_freq;
+    m_filter_hi = hi_freq;
 
     m_one_over_norm = 1.0 / (m_size * 2.0);
 
@@ -37,14 +37,8 @@ void QsPostRxFilter::init(int size) {
 }
 
 void QsPostRxFilter::process(qs_vect_cpx &src_dst) {
-    if (!m_is_init) {
-        throw std::runtime_error("QsPostRxFilter::process must call init() first!");
-    }
-    if (m_filter_lo != QsGlobal::g_memory->getFilterLo() || m_filter_hi != QsGlobal::g_memory->getFilterHi()) {
-        m_filter_lo = QsGlobal::g_memory->getFilterLo();
-        m_filter_hi = QsGlobal::g_memory->getFilterHi();
-        MakeFilter(m_filter_lo, m_filter_hi);
-    }
+    if (!m_is_init) { throw std::runtime_error("QsPostRxFilter::process must call init() first!"); } 
+    if (!QsGlobal::g_memory->getPostDemodFilterSwitch()) { return; }  
 
     QsSignalOps::Zero(&cpx_0[0] + m_size, m_size);
     QsSignalOps::Copy(&src_dst[0], &cpx_0[0], m_size);

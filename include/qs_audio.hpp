@@ -31,12 +31,12 @@
 #pragma once
 
 #include "../include/qs_globals.hpp"
-#include "../include/qs_listclass.hpp"
-#include "../include/qs_mapclass.hpp"
-#include "../include/qs_stringclass.hpp"
-#include "../include/qs_stringlistclass.hpp"
 #include "/usr/include/rtaudio/RtAudio.h"
 #include <memory>
+#include <vector>
+#include <string>
+#include <unordered_map>
+#include <iostream>
 
 class QsAudio {
 
@@ -51,8 +51,8 @@ class QsAudio {
         return ((QsAudio *)userData)->RtCallback(outputBuffer, inputBuffer, nBufferFrames, streamTime, status);
     }
 
-    Map<int, String> rtaInputDeviceMap;
-    Map<int, String> rtaOutputDeviceMap;
+    std::unordered_map<unsigned int, std::string> rtaOutputDeviceMap;
+    std::unordered_map<unsigned int, std::string> rtaInputDeviceMap;
     double m_sample_rate;
     int stop_stream_request;
 
@@ -72,14 +72,14 @@ class QsAudio {
             p_rta->stopStream();
     }    
 
-    StringList getOutputDevices();
-    StringList getInputDevices();
+    std::vector<std::string> getOutputDevices();
+    std::vector<std::string> getInputDevices();
 
     int getDefaultOutputDevice();
     int getDefaultInputDevice();
 
-    bool isOutputDeviceValid(int id, String &descr);
-    bool isInputDeviceValid(int id, String &descr);
+   bool isOutputDeviceValid(int id, std::string &descr);
+   bool isInputDeviceValid(int id, std::string &descr);
 
     bool isStreamRunning();
 };

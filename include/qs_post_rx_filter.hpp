@@ -41,7 +41,7 @@ class QsPostRxFilter {
   public:
     QsPostRxFilter();
 
-    void init(int size);
+    void init(double lo_freq, double hi_freq, int rate, int size);
     void process(qs_vect_cpx &src_dst);
 
     static void MakeWindow(int wtype, int size, qs_vect_cpx &window);

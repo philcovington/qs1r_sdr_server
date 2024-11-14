@@ -174,17 +174,7 @@ void CommandProcessor::process() {
          [this](const std::string &param) {
              int on = QsGlobal::g_memory->getDeEmphasisOn();
              std::cout << "De-emphasis is " << (on ? "on" : "off") << std::endl;
-         }},
-        {"set.ampref",
-         [this](const std::string &param) {
-             try {
-                 float alpha = std::stof(param);
-                 QsGlobal::g_memory->setAMPostFilterAlpha(alpha);
-                 std::cout << "AM post filter alpha set to " << alpha << std::endl;
-             } catch (const std::invalid_argument &) {
-                 std::cerr << "Invalid AM post filter alpha parameter" << std::endl;
-             }
-         }},
+         }},        
         {"set.squelch",
          [this](const std::string &param) {
              try {
@@ -233,6 +223,27 @@ void CommandProcessor::process() {
                  std::cerr << "Invalid CTCSS threshold parameter" << std::endl;
              }
          }},
+        {"set.postfilt",
+         [this](const std::string &param) {
+             try {
+                 int intVal = std::stoi(param);
+                 if (intVal != 0 && intVal != 1) {
+                     throw std::invalid_argument("Only 0 or 1 is allowed.");
+                 }
+                 bool on = static_cast<bool>(intVal);
+                 QsGlobal::g_memory->setPostDemodFilterSwitch( on );
+                 std::cout << "Post Demod filter set " << (on ? "on" : "off") << std::endl;
+             } catch (const std::invalid_argument &) {
+                 std::cerr << "Invalid Post Demod filter parameter. Use 0 or 1." << std::endl;
+             }
+         }},
+        {"set.pf", [this, &commands](const std::string &param) { commands["set.postfilt"](param); }},
+        {"get.postfilt",
+         [this](const std::string &) {
+             bool on = QsGlobal::g_memory->getPostDemodFilterSwitch();
+             std::cout << "Post demod filter is " << (on ? "on" : "off") << std::endl;
+         }},
+        {"get.pf", [this, &commands](const std::string &param) { commands["get.postfilt"](param); }},
         {"get.ctcsst",
          [this](const std::string &) {
              double thresh = QsGlobal::g_memory->getCTCSSThreshold();
@@ -336,7 +347,7 @@ void CommandProcessor::process() {
         {"get.outdevices",
          [this](const std::string &) {
              freopen("/dev/null", "w", stderr);
-             StringList device_list = QsGlobal::g_audio->getOutputDevices();
+             std::vector<std::string> device_list = QsGlobal::g_audio->getOutputDevices();
              freopen("/dev/tty", "w", stderr);
              for (int i = 0; i < device_list.size(); i++) {
                  std::cout << "Device " << i << ": " << device_list[i] << std::endl;

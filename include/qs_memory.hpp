@@ -156,8 +156,8 @@ class QsMemory {
     bool getNotchEnabled(int number, int rx_num = 0);
 
     // AM Post filter
-    float getAMPostFilterAlpha(int rx_num = 0);
-    void setAMPostFilterAlpha(float alpha, int rx_num = 0); 
+    float getPostDemodFilterSwitch(int rx_num = 0);
+    void setPostDemodFilterSwitch(bool on, int rx_num = 0); 
 
     // FM De-emphasis
 
@@ -350,8 +350,8 @@ class QsMemory {
     double m_notch_bandwidth[MAX_RECEIVERS][MAX_MAN_NOTCHES];
     bool m_notch_enabled[MAX_RECEIVERS][MAX_MAN_NOTCHES];
 
-    // AM Post filter
-    float m_am_post_filt_alpha[MAX_RECEIVERS];
+    // DEMOD Post filter
+    bool m_post_filt_switch[MAX_RECEIVERS];
 
     // FM De-emphasis
     bool m_fm_demp_on[MAX_RECEIVERS];

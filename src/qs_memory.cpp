@@ -37,7 +37,7 @@ QsMemory::QsMemory() {
         m_binaural_mode[i] = QS_DEFAULT_BINAURAL_MODE;
 
         // AM POST FILTER
-        m_am_post_filt_alpha[i] = QS_DEFAULT_AM_FILT_ALPHA;
+        m_post_filt_switch[i] = QS_DEFAULT_POST_FILT_SWITCH;
 
         // FM DE-EMPHASIS
         m_fm_demp_on[i] = QS_DEFAULT_FM_DEMPH_ON;
@@ -425,11 +425,11 @@ void QsMemory::setNotchEnabled(int number, bool value, int rx_num) { m_notch_ena
 bool QsMemory::getNotchEnabled(int number, int rx_num) { return m_notch_enabled[rx_num][number]; }
 
 //***************************************************//
-//-------------------AM POST FILTER------------------//
+//-------------------DEMOD POST FILTER------------------//
 //***************************************************//
 
-float QsMemory::getAMPostFilterAlpha(int rx_num) { return m_am_post_filt_alpha[rx_num]; };
-void QsMemory::setAMPostFilterAlpha(float alpha, int rx_num) { m_am_post_filt_alpha[rx_num] = alpha; }
+float QsMemory::getPostDemodFilterSwitch(int rx_num) { return m_post_filt_switch[rx_num]; };
+void QsMemory::setPostDemodFilterSwitch(bool on, int rx_num) { m_post_filt_switch[rx_num] = on; }
 
 //***************************************************//
 //-------------------FM DE-EMPHASIS------------------//
