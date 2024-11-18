@@ -30,10 +30,9 @@
 
 #pragma once
 
-#include "../include/qs_bandpass_filter.hpp"
-#include "../include/qs_butterworth_lowpass.hpp"
 #include "../include/qs_globals.hpp"
 #include "../include/qs_signalops.hpp"
+#include "../include/qs_fir_filter.hpp"
 #include <deque>
 #include <string>
 #include <unordered_map>
@@ -96,6 +95,8 @@ class QsSquelch {
   private:
     bool detectTone(qs_vect_cpx &src_dst);
 
+    QsFirFilter filter;
+
     // SQUELCH
     bool m_sq_switch;
     double m_sq_thresh;
@@ -103,10 +104,7 @@ class QsSquelch {
     double m_sq_hysteresis;
     double m_attack;
     double m_decay;
-
-    ButterworthLowPass m_lowPassFilter;
-    BandPassFilter m_bandpassFilter;
-
+  
     size_t m_blocksize;
     double m_sampleRate;     // Sample rate of the audio (e.g., 48000 Hz)
     double m_ctcss_tone;     // CTCSS tone frequency to detect

@@ -1006,6 +1006,7 @@ void QS1RServer::setFilter(double width, int rx_num) {
 
     QsGlobal::g_memory->setFilterHi(send_width_hi);
     QsGlobal::g_memory->setFilterLo(send_width_lo);
+    
 }
 
 // ------------------------------------------------------------

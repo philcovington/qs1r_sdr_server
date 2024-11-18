@@ -9,6 +9,7 @@
 #include "../include/qs_debugloggerclass.hpp"
 #include "../include/qs_defines.hpp"
 #include "../include/qs_downcnv.hpp"
+#include "../include/qs_fir_filter.hpp"
 #include "../include/qs_fm_demod.hpp"
 #include "../include/qs_globals.hpp"
 #include "../include/qs_iir_filter.hpp"
@@ -46,15 +47,15 @@ void QsDspProcessor::init(int rx_num) {
     p_tg1 = std::make_unique<QsToneGenerator>();
     p_tg_test = std::make_unique<QsToneGenerator>();
     p_agc = std::make_unique<QsAgc>();
-    p_main_filter = std::make_unique<QsMainRxFilter>();
-    p_post_filter = std::make_unique<QsPostRxFilter>();
+    p_main_filter = std::make_unique<QsFirFilter>();
+    p_post_filter = std::make_unique<QsFirFilter>();
     p_am = std::make_unique<QsAMDemodulator>();
     p_sam = std::make_unique<QsSAMDemodulator>();
     p_fm = std::make_unique<QsFMCombinedDemodulator>();
     p_fm_demph = std::make_unique<DeEmphasis>();
     p_nr = std::make_unique<QsNoiseReductionFilter>();
     p_anf = std::make_unique<QsAutoNotchFilter>();
-    p_sm = std::make_unique<QsSMeter>();    
+    p_sm = std::make_unique<QsSMeter>();
     p_sq = std::make_unique<QsSquelch>();
     p_vol = std::make_unique<QsVolume>();
     p_iir0 = std::make_unique<QS_IIR>();
@@ -64,8 +65,8 @@ void QsDspProcessor::init(int rx_num) {
     p_iir4 = std::make_unique<QS_IIR>();
     p_iir5 = std::make_unique<QS_IIR>();
     p_iir6 = std::make_unique<QS_IIR>();
-    p_iir7 = std::make_unique<QS_IIR>();    
-    p_test_tone = std::make_unique<QsTestTone>();   
+    p_iir7 = std::make_unique<QS_IIR>();
+    p_test_tone = std::make_unique<QsTestTone>();
 
     m_rx_num = rx_num;
     m_bsize = QsGlobal::g_memory->getReadBlockSize();
@@ -76,25 +77,25 @@ void QsDspProcessor::init(int rx_num) {
     re_f.resize(m_bsize);
     im_f.resize(m_bsize);
     in_re_f.resize(m_bsize);
-    in_im_f.resize(m_bsize);    
+    in_im_f.resize(m_bsize);
 
     in_interleaved_i.resize(m_bsizeX2);
     in_interleaved_f.resize(m_bsizeX2);
     out_interleaved_f.resize(m_bsizeX2);
-    rs_interleaved_f.resize(m_bsizeX2);    
+    rs_interleaved_f.resize(m_bsizeX2);
 
-    out_s.resize(m_bsizeX2);    
+    out_s.resize(m_bsizeX2);
 
     std::fill(buf_cpx.begin(), buf_cpx.end(), std::complex<float>(0.0f, 0.0f));
     std::fill(in_interleaved_i.begin(), in_interleaved_i.end(), 0);
     std::fill(in_interleaved_f.begin(), in_interleaved_f.end(), 0.0f);
     std::fill(out_interleaved_f.begin(), out_interleaved_f.end(), 0.0f);
     std::fill(re_f.begin(), re_f.end(), 0.0f);
-    std::fill(im_f.begin(), im_f.end(), 0.0f); 
+    std::fill(im_f.begin(), im_f.end(), 0.0f);
     std::fill(in_re_f.begin(), in_re_f.end(), 0.0f);
     std::fill(in_im_f.begin(), in_im_f.end(), 0.0f);
     std::fill(out_s.begin(), out_s.end(), 0);
-    
+
     QsGlobal::g_float_rt_ring->init(m_bsize * 16);
     QsGlobal::g_float_rt_ring->empty();
 
@@ -127,9 +128,9 @@ void QsDspProcessor::init(int rx_num) {
     p_sam->init();
     p_fm->init(NARROW);
     p_fm_demph->init(m_processing_rate);
-   
+
     // MAIN FILTER
-    p_main_filter->init(m_bsize);
+    p_main_filter->init(-10000, 10000, 50000, m_bsize);
 
     // POST DEMOD FILTER
     p_post_filter->init(300, 3500, 50000, m_bsize);
@@ -142,7 +143,7 @@ void QsDspProcessor::init(int rx_num) {
 
     // CW TONE GEN
     p_tg1->init(QsToneGenerator::ratePostDataRate);
-    
+
 #ifdef __IIR_NOTCH__
     // Instantiate 8 manual notch filters
     p_iir0->init(1, QS_IIR::iirBandReject);
@@ -156,8 +157,8 @@ void QsDspProcessor::init(int rx_num) {
 #endif
 
     // For testing
-    p_test_tone->init(162.2, 0.75, m_processing_rate);    
-    
+    p_test_tone->init(162.2, 0.75, m_processing_rate);
+
     _debug() << "QsDSPProcessor init end...";
 }
 
@@ -175,13 +176,13 @@ void QsDspProcessor::run() {
     int dstlen = 0;
 
     std::fill(re_f.begin(), re_f.end(), 0.0f);
-    std::fill(im_f.begin(), im_f.end(), 0.0f); 
+    std::fill(im_f.begin(), im_f.end(), 0.0f);
     std::fill(in_re_f.begin(), in_re_f.end(), 0.0f);
     std::fill(in_im_f.begin(), in_im_f.end(), 0.0f);
 
     std::fill(out_s.begin(), out_s.end(), 0);
 
-    QsGlobal::g_float_rt_ring->empty();  
+    QsGlobal::g_float_rt_ring->empty();
 
     m_is_running = true;
     m_thread_go = true;
@@ -254,15 +255,15 @@ void QsDspProcessor::run() {
 
             switch (QsGlobal::g_memory->getDemodMode()) {
             case dmAM:
-                p_am->process(buf_cpx);                
+                p_am->process(buf_cpx);
                 break;
             case dmSAM:
-                p_sam->process(buf_cpx);                
+                p_sam->process(buf_cpx);
                 break;
             case dmFMN:
                 p_fm->process(buf_cpx, NARROW);
                 p_fm_demph->process(buf_cpx);
-                
+
                 break;
             case dmFMW:
                 p_fm->process(buf_cpx, WIDE);
@@ -304,8 +305,8 @@ void QsDspProcessor::run() {
             p_vol->process(out_interleaved_f);
             // ======== </VOLUME WITH LIMITER> ===========
 
-            // ======== <RESAMPLE> ===========            
-            p_rs->process(out_interleaved_f, rs_interleaved_f);            
+            // ======== <RESAMPLE> ===========
+            p_rs->process(out_interleaved_f, rs_interleaved_f);
             // ======== </RESAMPLE> ===========
 
             // ======== <WRITE TO RA RING> ===========

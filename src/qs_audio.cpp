@@ -16,7 +16,7 @@ bool QsAudio ::initAudio(int frames, double sample_rate, int in_dev_id, int out_
 
     unsigned int devcount = p_rta->getDeviceCount();
 
-	std::vector<unsigned int> ids = p_rta->getDeviceIds();
+    std::vector<unsigned int> ids = p_rta->getDeviceIds();
     if (ids.size() == 0) {
         _debug() << std::string("Info: No sound devices found!");
         return ok;
@@ -37,10 +37,10 @@ bool QsAudio ::initAudio(int frames, double sample_rate, int in_dev_id, int out_
 
     RtAudio::StreamParameters out_rta_parameters;
 
-    std::cout << "Default output device is: " <<  p_rta->getDefaultOutputDevice() << std::endl;
+    std::cout << "Default output device is: " << p_rta->getDefaultOutputDevice() << std::endl;
 
     out_rta_parameters.deviceId = out_dev_id;
-	out_rta_parameters.nChannels = 2;
+    out_rta_parameters.nChannels = 2;
     out_rta_parameters.firstChannel = 0;
 
     RtAudio::StreamOptions rta_options;
@@ -55,12 +55,12 @@ bool QsAudio ::initAudio(int frames, double sample_rate, int in_dev_id, int out_
     unsigned int rate = (unsigned int)sample_rate;
 
     _debug() << "Opening rtaudio stream";
-    RtAudioErrorType rta_result = p_rta->openStream(&out_rta_parameters, nullptr, RTAUDIO_FLOAT32, rate, &frames_, sta_rt_callback, this,
-                          &rta_options);
-	if (rta_result == 0) {
+    RtAudioErrorType rta_result = p_rta->openStream(&out_rta_parameters, nullptr, RTAUDIO_FLOAT32, rate, &frames_,
+                                                    sta_rt_callback, this, &rta_options);
+    if (rta_result == 0) {
         m_sample_rate = rate;
-	} else {
-    	_debug() << std::string("Audio Error!");
+    } else {
+        _debug() << std::string("Audio Error!");
         return ok;
     }
 
@@ -84,45 +84,52 @@ int QsAudio::RtCallback(void *outputBuffer, void *inputBuffer, unsigned int nBuf
 }
 
 std::vector<std::string> QsAudio::getOutputDevices() {
-    unsigned int devcount = p_rta->getDeviceCount();
-    RtAudio::DeviceInfo info;
     std::vector<std::string> list;
+    unsigned int devcount = p_rta->getDeviceCount();
 
-    if (devcount < 1) {
-        list.push_back("No audio devices found.");
-    } else {
-        rtaOutputDeviceMap.clear();
-        for (unsigned int i = 0; i < devcount; i++) {
-            info = p_rta->getDeviceInfo(i);
-            if (info.outputChannels > 1) {
-                rtaOutputDeviceMap[i] = info.name;
-                std::string str = "id: " + std::to_string(i) + " -> " + info.name;
-                list.push_back(str);
-            }
+    std::vector<unsigned int> ids = p_rta->getDeviceIds();
+
+    if (ids.size() == 0) {
+        _debug() << std::string("Info: No sound devices found!");
+        list.push_back(std::string(""));
+        return list;
+    }
+
+    RtAudio::DeviceInfo info;
+
+    for (unsigned int n = 0; n < ids.size(); n++) {
+        info = p_rta->getDeviceInfo(ids[n]);
+        if (info.outputChannels > 0) {
+            
+            std::string str = "id: " + std::to_string(info.ID) + " -> " + info.name;
+            list.push_back(str);            
         }
     }
     return list;
 }
 
 std::vector<std::string> QsAudio::getInputDevices() {
-    unsigned int devcount = p_rta->getDeviceCount();
-    RtAudio::DeviceInfo info;
     std::vector<std::string> list;
+    unsigned int devcount = p_rta->getDeviceCount();
 
-    if (devcount < 1) {
-        list.push_back("No audio devices found.");
-    } else {
-        rtaInputDeviceMap.clear();
-        for (unsigned int i = 0; i < devcount; i++) {
-            info = p_rta->getDeviceInfo(i);
-            if (info.inputChannels > 1) {
-                rtaInputDeviceMap[i] = info.name;
-                std::string str = "id: " + std::to_string(i) + " -> " + info.name;
-                list.push_back(str);
-            }
+    std::vector<unsigned int> ids = p_rta->getDeviceIds();
+
+    if (ids.size() == 0) {
+        _debug() << std::string("Info: No sound devices found!");
+        list.push_back(std::string(""));
+        return list;
+    }
+
+    RtAudio::DeviceInfo info;
+
+    for (unsigned int n = 0; n < ids.size(); n++) {
+        info = p_rta->getDeviceInfo(ids[n]);
+        if (info.inputChannels > 0) {
+            std::string str = "id: " + std::to_string(info.ID) + " -> " + info.name;
+            list.push_back(str);
         }
     }
-    return list;
+    return list;    
 }
 
 bool QsAudio::isOutputDeviceValid(int id, std::string &descr) {

@@ -18,8 +18,7 @@ void QsSquelch::init(double attack, double decay, CtcssTone tone) {
         m_ctcss_tone = it->second;
         m_sampleRate = QsGlobal::g_memory->getDataProcRate();
         m_tone_threshold = QsGlobal::g_memory->getCTCSSThreshold();
-        m_lowPassFilter.init(300.0, m_sampleRate); // Initialize low-pass filter with 300 Hz cutoff
-        m_bandpassFilter.setFilter(m_ctcss_tone, m_sampleRate, 3);
+        filter.init(m_ctcss_tone-5, m_ctcss_tone+5, m_sampleRate, m_blocksize);
         m_is_init = true;
     } else {
         m_is_init = false;
@@ -37,8 +36,7 @@ void QsSquelch::init(double attack, double decay, double tone) {
     m_ctcss_tone = tone;
     m_sampleRate = QsGlobal::g_memory->getDataProcRate();
     m_tone_threshold = QsGlobal::g_memory->getCTCSSThreshold();
-    m_lowPassFilter.init(300.0, m_sampleRate); // Initialize low-pass filter with 300 Hz cutoff
-    m_bandpassFilter.setFilter(m_ctcss_tone, m_sampleRate, 3);
+    filter.init(m_ctcss_tone-5, m_ctcss_tone+5, m_sampleRate, m_blocksize);
     m_is_init = true;
 }
 
@@ -110,12 +108,12 @@ bool QsSquelch::detectTone(qs_vect_cpx &src_dst) {
     double threshold_on = m_tone_threshold * 1.0;
     double threshold_off = m_tone_threshold * 0.8;
 
-    qs_vect_cpx filtered_data_bp = m_bandpassFilter.applyToData(src_dst);   
+    filter.process(src_dst);
 
     // Go through each complex sample in the filtered data
     for (size_t i = 0; i < length; ++i) {
-        double real_sample = filtered_data_bp[i].real();
-        double imag_sample = filtered_data_bp[i].imag();
+        double real_sample = src_dst[i].real();
+        double imag_sample = src_dst[i].imag();
 
         // Apply Goertzel’s algorithm separately to real and imaginary components
         q0_real = coeff * q1_real - q2_real + real_sample;
@@ -150,7 +148,7 @@ bool QsSquelch::detectTone(qs_vect_cpx &src_dst) {
 void QsSquelch::setToneFrequency(double frequency) {
     if (m_is_init) {
         m_ctcss_tone = frequency;
-        m_bandpassFilter.setFilter(m_ctcss_tone, m_sampleRate, 3);
+        filter.setFilter(m_ctcss_tone-5, m_ctcss_tone+5);
     } else {
         throw std::runtime_error("QsSquelch::process must call init() first!");
     }
@@ -161,7 +159,7 @@ void QsSquelch::setToneFrequency(CtcssTone tone) {
         if (it != CtcssToneFrequencies.end()) {
             m_ctcss_tone = it->second;
             m_sampleRate = QsGlobal::g_memory->getDataProcRate();
-            m_bandpassFilter.setFilter(m_ctcss_tone, m_sampleRate, 3);
+            filter.setFilter(m_ctcss_tone-5, m_ctcss_tone+5);
         } else {
             throw std::runtime_error("CTCSS tone is invalid!");
         }

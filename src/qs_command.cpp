@@ -1,5 +1,6 @@
 #include "../include/qs_command.hpp"
 #include "../include/config.h"
+#include "../include/qs_fir_filter.hpp"
 #include "../include/qs_squelch.hpp"
 #include "../include/qs_state.hpp"
 #include <functional>
@@ -223,7 +224,7 @@ void CommandProcessor::process() {
                  std::cerr << "Invalid CTCSS threshold parameter" << std::endl;
              }
          }},
-        {"set.postfilt",
+        {"set.postfiltsw",
          [this](const std::string &param) {
              try {
                  int intVal = std::stoi(param);
@@ -238,7 +239,7 @@ void CommandProcessor::process() {
              }
          }},
         {"set.pf", [this, &commands](const std::string &param) { commands["set.postfilt"](param); }},
-        {"get.postfilt",
+        {"get.postfiltsw",
          [this](const std::string &) {
              bool on = QsGlobal::g_memory->getPostDemodFilterSwitch();
              std::cout << "Post demod filter is " << (on ? "on" : "off") << std::endl;
@@ -262,17 +263,71 @@ void CommandProcessor::process() {
          [this](const std::string &param) {
              try {
                  double value = std::stod(param);
-                 m_p_server->setFilter(value);
-                 std::cout << "Filter set to " << value << std::endl;
+                 if (QsGlobal::g_dsp_proc->p_main_filter != nullptr) {
+                    QsGlobal::g_dsp_proc->p_main_filter->setFilter(-value, value);
+                    std::cout << "Filter set to " << value << std::endl;
+                 } else { 
+                    std::cerr << "Main filter is nullptr!" << std::endl;
+                 }
              } catch (const std::invalid_argument &) {
                  std::cerr << "Invalid filter parameter." << std::endl;
              }
          }},
+        {"set.filterlo",
+         [this](const std::string &param) {
+             try {
+                 double value = std::stod(param);
+                 if (QsGlobal::g_dsp_proc->p_main_filter != nullptr) {
+                    QsGlobal::g_dsp_proc->p_main_filter->setFilterLo(value);
+                    std::cout << "Filter lo set to " << value << std::endl;
+                 } else { 
+                    std::cerr << "Main filter is nullptr!" << std::endl;
+                 }
+             } catch (const std::invalid_argument &) {
+                 std::cerr << "Invalid filter lo parameter." << std::endl;
+             }
+         }},
+        {"set.filterhi",
+         [this](const std::string &param) {
+             try {
+                 double value = std::stod(param);
+                 if (QsGlobal::g_dsp_proc->p_main_filter != nullptr) {
+                    QsGlobal::g_dsp_proc->p_main_filter->setFilterHi(value);
+                    std::cout << "Filter hi set to " << value << std::endl;
+                 } else { 
+                    std::cerr << "Main filter is nullptr!" << std::endl;
+                 }
+             } catch (const std::invalid_argument &) {
+                 std::cerr << "Invalid filter hi parameter." << std::endl;
+             }
+         }},
         {"get.filter",
          [this](const std::string &) {
-             double valuehi = QsGlobal::g_memory->getFilterHi();
-             double valuelo = QsGlobal::g_memory->getFilterLo();
-             std::cout << "Filter Hi: " << valuehi << ", Filter Lo: " << valuelo << std::endl;
+            if (QsGlobal::g_dsp_proc->p_main_filter != nullptr) {
+                double valuehi = QsGlobal::g_dsp_proc->p_main_filter->getFilterHi();
+                double valuelo = QsGlobal::g_dsp_proc->p_main_filter->getFilterLo();
+                std::cout << "Filter Lo: " << valuelo << ", Filter Hi: " << valuehi << std::endl;
+            } else {
+                std::cerr << "Main filter is nullptr!" << std::endl;    
+            }
+         }},
+        {"get.filterlo",
+         [this](const std::string &) {
+            if (QsGlobal::g_dsp_proc->p_main_filter != nullptr) {
+                double valuelo = QsGlobal::g_dsp_proc->p_main_filter->getFilterLo();
+                std::cout << "Filter Lo: " << valuelo << std::endl;
+            } else {
+                std::cerr << "Main filter is nullptr!" << std::endl;    
+            }
+         }},
+        {"get.filterhi",
+         [this](const std::string &) {
+            if (QsGlobal::g_dsp_proc->p_main_filter != nullptr) {
+                double valuelo = QsGlobal::g_dsp_proc->p_main_filter->getFilterLo();
+                std::cout << "Filter Hi: " << valuelo << std::endl;
+            } else {
+                std::cerr << "Main filter is nullptr!" << std::endl;    
+            }
          }},
         {"set.volume",
          [this](const std::string &param) {
