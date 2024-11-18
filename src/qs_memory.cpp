@@ -102,7 +102,7 @@ QsMemory::QsMemory() {
     m_dac_block_size = QS_DEFAULT_DAC_BLOCKSIZE;
     m_tx_block_size = QS_DEFAULT_TX_BLOCKSIZE;
     m_resampler_quality = QS_DEFAULT_RS_QUAL;
-    m_resampler_rate = QS_DEFAULT_RT_RATE;
+    m_resampler_rate = QS_DEFAULT_RTA_RATE;
     m_enc_clock_freq = QS_DEFAULT_ENC_FREQ;
     m_tx_filter_low = QS_DEFAULT_TX_FILT_LO;
     m_tx_filter_high = QS_DEFAULT_TX_FILT_HI;

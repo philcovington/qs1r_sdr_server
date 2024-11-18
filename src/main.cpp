@@ -7,7 +7,7 @@
 #include "../include/qs_debugloggerclass.hpp"
 #include "../include/qs_globals.hpp"
 
-#include "/usr/include/rtaudio/RtAudio.h"
+#include "/usr/local/include/rtaudio/RtAudio.h"
 #include <fstream>
 #include <unistd.h>
 

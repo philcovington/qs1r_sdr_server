@@ -34,7 +34,7 @@ QS_IIR ::QS_IIR() {
     case iirTxDcBlock:
         m_f0Freq = QS_DEFAULT_TX_DCBLOCK_F0;
         m_bwHz = QS_DEFAULT_TX_DCBLOCK_BW;
-        initHighPass(m_f0Freq, m_bwHz, QS_DEFAULT_RT_RATE);
+        initHighPass(m_f0Freq, m_bwHz, QS_DEFAULT_RTA_RATE);
         break;
     }
 }
@@ -64,7 +64,7 @@ void QS_IIR ::init(unsigned int notch_num, QSIIRTYPE type) {
     case iirTxDcBlock:
         m_f0Freq = QS_DEFAULT_TX_DCBLOCK_F0;
         m_bwHz = QS_DEFAULT_TX_DCBLOCK_BW;
-        initHighPass(m_f0Freq, m_bwHz, QS_DEFAULT_RT_RATE);
+        initHighPass(m_f0Freq, m_bwHz, QS_DEFAULT_RTA_RATE);
         break;
     }
 }

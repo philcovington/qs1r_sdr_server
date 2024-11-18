@@ -31,7 +31,7 @@
 #pragma once
 
 #include "../include/qs_globals.hpp"
-#include "/usr/include/rtaudio/RtAudio.h"
+#include "/usr/local/include/rtaudio/RtAudio.h"
 #include <memory>
 #include <vector>
 #include <string>

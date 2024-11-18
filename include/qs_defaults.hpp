@@ -4,7 +4,7 @@
 #define QS_DEFAULT_DSP_BLOCKSIZE 2048
 #define QS_DEFAULT_DSP_RATE 50000.0
 #define QS_DEFAULT_TX_DSP_RATE 50000.0
-#define QS_DEFAULT_FREQ 10e6
+#define QS_DEFAULT_FREQ 39.8e6
 #define QS_DEFAULT_DISPL_FREQ_OFFSET 1.0
 
 //****************************************************//
@@ -145,7 +145,11 @@
 //----------------------RT AUDIO----------------------//
 //****************************************************//
 #define QS_DEFAULT_RT_FRAMES 2048
-#define QS_DEFAULT_RT_RATE 48000.0
+#define QS_DEFAULT_RTA_RATE 48000.0
+#define QS_DEFAULT_RT_BYPASS false
+#define QS_DEFAULT_RTA_IN_DEVID -1
+#define QS_DEFAULT_RTA_OUT_DEVID 132
+#define QS_DEFAULT_USE_DEFAULT_RTA_DEV false
 
 //****************************************************//
 //--------------DATA PROCESSOR SAMPLE RATE------------//
@@ -161,27 +165,6 @@
 //--------------FIRST DOWNSAMPLE FACTOR---------------//
 //****************************************************//
 #define QS_DEFAULT_FIRST_DS_FACTOR 1
-
-//****************************************************//
-//-----------------RT AUDIO RATE----------------------//
-//****************************************************//
-#define QS_DEFAULT_RTA_RATE 48000
-
-//****************************************************//
-//--------------RT AUDIO BYPASS-----------------------//
-//****************************************************//
-#define QS_DEFAULT_RT_BYPASS false
-
-//****************************************************//
-//--------------RT AUDIO DEVID------------------------//
-//****************************************************//
-#define QS_DEFAULT_RTA_IN_DEVID -1
-#define QS_DEFAULT_RTA_OUT_DEVID 3
-
-//****************************************************//
-//--------------RT AUDIO USE DEFAULT------------------//
-//****************************************************//
-#define QS_DEFAULT_USE_DEFAULT_RTA_DEV true
 
 //****************************************************//
 //-----------------DAC BYPASS--------------------------//

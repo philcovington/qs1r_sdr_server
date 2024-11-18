@@ -16,7 +16,8 @@ bool QsAudio ::initAudio(int frames, double sample_rate, int in_dev_id, int out_
 
     unsigned int devcount = p_rta->getDeviceCount();
 
-    if (devcount < 1) {
+	std::vector<unsigned int> ids = p_rta->getDeviceIds();
+    if (ids.size() == 0) {
         _debug() << std::string("Info: No sound devices found!");
         return ok;
     }
@@ -26,23 +27,20 @@ bool QsAudio ::initAudio(int frames, double sample_rate, int in_dev_id, int out_
     RtAudio::DeviceInfo info;
     std::vector<unsigned int> rates;
 
-    for (unsigned int i = 0; i < devcount; i++) {
-        info = p_rta->getDeviceInfo(i);
+    for (unsigned int n = 0; n < ids.size(); n++) {
+        info = p_rta->getDeviceInfo(ids[n]);
         if (info.outputChannels > 0) {
-            rtaOutputDeviceMap[i] = info.name;
+            rtaOutputDeviceMap[n] = info.name;
             rates = info.sampleRates;
         }
     }
 
     RtAudio::StreamParameters out_rta_parameters;
 
-    if ((out_dev_id == -1) | (out_dev_id > devcount - 1)) {
-        out_dev_id = p_rta->getDefaultOutputDevice();
-    } else {
-        out_rta_parameters.deviceId = out_dev_id;
-    }
+    std::cout << "Default output device is: " <<  p_rta->getDefaultOutputDevice() << std::endl;
 
-    out_rta_parameters.nChannels = 2;
+    out_rta_parameters.deviceId = out_dev_id;
+	out_rta_parameters.nChannels = 2;
     out_rta_parameters.firstChannel = 0;
 
     RtAudio::StreamOptions rta_options;
@@ -56,15 +54,13 @@ bool QsAudio ::initAudio(int frames, double sample_rate, int in_dev_id, int out_
     unsigned int frames_ = frames;
     unsigned int rate = (unsigned int)sample_rate;
 
-    try {
-        _debug() << "Opening rtaudio stream";
-        p_rta->openStream(&out_rta_parameters, nullptr, RTAUDIO_FLOAT32, rate, &frames_, sta_rt_callback, this,
+    _debug() << "Opening rtaudio stream";
+    RtAudioErrorType rta_result = p_rta->openStream(&out_rta_parameters, nullptr, RTAUDIO_FLOAT32, rate, &frames_, sta_rt_callback, this,
                           &rta_options);
-
+	if (rta_result == 0) {
         m_sample_rate = rate;
-        // _debug()() << "frames: " << frames_;
-    } catch (RtAudioError &e) {
-        _debug() << std::string("Audio Error: ") << String(e.what());
+	} else {
+    	_debug() << std::string("Audio Error!");
         return ok;
     }
 
