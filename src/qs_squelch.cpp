@@ -108,12 +108,13 @@ bool QsSquelch::detectTone(qs_vect_cpx &src_dst) {
     double threshold_on = m_tone_threshold * 1.0;
     double threshold_off = m_tone_threshold * 0.8;
 
-    filter.process(src_dst);
+    std::vector<std::complex<float>> src_dst_copy = src_dst;
+    filter.process(src_dst_copy);
 
     // Go through each complex sample in the filtered data
     for (size_t i = 0; i < length; ++i) {
-        double real_sample = src_dst[i].real();
-        double imag_sample = src_dst[i].imag();
+        double real_sample = src_dst_copy[i].real();
+        double imag_sample = src_dst_copy[i].imag();
 
         // Apply Goertzel’s algorithm separately to real and imaginary components
         q0_real = coeff * q1_real - q2_real + real_sample;

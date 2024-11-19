@@ -14,9 +14,7 @@
 #include "../include/qs_globals.hpp"
 #include "../include/qs_iir_filter.hpp"
 #include "../include/qs_io_libusb.hpp"
-#include "../include/qs_main_rx_filter.hpp"
 #include "../include/qs_nr_filter.hpp"
-#include "../include/qs_post_rx_filter.hpp"
 #include "../include/qs_resampler.hpp"
 #include "../include/qs_sam_demod.hpp"
 #include "../include/qs_signalops.hpp"
@@ -118,7 +116,7 @@ void QsDspProcessor::init(int rx_num) {
     p_sm->init();
 
     // SQUELCH
-    p_sq->init(0.95, 0.7, CtcssTone::TONE_NONE);
+    p_sq->init(0.95, 0.7, CtcssTone::TONE_162_2);
 
     // AGC
     p_agc->init();
@@ -133,7 +131,7 @@ void QsDspProcessor::init(int rx_num) {
     p_main_filter->init(-10000, 10000, 50000, m_bsize);
 
     // POST DEMOD FILTER
-    p_post_filter->init(300, 3500, 50000, m_bsize);
+    p_post_filter->init(50, 3500, 50000, m_bsize);
 
     // ANF
     p_anf->init(m_bsize);
